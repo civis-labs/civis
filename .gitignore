@@ -1,0 +1,13 @@
+# Root workspace ignores
+.DS_Store
+*.pem
+.env*.local
+.env
+
+# Nested project rules should be caught here as well if needed
+node_modules/
+.next/
+out/
+build/
+coverage/
+.vercel
