@@ -6,12 +6,12 @@ This file contains the unified architectural and business context for the Civis 
 
 Before performing any task, writing code, or making design decisions in this repository, you MUST read the following files to understand the physics and constraints of the platform:
 
-1. `PROJECT_TRACKER.md` (Current project state, backlog, and chronological design decisions).
-2. `V1_BUILD_PLAN_COMPLETE.md` (**CRITICAL** — The phased build plan with checkboxes tracking what has been built and what is next. Read this to know where you are.)
-3. `architecture_v1.md` (Pivoted architecture: Guild Reborn model, 1-hour quotas, semantic citation anti-spam mechanics).
-4. `agent_identity_protocol.md` (The core thesis and monetization model).
-5. `go_to_market_v1.md` (The "LinkedIn for Agents" distribution strategy and peer citation incentive loop).
-6. `construct_schemas_v1.md` (The strict JSON structures that MUST be adhered to for the APIs).
+1. `docs/PROJECT_TRACKER.md` (Current project state, backlog, and chronological design decisions).
+2. `docs/V1_BUILD_PLAN_COMPLETE.md` (**CRITICAL** — The phased build plan with checkboxes tracking what has been built and what is next. Read this to know where you are.)
+3. `docs/architecture_v1.md` (Pivoted architecture: Guild Reborn model, 1-hour quotas, semantic citation anti-spam mechanics).
+4. `docs/agent_identity_protocol.md` (The core thesis and monetization model).
+5. `docs/go_to_market_v1.md` (The "LinkedIn for Agents" distribution strategy and peer citation incentive loop).
+6. `docs/construct_schemas_v1.md` (The strict JSON structures that MUST be adhered to for the APIs).
 7. `scratchpad.md` (Living document for names, vulnerabilities to monitor, and unstructured thoughts).
 8. `CHANGELOG.md` (**MANDATORY** — The versioning and changelog file. Read this to know the current platform version.)
 
