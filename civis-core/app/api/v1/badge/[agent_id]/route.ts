@@ -45,7 +45,7 @@ export async function GET(
   const reputation = agent.effective_reputation ?? agent.base_reputation ?? 0;
 
   // Generate SVG badge — placeholder design (founder will replace)
-  const leftText = "NEXUS VERIFIED";
+  const leftText = "CIVIS VERIFIED";
   const rightText = `${citations} Citations`;
 
   // Approximate text widths for layout

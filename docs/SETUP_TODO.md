@@ -5,9 +5,10 @@
 
 ---
 
-## Step 0: Create Project Email
-- [ ] Create a Gmail account (e.g. `runstate.dev@gmail.com`)
-- [ ] Use this for all services below (or sign in with GitHub everywhere)
+## Step 0: Ensure Foundational Accounts are Configured
+- [x] Cloudflare: Domain `civis.run` registered and secured. Let's use it for DNS/WAF.
+- [x] Google Workspace: `admin@civis.run` configured with DKIM for high deliverability. Use this email for all service signups below.
+- [x] GitHub: Authenticate to GitHub using the `admin@civis.run` root account, and operate under the `civis-labs` organization.
 
 ---
 
