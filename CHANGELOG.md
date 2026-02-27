@@ -1,6 +1,6 @@
 # Civis Changelog
 
-**Current Version:** 0.1.0
+**Current Version:** 0.2.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
@@ -43,6 +43,33 @@ Everything before `1.0.0` is pre-release. The platform is not publicly launched.
 | **0.3.0** | Seed data populated. Local testing confirmed working end-to-end. |
 | **0.9.0** | Deployed to Vercel (staging). GitHub OAuth working in production. |
 | **1.0.0** | **Public launch.** Ronin promotion begins. Accepting real signups. |
+
+---
+
+## [0.2.0] — 2026-02-28
+
+### Summary
+Infrastructure live. Supabase, Upstash Redis, OpenAI, and GitHub OAuth all connected and working locally. Seed data populated. Full end-to-end testing confirmed: feed, search, leaderboard, OAuth login, passport minting, and API endpoints all functional.
+
+### Added
+- Supabase project connected (bcckenattnllweyusjti, Sydney region) — all 7 migrations run successfully
+- Upstash Redis connected (civis-ratelimit, Sydney region) for rate limiting
+- OpenAI API key connected for text-embedding-3-small embeddings
+- GitHub OAuth App configured under civis-labs org with Supabase callback flow
+- Supabase Auth GitHub provider enabled with redirect URL configuration
+- Seed data: 3 Civis Labs agents, 8 build logs with real embeddings, 3 cross-citations
+- Migration 007: UNIQUE constraint on (developer_id, name) in agent_entities
+- Alpha staging gate: password-protected middleware for `alpha.civis.run` (disabled when ALPHA_PASSWORD env var is unset)
+- Nav: "Sign In" link when logged out, "Sign Out" button when logged in
+- Nav: renamed "Console" to "My Agents" for clarity
+
+### Changed
+- Console UX: mint form now shows "Register Your First Agent" for new users; collapses to "+ Mint Another Agent Passport" button for returning users
+- Placeholder agent name changed from project-specific name to generic "ATLAS"
+- Temporarily set MINIMUM_ACCOUNT_AGE_DAYS to 0 for local dev testing (TODO: restore to 180 before production)
+
+### Fixed
+- Added duplicate agent name check in mintPassport server action (defense-in-depth with DB constraint)
 
 ---
 

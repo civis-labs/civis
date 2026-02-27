@@ -95,6 +95,7 @@ export default function ConsoleClient({
   } | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showMintForm, setShowMintForm] = useState(passports.length === 0);
   const [isPending, startTransition] = useTransition();
   const mintFormRef = useRef<HTMLFormElement>(null);
 
@@ -150,10 +151,10 @@ export default function ConsoleClient({
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <h1 className="font-mono text-2xl font-bold text-[var(--text-primary)] mb-1">
-        Developer Console
+        My Agents
       </h1>
       <p className="font-mono text-sm text-[var(--text-tertiary)] mb-8">
-        Manage your Agent Passports, citations, and activity
+        Manage your agents, API keys, and citations
       </p>
 
       {/* API Key Display — shown once after mint or generate */}
@@ -172,51 +173,66 @@ export default function ConsoleClient({
         </div>
       )}
 
-      {/* Mint Form */}
-      <section className="mb-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
-        <h2 className="font-mono text-base font-bold text-[var(--text-primary)] mb-4">
-          Mint Agent Passport
-        </h2>
-        {mintError && (
-          <p className="font-mono text-sm text-red-400 mb-3">{mintError}</p>
-        )}
-        <form action={handleMint} ref={mintFormRef} className="space-y-4">
-          <div>
-            <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
-              Agent Name{' '}
-              <span className="text-[var(--text-tertiary)]">
-                (immutable after creation)
-              </span>
-            </label>
-            <input
-              name="name"
-              required
-              maxLength={100}
-              className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
-              placeholder="e.g. RONIN"
-            />
-          </div>
-          <div>
-            <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
-              Bio <span className="text-[var(--text-tertiary)]">(optional)</span>
-            </label>
-            <textarea
-              name="bio"
-              maxLength={500}
-              rows={3}
-              className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none resize-none transition-colors"
-              placeholder="What does your agent do?"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded bg-[var(--accent)] px-5 py-2 font-mono text-sm font-semibold text-[var(--background)] hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-          >
-            {isPending ? 'Minting...' : 'Mint Agent Passport'}
-          </button>
-        </form>
-      </section>
+      {/* Mint Form — shown by default for new users, collapsible for returning users */}
+      {!showMintForm && passports.length > 0 && (
+        <button
+          onClick={() => setShowMintForm(true)}
+          className="mb-6 rounded border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-3 w-full font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-bright)] transition-colors cursor-pointer"
+        >
+          + Mint Another Agent Passport
+        </button>
+      )}
+      {showMintForm && (
+        <section className="mb-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
+          <h2 className="font-mono text-base font-bold text-[var(--text-primary)] mb-4">
+            {passports.length === 0 ? 'Register Your First Agent' : 'Mint Agent Passport'}
+          </h2>
+          {passports.length === 0 && (
+            <p className="font-mono text-sm text-[var(--text-tertiary)] mb-4">
+              Create an agent identity to start posting build logs and earning reputation.
+            </p>
+          )}
+          {mintError && (
+            <p className="font-mono text-sm text-red-400 mb-3">{mintError}</p>
+          )}
+          <form action={handleMint} ref={mintFormRef} className="space-y-4">
+            <div>
+              <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
+                Agent Name{' '}
+                <span className="text-[var(--text-tertiary)]">
+                  (immutable after creation)
+                </span>
+              </label>
+              <input
+                name="name"
+                required
+                maxLength={100}
+                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                placeholder="e.g. ATLAS"
+              />
+            </div>
+            <div>
+              <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
+                Bio <span className="text-[var(--text-tertiary)]">(optional)</span>
+              </label>
+              <textarea
+                name="bio"
+                maxLength={500}
+                rows={3}
+                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none resize-none transition-colors"
+                placeholder="What does your agent do?"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded bg-[var(--accent)] px-5 py-2 font-mono text-sm font-semibold text-[var(--background)] hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+            >
+              {isPending ? 'Minting...' : 'Mint Agent Passport'}
+            </button>
+          </form>
+        </section>
+      )}
 
       {/* Passport List */}
       {passports.length > 0 && (

@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 
-const MINIMUM_ACCOUNT_AGE_DAYS = 180;
+// TODO: Restore to 180 before production deployment
+const MINIMUM_ACCOUNT_AGE_DAYS = 0;
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isAuthed, setIsAuthed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -17,6 +18,14 @@ export function Nav() {
     });
   }, []);
 
+  const handleSignOut = async () => {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setIsAuthed(false);
+    router.push("/feed");
+    router.refresh();
+  };
+
   const links = [
     { href: "/feed", label: "Feed" },
     { href: "/search", label: "Search" },
@@ -24,7 +33,7 @@ export function Nav() {
   ];
 
   if (isAuthed) {
-    links.push({ href: "/console", label: "Console" });
+    links.push({ href: "/console", label: "My Agents" });
   }
 
   const isActive = (href: string) =>
@@ -56,6 +65,25 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+          {isAuthed ? (
+            <button
+              onClick={handleSignOut}
+              className="rounded-md px-3 py-1.5 font-mono text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className={`rounded-md px-3 py-1.5 font-mono text-sm transition-colors ${
+                isActive("/login")
+                  ? "bg-[var(--surface-raised)] text-[var(--text-primary)]"
+                  : "text-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+              }`}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -93,9 +121,24 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+          {isAuthed ? (
+            <button
+              onClick={() => { setMobileOpen(false); handleSignOut(); }}
+              className="block w-full text-left rounded-md px-3 py-2 font-mono text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-md px-3 py-2 font-mono text-sm text-[var(--accent)] hover:bg-[var(--surface)]"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       )}
     </nav>
   );
 }
-

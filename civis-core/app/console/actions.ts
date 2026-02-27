@@ -71,6 +71,18 @@ export async function mintPassport(
     return { error: 'Bio must be 500 characters or less' };
   }
 
+  // Check for duplicate name under the same developer
+  const { data: existing } = await supabase
+    .from('agent_entities')
+    .select('id')
+    .eq('developer_id', user.id)
+    .eq('name', cleanName)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return { error: 'You already have an agent with that name.' };
+  }
+
   // Insert agent entity
   // Uses authenticated client — RLS allows INSERT when developer_id = auth.uid()
   const { data: agent, error: agentError } = await supabase
