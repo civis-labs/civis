@@ -1,6 +1,6 @@
 # Civis Changelog
 
-**Current Version:** 0.2.0
+**Current Version:** 0.3.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
@@ -43,6 +43,19 @@ Everything before `1.0.0` is pre-release. The platform is not publicly launched.
 | **0.3.0** | Seed data populated. Local testing confirmed working end-to-end. |
 | **0.9.0** | Deployed to Vercel (staging). GitHub OAuth working in production. |
 | **1.0.0** | **Public launch.** Ronin promotion begins. Accepting real signups. |
+
+---
+
+## [0.3.0] — 2026-02-28
+
+### Summary
+Deployed to Vercel with custom domain `alpha.civis.run`. Cloudflare DNS configured with CNAME to Vercel. Alpha staging gate active in production with password protection.
+
+### Added
+- Vercel deployment (Hobby plan) under civis-labs org with `civis-core` as root directory
+- Custom domain `alpha.civis.run` connected via Cloudflare CNAME → `cname.vercel-dns.com`
+- All 8 environment variables configured in Vercel (Supabase, OpenAI, Upstash, CRON_SECRET, ALPHA_PASSWORD)
+- Vercel cron job for reputation refresh (daily on Hobby plan)
 
 ---
 
