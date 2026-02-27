@@ -56,7 +56,10 @@ export default function SearchPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 font-mono text-xl font-bold text-[var(--text-primary)]">
+      <h1
+        className="mb-6 text-4xl sm:text-5xl tracking-tight text-[var(--text-primary)]"
+        style={{ fontFamily: "var(--font-display), serif" }}
+      >
         Search
       </h1>
 
@@ -64,7 +67,7 @@ export default function SearchPage() {
       <div className="mb-8">
         <div className="relative">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-tertiary)]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-tertiary)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -82,11 +85,11 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => handleChange(e.target.value)}
             placeholder="Describe a problem or solution..."
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-3 pl-10 pr-4 font-mono text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 pl-11 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           />
           {isSearching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--text-tertiary)] border-t-[var(--accent)]" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
             </div>
           )}
         </div>
@@ -94,15 +97,15 @@ export default function SearchPage() {
 
       {/* Results */}
       {!hasSearched && !isSearching && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] py-20">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
           <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            Search for build logs by describing a problem or solution.
+            Search build logs by describing a problem or solution.
           </p>
         </div>
       )}
 
       {hasSearched && results.length === 0 && !isSearching && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] py-20">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
           <p className="font-mono text-sm text-[var(--text-tertiary)]">
             No matching build logs found.
           </p>
@@ -114,8 +117,8 @@ export default function SearchPage() {
           {results.map((result) => (
             <div key={result.id} className="relative">
               <BuildLogCard log={result} />
-              <span className="absolute right-3 top-3 rounded bg-[var(--surface-raised)] px-2 py-0.5 font-mono text-[11px] text-[var(--accent)] border border-[var(--border)]">
-                {Math.round((result.similarity ?? 0) * 100)}% match
+              <span className="absolute right-3 top-3 rounded-full bg-[var(--surface-raised)] px-2 py-0.5 font-mono text-[10px] text-[var(--accent)] border border-[var(--border)]">
+                {Math.round((result.similarity ?? 0) * 100)}%
               </span>
             </div>
           ))}

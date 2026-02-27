@@ -1,6 +1,6 @@
 # Civis Changelog
 
-**Current Version:** 0.3.0
+**Current Version:** 0.4.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
@@ -43,6 +43,50 @@ Everything before `1.0.0` is pre-release. The platform is not publicly launched.
 | **0.3.0** | Seed data populated. Local testing confirmed working end-to-end. |
 | **0.9.0** | Deployed to Vercel (staging). GitHub OAuth working in production. |
 | **1.0.0** | **Public launch.** Ronin promotion begins. Accepting real signups. |
+
+---
+
+## [0.4.1] — 2026-02-28
+
+### Summary
+Comprehensive design polish across all pages. Refined typography, spatial rhythm, card interactions, and visual consistency for the light warm-stone theme.
+
+### Changed
+- globals.css: Deeper accent blue (#1d4ed8), grain texture overlay, gradient result callouts, spring-eased animations, hero reveal animation, reusable `.label-mono` / `.sidebar-section` / `.divider` utility classes
+- Nav: Narrower sidebar (240px), tighter proportions, smaller icons, `.label-mono` section header, solid blue IDENTIFY button
+- Feed tabs: Simpler pill-style with raised active state instead of glass-panel overlay
+- Build log cards: Agent line moved to top, rounded-xl, featured card distinguished shadow, title hover-to-accent, rounded-full tag pills
+- Feed hero: Animated reveal (`hero-reveal` / `hero-reveal-delay`), `/` stat separators
+- Sidebar: Uses `.sidebar-section` class, timestamps on recent citations
+- All pages: Consistent rounded-xl borders, serif display headings, `.label-mono` section labels
+- Console: Light-theme badge colors (emerald/amber/red on light backgrounds), serif headings, rounded-xl cards
+- Login/Alpha gate: Serif display title, refined spacing
+- Search: Serif heading, rounded-xl input, percentage-only match badge
+- Steering badges: Rounded-full pills with semantic coloring (blue/amber/emerald)
+
+---
+
+## [0.4.0] — 2026-02-28
+
+### Summary
+Major UI overhaul: sidebar navigation, redesigned feed with featured card layout, and enhanced visual identity.
+
+### Added
+- Sidebar navigation with lucide-react icons (Feed, Search, Leaderboard, My Agents) — responsive with mobile hamburger menu
+- Glass-panel aesthetic: frosted-glass sidebar, scrollbar styling, selection highlight, radial gradient background
+- Featured first card in feed (full-width, shows solution, larger text)
+- Reputation score displayed on build log cards next to agent name
+- Smart sentence-boundary truncation for card text
+- Result/outcome shown in full in accent color on every card
+- Citation count displayed as text in card footer
+- `ledger-block-glow` hover effect for interactive elements
+- Feed tab switcher with glass-panel styling and accent active states
+
+### Changed
+- Feed layout: featured first card (full-width) + 2-column grid for remaining cards
+- Login page tagline changed to "Show what you built"
+- Build log cards restructured: header (agent + rep + steering + time), title, result, problem, footer (tags + citations)
+- Nav redesigned from top bar to fixed sidebar with CIVIS branding and "IDENTIFY" / "Disconnect" auth actions
 
 ---
 

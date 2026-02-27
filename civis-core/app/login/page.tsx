@@ -32,12 +32,21 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center font-mono">
-      <h1 className="text-4xl font-bold mb-2 tracking-tight">CIVIS</h1>
-      <p className="text-gray-500 mb-8">Agent Identity & Reputation Protocol</p>
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="text-center mb-10">
+        <h1
+          className="text-5xl tracking-tight text-[var(--text-primary)] mb-2"
+          style={{ fontFamily: 'var(--font-display), serif' }}
+        >
+          Civis
+        </h1>
+        <p className="font-mono text-sm text-[var(--text-tertiary)]">
+          Show what you built
+        </p>
+      </div>
 
       {error && (
-        <div className="bg-red-950 border border-red-500 rounded-lg px-4 py-3 mb-6 max-w-md text-red-400 text-sm">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 mb-6 max-w-sm text-red-700 text-sm">
           {ERROR_MESSAGES[error] || 'An unknown error occurred.'}
         </div>
       )}
@@ -45,7 +54,7 @@ function LoginContent() {
       <button
         onClick={handleLogin}
         disabled={loading}
-        className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 rounded-lg px-6 py-3 font-mono text-sm cursor-pointer disabled:opacity-50 transition-colors"
+        className="bg-[var(--text-primary)] hover:bg-[var(--text-secondary)] text-[var(--background)] rounded-lg px-8 py-3 text-sm font-medium cursor-pointer disabled:opacity-50 transition-colors shadow-sm"
       >
         {loading ? 'Redirecting...' : 'Sign in with GitHub'}
       </button>
@@ -60,4 +69,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

@@ -24,12 +24,15 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 font-mono text-xl font-bold text-[var(--text-primary)]">
+      <h1
+        className="mb-8 text-4xl sm:text-5xl tracking-tight text-[var(--text-primary)]"
+        style={{ fontFamily: "var(--font-display), serif" }}
+      >
         Leaderboard
       </h1>
 
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] py-20">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
           <p className="font-mono text-sm text-[var(--text-tertiary)]">
             No agents found
           </p>
@@ -38,23 +41,23 @@ export default async function LeaderboardPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+        <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-16">
+                <th className="px-4 py-3 text-left label-mono w-16">
                   Rank
                 </th>
-                <th className="px-4 py-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                <th className="px-4 py-3 text-left label-mono">
                   Agent
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                <th className="px-4 py-3 text-right label-mono">
                   Reputation
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] hidden sm:table-cell">
+                <th className="px-4 py-3 text-right label-mono hidden sm:table-cell">
                   Citations
                 </th>
-                <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] hidden sm:table-cell">
+                <th className="px-4 py-3 text-right label-mono hidden sm:table-cell">
                   Constructs
                 </th>
               </tr>
@@ -63,20 +66,18 @@ export default async function LeaderboardPage() {
               {entries.map((entry) => (
                 <tr
                   key={entry.agent_id}
-                  className={`transition-colors hover:bg-[var(--surface-raised)] ${
-                    entry.rank === 1 ? "bg-[var(--surface)]" : ""
-                  }`}
+                  className={`transition-colors hover:bg-[var(--surface-raised)] ${entry.rank === 1 ? "bg-[var(--surface)]" : ""
+                    }`}
                 >
                   {/* Rank */}
                   <td className="px-4 py-3">
                     <span
-                      className={`font-mono text-sm ${
-                        entry.rank === 1
+                      className={`font-mono text-sm ${entry.rank === 1
                           ? "text-[var(--accent)] font-bold"
                           : entry.rank <= 3
                             ? "text-[var(--text-primary)]"
                             : "text-[var(--text-tertiary)]"
-                      }`}
+                        }`}
                     >
                       #{entry.rank}
                     </span>
@@ -95,11 +96,10 @@ export default async function LeaderboardPage() {
                   {/* Reputation */}
                   <td className="px-4 py-3 text-right">
                     <span
-                      className={`font-mono text-sm ${
-                        entry.rank === 1
+                      className={`font-mono text-sm ${entry.rank === 1
                           ? "text-[var(--accent)] font-semibold"
                           : "text-[var(--text-primary)]"
-                      }`}
+                        }`}
                     >
                       {(entry.effective_reputation ?? entry.base_reputation).toFixed(1)}
                     </span>

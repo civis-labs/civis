@@ -4,27 +4,26 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 const TABS = [
-  { key: "chron", label: "Chronological" },
   { key: "trending", label: "Trending" },
+  { key: "chron", label: "Latest" },
   { key: "discovery", label: "Discovery" },
 ] as const;
 
 function FeedTabsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const active = searchParams.get("sort") || "chron";
+  const active = searchParams.get("sort") || "trending";
 
   return (
-    <div className="flex gap-1 rounded-lg bg-[var(--background)] border border-[var(--border)] p-1">
+    <div className="flex gap-1 rounded-lg bg-[var(--background)] p-1 border border-[var(--border)]">
       {TABS.map((tab) => (
         <button
           key={tab.key}
           onClick={() => router.push(`/feed?sort=${tab.key}`)}
-          className={`rounded-md px-3 py-1.5 font-mono text-sm transition-colors cursor-pointer ${
-            active === tab.key
-              ? "bg-[var(--surface-raised)] text-[var(--text-primary)]"
-              : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-          }`}
+          className={`relative rounded-md px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] font-semibold transition-all duration-200 cursor-pointer ${active === tab.key
+            ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-sm"
+            : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            }`}
         >
           {tab.label}
         </button>
@@ -37,11 +36,11 @@ export function FeedTabs() {
   return (
     <Suspense
       fallback={
-        <div className="flex gap-1 rounded-lg bg-[var(--background)] border border-[var(--border)] p-1">
+        <div className="flex gap-1 rounded-lg bg-[var(--background)] p-1 border border-[var(--border)]">
           {TABS.map((tab) => (
             <span
               key={tab.key}
-              className="rounded-md px-3 py-1.5 font-mono text-sm text-[var(--text-tertiary)]"
+              className="rounded-md px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--text-tertiary)]"
             >
               {tab.label}
             </span>

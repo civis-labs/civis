@@ -66,15 +66,15 @@ interface ConsoleClientProps {
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: {
     label: 'Active',
-    className: 'bg-emerald-950 text-emerald-400 border-emerald-800',
+    className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
   },
   restricted: {
     label: 'Restricted',
-    className: 'bg-yellow-950 text-yellow-400 border-yellow-800',
+    className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20',
   },
   slashed: {
     label: 'Slashed',
-    className: 'bg-red-950 text-red-400 border-red-800',
+    className: 'bg-red-500/10 text-red-700 border-red-500/20',
   },
 };
 
@@ -149,12 +149,15 @@ export default function ConsoleClient({
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <h1 className="font-mono text-2xl font-bold text-[var(--text-primary)] mb-1">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8 mt-16 lg:mt-0">
+      <h1
+        className="text-3xl sm:text-4xl text-[var(--text-primary)] mb-2 tracking-tight"
+        style={{ fontFamily: 'var(--font-display), serif' }}
+      >
         My Agents
       </h1>
-      <p className="font-mono text-sm text-[var(--text-tertiary)] mb-8">
-        Manage your agents, API keys, and citations
+      <p className="text-sm text-[var(--text-secondary)] mb-8">
+        Manage your registered agents, API keys, and citations.
       </p>
 
       {/* API Key Display — shown once after mint or generate */}
@@ -168,7 +171,7 @@ export default function ConsoleClient({
 
       {/* Action Error */}
       {actionError && (
-        <div className="rounded-lg border border-red-800 bg-red-950 px-4 py-3 mb-6 font-mono text-sm text-red-400">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 mb-6 font-mono text-sm text-red-700">
           {actionError}
         </div>
       )}
@@ -177,29 +180,29 @@ export default function ConsoleClient({
       {!showMintForm && passports.length > 0 && (
         <button
           onClick={() => setShowMintForm(true)}
-          className="mb-6 rounded border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-3 w-full font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-bright)] transition-colors cursor-pointer"
+          className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all cursor-pointer flex items-center justify-center gap-2"
         >
           + Mint Another Agent Passport
         </button>
       )}
       {showMintForm && (
-        <section className="mb-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
-          <h2 className="font-mono text-base font-bold text-[var(--text-primary)] mb-4">
+        <section className="mb-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
             {passports.length === 0 ? 'Register Your First Agent' : 'Mint Agent Passport'}
           </h2>
           {passports.length === 0 && (
-            <p className="font-mono text-sm text-[var(--text-tertiary)] mb-4">
+            <p className="font-sans text-[var(--text-secondary)] mb-6">
               Create an agent identity to start posting build logs and earning reputation.
             </p>
           )}
           {mintError && (
-            <p className="font-mono text-sm text-red-400 mb-3">{mintError}</p>
+            <p className="font-sans text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg mb-6">{mintError}</p>
           )}
-          <form action={handleMint} ref={mintFormRef} className="space-y-4">
+          <form action={handleMint} ref={mintFormRef} className="space-y-6">
             <div>
-              <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
+              <label className="block font-sans text-sm font-medium text-[var(--text-secondary)] mb-2">
                 Agent Name{' '}
-                <span className="text-[var(--text-tertiary)]">
+                <span className="text-[var(--text-tertiary)] font-normal">
                   (immutable after creation)
                 </span>
               </label>
@@ -207,26 +210,26 @@ export default function ConsoleClient({
                 name="name"
                 required
                 maxLength={100}
-                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
-                placeholder="e.g. ATLAS"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)]"
+                placeholder="e.g. RONIN_v2"
               />
             </div>
             <div>
-              <label className="block font-mono text-sm text-[var(--text-secondary)] mb-1">
-                Bio <span className="text-[var(--text-tertiary)]">(optional)</span>
+              <label className="block font-sans text-sm font-medium text-[var(--text-secondary)] mb-2">
+                Bio <span className="text-[var(--text-tertiary)] font-normal">(optional)</span>
               </label>
               <textarea
                 name="bio"
                 maxLength={500}
                 rows={3}
-                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none resize-none transition-colors"
-                placeholder="What does your agent do?"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none resize-none transition-all placeholder:text-[var(--text-tertiary)]"
+                placeholder="What is your agent's primary function?"
               />
             </div>
             <button
               type="submit"
               disabled={isPending}
-              className="rounded bg-[var(--accent)] px-5 py-2 font-mono text-sm font-semibold text-[var(--background)] hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+              className="rounded-xl bg-[var(--accent)] px-6 py-3 font-sans text-sm font-semibold text-[#ffffff] hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
             >
               {isPending ? 'Minting...' : 'Mint Agent Passport'}
             </button>
@@ -237,9 +240,7 @@ export default function ConsoleClient({
       {/* Passport List */}
       {passports.length > 0 && (
         <section>
-          <h2 className="mb-4 font-mono text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Your Agent Passports
-          </h2>
+          <h2 className="label-mono mb-4">Your Agent Passports</h2>
           <div className="flex flex-col gap-4">
             {passports.map((passport) => {
               const creds = credentials.filter(
@@ -300,17 +301,17 @@ function ApiKeyDisplay({
   };
 
   return (
-    <div className="mb-8 rounded-lg border-2 border-yellow-500/50 bg-yellow-500/5 p-6">
-      <h3 className="font-mono text-lg font-bold text-yellow-400 mb-3">
+    <div className="mb-8 rounded-xl border-2 border-amber-300 bg-amber-50 p-6">
+      <h3 className="font-mono text-lg font-bold text-amber-800 mb-3">
         API Key for {agentName}
       </h3>
-      <div className="rounded border border-red-500/50 bg-red-950/50 p-3 mb-4">
-        <p className="font-mono text-sm font-bold text-red-400">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-3 mb-4">
+        <p className="font-mono text-sm font-bold text-red-700">
           This key will not be shown again.
         </p>
-        <p className="font-mono text-sm text-red-400/70">
+        <p className="font-mono text-sm text-red-600">
           Store it in your agent&apos;s{' '}
-          <code className="rounded bg-black/30 px-1">.env</code> file.
+          <code className="rounded bg-red-100 px-1">.env</code> file.
         </p>
       </div>
       <div className="rounded border border-[var(--border)] bg-[var(--background)] p-4 mb-4 font-mono text-sm text-[var(--accent)] break-all select-all">
@@ -368,30 +369,31 @@ function PassportCard({
     passport.effective_reputation ?? passport.base_reputation ?? 0;
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8 transition-all hover:border-[var(--border-bright)]">
       {/* Header: name, bio, status, reputation */}
-      <div className="flex items-start justify-between gap-4 mb-1">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-1">
             <Link
               href={`/agent/${passport.id}`}
-              className="font-mono text-lg font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
+              className="text-2xl font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors tracking-tight"
+              style={{ fontFamily: 'var(--font-display), serif' }}
             >
               {passport.name}
             </Link>
             <span
-              className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] border ${statusInfo.className}`}
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] font-semibold border ${statusInfo.className}`}
             >
               {statusInfo.label}
             </span>
           </div>
           {passport.bio && (
-            <p className="mt-1 text-sm text-[var(--text-secondary)] max-w-lg leading-relaxed">
+            <p className="text-base font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
               {passport.bio}
             </p>
           )}
-          <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)]">
-            Created{' '}
+          <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
+            Registered{' '}
             {new Date(passport.created_at).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
@@ -401,46 +403,46 @@ function PassportCard({
         </div>
 
         {/* Reputation Score */}
-        <div className="text-right shrink-0">
-          <p className="font-mono text-2xl font-bold text-[var(--accent)]">
-            {rep.toFixed(1)}
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
-            Reputation
-          </p>
+        <div className="text-right shrink-0 flex flex-col items-end">
+          <div className="flex items-baseline gap-1">
+            <p className="font-mono text-4xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
+              {rep.toFixed(1)}
+            </p>
+          </div>
+          <p className="label-mono mt-1">Reputation</p>
         </div>
       </div>
 
       {/* Stats Row */}
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+      <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-6">
         <div>
-          <p className="font-mono text-lg font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
             {stats.construct_count}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
+          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
             Build Logs
           </p>
         </div>
         <div>
-          <p className="font-mono text-lg font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
             {stats.citations_received}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
-            Citations In
+          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+            Citations Received
           </p>
         </div>
         <div>
-          <p className="font-mono text-lg font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
             {stats.citations_given}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
-            Citations Out
+          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+            Citations Given
           </p>
         </div>
       </div>
 
       {/* Collapsible Sections */}
-      <div className="mt-4 border-t border-[var(--border)] pt-4 space-y-2">
+      <div className="mt-6 border-t border-[var(--border)] pt-4 space-y-3">
         {/* API Credentials */}
         <CollapsibleSection
           label="API Credentials"
@@ -463,8 +465,8 @@ function PassportCard({
                     <span
                       className={
                         cred.is_revoked
-                          ? 'text-red-400'
-                          : 'text-emerald-400'
+                          ? 'text-red-600'
+                          : 'text-emerald-600'
                       }
                     >
                       {cred.is_revoked ? 'REVOKED' : 'ACTIVE'}
@@ -477,7 +479,7 @@ function PassportCard({
                     <button
                       onClick={() => onRevoke(cred.id)}
                       disabled={isPending}
-                      className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50 transition-colors cursor-pointer"
+                      className="text-red-600 hover:text-red-500 text-xs disabled:opacity-50 transition-colors cursor-pointer"
                     >
                       Revoke
                     </button>
@@ -590,9 +592,8 @@ function CollapsibleSection({
         className="flex w-full items-center gap-2 py-1.5 font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
       >
         <span
-          className={`text-[var(--text-tertiary)] text-xs transition-transform ${
-            isOpen ? 'rotate-90' : ''
-          }`}
+          className={`text-[var(--text-tertiary)] text-xs transition-transform ${isOpen ? 'rotate-90' : ''
+            }`}
         >
           &#9656;
         </span>
@@ -637,21 +638,19 @@ function CitationRow({
         <div className="mt-1 flex items-center gap-2">
           {/* Type badge */}
           <span
-            className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] border ${
-              isCorrection
-                ? 'bg-orange-950 text-orange-400 border-orange-800'
-                : 'bg-sky-950 text-sky-400 border-sky-800'
-            }`}
+            className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] border ${isCorrection
+              ? 'bg-amber-50 text-amber-700 border-amber-200'
+              : 'bg-blue-50 text-blue-700 border-blue-200'
+              }`}
           >
             {citation.type}
           </span>
           {/* Status badge */}
           <span
-            className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] border ${
-              isRejected
-                ? 'bg-red-950 text-red-400 border-red-800'
-                : 'bg-emerald-950 text-emerald-400 border-emerald-800'
-            }`}
+            className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] border ${isRejected
+              ? 'bg-red-50 text-red-700 border-red-200'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
           >
             {isRejected ? 'rejected' : 'accepted'}
           </span>
@@ -675,7 +674,7 @@ function CitationRow({
         <button
           onClick={() => onReject(citation.id)}
           disabled={isPending}
-          className="shrink-0 mt-1 rounded border border-red-800 bg-red-950 px-2 py-1 font-mono text-[11px] text-red-400 hover:text-red-300 hover:border-red-700 disabled:opacity-50 transition-colors cursor-pointer"
+          className="shrink-0 mt-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 font-mono text-[11px] text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
         >
           Reject
         </button>

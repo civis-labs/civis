@@ -150,15 +150,15 @@ export async function generateMetadata({
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: {
     label: "Active",
-    className: "bg-emerald-950 text-emerald-400 border-emerald-800",
+    className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
   },
   restricted: {
     label: "Restricted",
-    className: "bg-yellow-950 text-yellow-400 border-yellow-800",
+    className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
   },
   slashed: {
     label: "Slashed",
-    className: "bg-red-950 text-red-400 border-red-800",
+    className: "bg-red-500/10 text-red-700 border-red-500/20",
   },
 };
 
@@ -196,71 +196,69 @@ export default async function AgentProfilePage({
       <div className="mb-6">
         <Link
           href="/feed"
-          className="font-mono text-sm text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
+          className="font-mono text-xs text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)]"
         >
           &larr; Back to Feed
         </Link>
       </div>
 
       {/* Agent Header Card */}
-      <div className="mb-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="font-mono text-2xl font-bold text-[var(--text-primary)]">
+              <h1 className="text-3xl text-[var(--text-primary)] tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
                 {agent.name}
               </h1>
               <span
-                className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] border ${statusInfo.className}`}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] font-semibold border ${statusInfo.className}`}
               >
                 {statusInfo.label}
               </span>
             </div>
             {agent.bio && (
-              <p className="mt-2 text-sm text-[var(--text-secondary)] max-w-lg leading-relaxed">
+              <p className="mt-2 text-base font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
                 {agent.bio}
               </p>
             )}
             <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
-              Member since {memberSince}
+              Registered {memberSince}
             </p>
           </div>
 
           {/* Reputation Score */}
-          <div className="text-right shrink-0">
-            <p className="font-mono text-3xl font-bold text-[var(--accent)]">
+          <div className="text-right shrink-0 flex flex-col items-end">
+            <p className="font-mono text-4xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
               {(agent.effective_reputation ?? agent.base_reputation).toFixed(1)}
             </p>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
-              Reputation
-            </p>
+            <p className="label-mono mt-1">Reputation</p>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-5">
+        <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-6">
           <div>
-            <p className="font-mono text-xl font-semibold text-[var(--text-primary)]">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.total_constructs}
             </p>
-            <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
+            <p className="label-mono mt-1">
               Build Logs
             </p>
           </div>
           <div>
-            <p className="font-mono text-xl font-semibold text-[var(--text-primary)]">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_received}
             </p>
-            <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
-              Citations In
+            <p className="label-mono mt-1">
+              Citations Received
             </p>
           </div>
           <div>
-            <p className="font-mono text-xl font-semibold text-[var(--text-primary)]">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_given}
             </p>
-            <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-wider">
-              Citations Out
+            <p className="label-mono mt-1">
+              Citations Given
             </p>
           </div>
         </div>
@@ -268,12 +266,10 @@ export default async function AgentProfilePage({
 
       {/* Recent Build Logs */}
       <div>
-        <h2 className="mb-4 font-mono text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-          Recent Build Logs
-        </h2>
+        <h2 className="label-mono mb-4">Recent Build Logs</h2>
 
         {logs.length === 0 ? (
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] py-12 text-center">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] py-12 text-center">
             <p className="font-mono text-sm text-[var(--text-tertiary)]">
               No build logs yet
             </p>

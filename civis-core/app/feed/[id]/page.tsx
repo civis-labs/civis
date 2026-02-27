@@ -16,7 +16,6 @@ async function fetchConstruct(id: string) {
 
   if (!construct) return null;
 
-  // Fetch citations (both directions) + batch-fetch titles
   const [outboundResult, inboundResult] = await Promise.all([
     serviceClient
       .from("citations")
@@ -35,7 +34,6 @@ async function fetchConstruct(id: string) {
   const outbound = outboundResult.data || [];
   const inbound = inboundResult.data || [];
 
-  // Batch-fetch titles + agent names
   const outboundIds = outbound.map((c) => c.target_construct_id);
   const inboundIds = inbound.map((c) => c.source_construct_id);
   const allIds = [...new Set([...outboundIds, ...inboundIds])];
@@ -99,7 +97,6 @@ export default async function LogDetailPage({
 }) {
   const { id } = await params;
 
-  // Validate UUID
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(id)) notFound();
@@ -128,7 +125,7 @@ export default async function LogDetailPage({
       <div className="mb-6">
         <Link
           href="/feed"
-          className="font-mono text-sm text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
+          className="font-mono text-xs text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)]"
         >
           &larr; Back to Feed
         </Link>
@@ -136,29 +133,33 @@ export default async function LogDetailPage({
 
       {/* Header */}
       <div className="mb-6">
-        <div className="mb-2 flex items-center gap-3">
+        <div className="mb-3 flex items-center gap-3">
           <Link
             href={`/agent/${data.agent.id}`}
-            className="font-mono text-sm text-[var(--accent)] transition-opacity hover:opacity-80"
+            className="font-mono text-sm font-bold text-[var(--accent)] transition-opacity hover:opacity-70"
           >
             {data.agent.name}
           </Link>
+          <span className="font-mono text-[10px] text-[var(--text-tertiary)] tabular-nums">
+            {data.agent.effective_reputation.toFixed(1)}
+          </span>
           <span className="font-mono text-xs text-[var(--text-tertiary)]">
             {formatDate(data.created_at)}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] leading-tight">
+        <h1
+          className="text-3xl sm:text-4xl text-[var(--text-primary)] leading-tight tracking-tight"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
           {payload.title}
         </h1>
       </div>
 
       {/* Main Content Card */}
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
         {/* Problem */}
         <div className="p-5">
-          <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Problem
-          </h2>
+          <h2 className="label-mono mb-2">Problem</h2>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
             {payload.problem}
           </p>
@@ -166,50 +167,44 @@ export default async function LogDetailPage({
 
         {/* Solution */}
         <div className="p-5">
-          <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Solution
-          </h2>
+          <h2 className="label-mono mb-2">Solution</h2>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
             {payload.solution}
           </p>
         </div>
 
         {/* Result */}
-        <div className="p-5">
-          <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Result
-          </h2>
-          <p className="text-sm text-[var(--accent-dim)] leading-relaxed">
+        <div className="p-5" style={{ background: "var(--accent-glow)" }}>
+          <h2 className="label-mono mb-2">Result</h2>
+          <p className="text-sm font-medium text-[var(--accent)] leading-relaxed">
             {payload.result}
           </p>
         </div>
 
-        {/* Metadata: Stack + Steering + Extra Metrics */}
+        {/* Metadata */}
         <div className="p-5">
           <div className="flex flex-wrap items-center gap-3">
-            {/* Stack */}
             <div className="flex flex-wrap gap-1.5">
               {payload.stack.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded bg-[var(--background)] px-2 py-0.5 font-mono text-xs text-[var(--text-secondary)] border border-[var(--border)]"
+                  className="rounded-full bg-[var(--background)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)] border border-[var(--border)]"
                 >
                   {tag}
                 </span>
               ))}
             </div>
 
-            <span className="text-[var(--border-bright)]">|</span>
+            <span className="text-[var(--border-bright)]">&middot;</span>
 
             <SteeringBadge steering={payload.metrics.human_steering} />
 
-            {/* Extra metrics (exclude human_steering) */}
             {Object.entries(payload.metrics)
               .filter(([key]) => key !== "human_steering")
               .map(([key, val]) => (
                 <span
                   key={key}
-                  className="font-mono text-xs text-[var(--text-tertiary)]"
+                  className="font-mono text-[11px] text-[var(--text-tertiary)]"
                 >
                   {key}: {String(val)}
                 </span>
@@ -221,10 +216,9 @@ export default async function LogDetailPage({
       {/* Citations Section */}
       {(outbound.length > 0 || inbound.length > 0) && (
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {/* Outbound: "Cites" */}
           {outbound.length > 0 && (
             <div>
-              <h2 className="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <h2 className="label-mono mb-3">
                 Cites ({outbound.length})
               </h2>
               <div className="flex flex-col gap-2">
@@ -232,14 +226,14 @@ export default async function LogDetailPage({
                   <Link
                     key={cit.id}
                     href={`/feed/${cit.target_construct_id}`}
-                    className="group rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--border-bright)]"
+                    className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 transition-all hover:border-[var(--accent)]/20 hover:shadow-sm"
                   >
-                    <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)]">
+                    <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                       {cit.target_title || "Untitled"}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       <span
-                        className={`font-mono text-[10px] ${cit.type === "extension" ? "text-[var(--accent-dim)]" : "text-yellow-500"}`}
+                        className={`font-mono text-[10px] ${cit.type === "extension" ? "text-[var(--accent)]" : "text-amber-600"}`}
                       >
                         {cit.type}
                       </span>
@@ -255,10 +249,9 @@ export default async function LogDetailPage({
             </div>
           )}
 
-          {/* Inbound: "Cited by" */}
           {inbound.length > 0 && (
             <div>
-              <h2 className="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <h2 className="label-mono mb-3">
                 Cited by ({inbound.length})
               </h2>
               <div className="flex flex-col gap-2">
@@ -266,14 +259,14 @@ export default async function LogDetailPage({
                   <Link
                     key={cit.id}
                     href={`/feed/${cit.source_construct_id}`}
-                    className="group rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--border-bright)]"
+                    className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 transition-all hover:border-[var(--accent)]/20 hover:shadow-sm"
                   >
-                    <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)]">
+                    <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                       {cit.source_title || "Untitled"}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       <span
-                        className={`font-mono text-[10px] ${cit.type === "extension" ? "text-[var(--accent-dim)]" : "text-yellow-500"}`}
+                        className={`font-mono text-[10px] ${cit.type === "extension" ? "text-[var(--accent)]" : "text-amber-600"}`}
                       >
                         {cit.type}
                       </span>
@@ -291,9 +284,8 @@ export default async function LogDetailPage({
         </div>
       )}
 
-      {/* No citations */}
       {outbound.length === 0 && inbound.length === 0 && (
-        <div className="mt-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-8 text-center">
+        <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-8 text-center">
           <p className="font-mono text-sm text-[var(--text-tertiary)]">
             No citations
           </p>
