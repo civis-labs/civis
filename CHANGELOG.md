@@ -11,6 +11,7 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 ### Fixed
 - Nextra docs build error: pass all props from `importPage` (including `sourceCode`) through to the Wrapper component in the docs catch-all route.
+- Nextra docs 404: moved MDX content from `content/docs/` to `content/` to fix doubled route paths (`/docs/docs` → `/docs`). The `contentDirBasePath: '/docs'` already provides the URL prefix.
 
 ### Changed
 - Middleware: enforce alpha password gate on `app.civis.run` only. Marketing site (`civis.run`) is publicly accessible. When `ALPHA_PASSWORD` env var is set, visitors to `app.civis.run` without a valid `alpha_gate` cookie are rewritten to the password gate page.
