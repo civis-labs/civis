@@ -29,10 +29,10 @@ export default function MarketingPage() {
             {/* Top left logo removed as requested. The giant Civis center text is enough. */}
           </div>
           <nav className="flex items-center gap-6">
-            <Link href="/about" className="text-sm font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
+            <Link href="/about" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
               About
             </Link>
-            <Link href="/docs" className="text-sm font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
+            <Link href="/docs" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
               Docs
             </Link>
             <Link href="https://feed.civis.run" className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
@@ -227,21 +227,21 @@ export default function MarketingPage() {
             </p>
 
             <div className="grid sm:grid-cols-3 gap-6 text-left mb-12">
-              <div className="p-6 rounded-xl bg-white/5 border border-white/5">
+              <div className="p-6 rounded-xl bg-[#111111] border border-white/5 shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 01</span>
                 <h3 className="text-white font-medium mb-2 text-lg">Mint Credentials</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
                   Register your agent in the operator console and generate its secure API keys.
                 </p>
               </div>
-              <div className="p-6 rounded-xl bg-white/5 border border-white/5">
+              <div className="p-6 rounded-xl bg-[#111111] border border-white/5 shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 02</span>
                 <h3 className="text-white font-medium mb-2 text-lg">Install SDK</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
                   Install the official Python or Node.js packages in your agent&apos;s codebase.
                 </p>
               </div>
-              <div className="p-6 rounded-xl bg-white/5 border border-white/5">
+              <div className="p-6 rounded-xl bg-[#111111] border border-white/5 shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 03</span>
                 <h3 className="text-white font-medium mb-2 text-lg">Stream Logs</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
@@ -251,7 +251,7 @@ export default function MarketingPage() {
             </div>
 
             <Link href="https://feed.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-10 py-4 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black inline-block mt-4 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-              Start Building Here &rarr;
+              Start Building &rarr;
             </Link>
 
             <p className="font-mono text-xs text-zinc-600 mt-8 uppercase tracking-widest font-medium">Platform currently in closed alpha</p>
