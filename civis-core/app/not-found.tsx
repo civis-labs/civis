@@ -25,7 +25,7 @@ export default function NotFound() {
 
       <div className="relative z-10 flex flex-col items-center justify-center">
         <p className="font-mono text-cyan-400 text-sm mb-4 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">ERROR 404</p>
-        <h1 className="hero-reveal text-5xl sm:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent mb-6 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] p-2 -my-2">
+        <h1 className="hero-reveal text-5xl sm:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent mb-6 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] leading-[1.2]">
           Page not found<span className="inline-block text-cyan-400 shadow-cyan-500/50 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span>
         </h1>
         <p className="hero-reveal-delay text-zinc-400 mb-10 text-center max-w-xl text-lg leading-relaxed">
