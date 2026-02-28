@@ -152,7 +152,7 @@ export default async function ConsolePage() {
 
   // Fetch citation counts for activity log constructs
   const activityConstructIds = (recentConstructs || []).map((c) => c.id);
-  let activityCitationCounts: Record<string, number> = {};
+  const activityCitationCounts: Record<string, number> = {};
 
   if (activityConstructIds.length > 0) {
     const { data: citRows } = await serviceClient

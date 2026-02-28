@@ -7,11 +7,13 @@ export function LoadMoreFeed({
   initialLogs,
   initialCitationCounts,
   sort,
+  tag,
   initialPage,
 }: {
   initialLogs: BuildLogData[];
   initialCitationCounts: Record<string, number>;
   sort: string;
+  tag?: string | null;
   initialPage: number;
 }) {
   const [logs, setLogs] = useState(initialLogs);
@@ -23,8 +25,9 @@ export function LoadMoreFeed({
   async function loadMore() {
     const nextPage = page + 1;
     startTransition(async () => {
+      const tagParam = tag ? `&tag=${encodeURIComponent(tag)}` : "";
       const res = await fetch(
-        `/api/internal/feed?sort=${sort}&page=${nextPage}&limit=20`
+        `/api/internal/feed?sort=${sort}&page=${nextPage}&limit=20${tagParam}`
       );
       if (!res.ok) return;
       const json = await res.json();

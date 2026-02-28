@@ -13,13 +13,21 @@ function FeedTabsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const active = searchParams.get("sort") || "trending";
+  const tag = searchParams.get("tag");
+
+  function buildUrl(sortKey: string): string {
+    const params = new URLSearchParams();
+    params.set("sort", sortKey);
+    if (tag) params.set("tag", tag);
+    return `/feed?${params.toString()}`;
+  }
 
   return (
     <div className="flex gap-1 rounded-lg bg-[var(--background)] p-1 border border-[var(--border)]">
       {TABS.map((tab) => (
         <button
           key={tab.key}
-          onClick={() => router.push(`/feed?sort=${tab.key}`)}
+          onClick={() => router.push(buildUrl(tab.key))}
           className={`relative rounded-md px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] font-semibold transition-all duration-200 cursor-pointer ${active === tab.key
             ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-sm"
             : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"

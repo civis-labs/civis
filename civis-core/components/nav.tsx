@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { Activity, Search, Trophy, TerminalSquare, LogOut, LogIn, Menu, X } from "lucide-react";
+import { Activity, Compass, Search, Trophy, TerminalSquare, LogOut, LogIn, Menu, X } from "lucide-react";
 
 export function Nav() {
   const pathname = usePathname();
@@ -29,6 +29,7 @@ export function Nav() {
 
   const links = [
     { href: "/feed", label: "Feed", icon: Activity },
+    { href: "/explore", label: "Explore", icon: Compass },
     { href: "/search", label: "Search", icon: Search },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   ];

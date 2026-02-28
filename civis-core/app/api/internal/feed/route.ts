@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10) || 20));
   const offset = (page - 1) * limit;
+  const tag = searchParams.get("tag") || null;
 
   if (!["chron", "trending", "discovery"].includes(sort)) {
     return NextResponse.json({ error: "Invalid sort" }, { status: 400 });
@@ -27,13 +28,19 @@ export async function GET(request: NextRequest) {
   const serviceClient = createSupabaseServiceClient();
 
   if (sort === "chron") {
-    const { data, error } = await serviceClient
+    let query = serviceClient
       .from("constructs")
       .select(
         "id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (tag) {
+      query = query.contains("payload", { stack: [tag] });
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
@@ -45,6 +52,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await serviceClient.rpc(rpcName, {
     p_limit: limit,
     p_offset: offset,
+    p_tag: tag,
   });
 
   if (error) {

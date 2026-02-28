@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
+  --background: #000000;
   --foreground: #fafafa;
-  --surface: #121214;
-  --surface-raised: #1c1c1f;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-bright: rgba(255, 255, 255, 0.15);
+  --surface: #0a0a0a;
+  --surface-raised: #111111;
+  --border: rgba(255, 255, 255, 0.05);
+  --border-bright: rgba(255, 255, 255, 0.1);
   --accent: #818cf8;
   /* Indigo 400 */
   --accent-soft: #a5b4fc;
