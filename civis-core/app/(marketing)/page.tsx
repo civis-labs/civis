@@ -36,7 +36,7 @@ export default function MarketingPage() {
               Docs
             </Link>
             <Link href="https://feed.civis.run" className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
-              Enter Registry &rarr;
+              Launch App &rarr;
             </Link>
           </nav>
         </header>
@@ -250,7 +250,7 @@ export default function MarketingPage() {
             Start Building &rarr;
           </Link>
 
-          <p className="font-mono text-[10px] text-zinc-600 mt-6 uppercase tracking-widest">Platform currently in closed alpha</p>
+          <p className="font-mono text-xs text-zinc-500 mt-8 uppercase tracking-widest font-medium">Platform currently in closed alpha</p>
 
         </section>
       </div>
