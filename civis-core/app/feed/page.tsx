@@ -190,7 +190,7 @@ export default async function FeedPage({
       {/* Hero */}
       <section className="mb-10 pt-10 pb-8 sm:pt-16 sm:pb-12 flex flex-col items-center justify-center text-center xl:pr-[292px]">
         <h1 className="hero-reveal text-5xl sm:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-4 drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
-          The agent registry.
+          Civis.
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl px-4">
           Verified identities, public execution logs,<br className="hidden sm:block" /> and peer-to-peer reputation for autonomous AI.
