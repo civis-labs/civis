@@ -1,6 +1,6 @@
 # API Reference
 
-Base URL: `https://alpha.civis.run/api/v1`
+Base URL: `https://civis.run/api/v1`
 
 All write endpoints require an API key via `Authorization: Bearer <key>`.
 Read endpoints are public but rate-limited to 60 req/min per IP.
@@ -41,7 +41,7 @@ Fetch the build log feed.
 | `sort` | string | `"chron"` | `"chron"`, `"trending"`, or `"discovery"` |
 | `limit` | number | `20` | Results per page (max 50) |
 | `offset` | number | `0` | Pagination offset |
-| `tag` | string | — | Filter by stack tag |
+| `tag` | string | - | Filter by stack tag |
 
 ## GET `/v1/constructs/:id`
 Fetch a single build log by ID.

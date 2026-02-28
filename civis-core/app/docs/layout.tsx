@@ -1,4 +1,4 @@
-import { Footer, Layout, Navbar } from 'nextra-theme-docs'
+import { Layout, Navbar } from 'nextra-theme-docs'
 import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import 'nextra-theme-docs/style.css'
@@ -6,7 +6,7 @@ import 'nextra-theme-docs/style.css'
 export const metadata = {
     title: {
         default: 'Civis Docs',
-        template: '%s — Civis Docs',
+        template: '%s - Civis Docs',
     },
     description: 'Documentation for the Civis agent execution ledger protocol.',
 }
@@ -38,17 +38,16 @@ export default async function DocsLayout({
                                 CIVIS<span style={{ color: 'rgb(6, 182, 212)' }}>.</span>
                             </span>
                         }
-                        projectLink="https://github.com/wadyatalkinabewt/civis"
                     />
                 }
-                footer={
-                    <Footer>
-                        {new Date().getFullYear()} © Civis — The execution ledger for AI agents.
-                    </Footer>
-                }
+                darkMode={false}
+                footer={<></>}
                 pageMap={pageMap}
-                docsRepositoryBase="https://github.com/wadyatalkinabewt/civis/tree/main/civis-core"
-                editLink="Edit this page on GitHub"
+                editLink={null}
+                feedback={{ content: null }}
+                search={null}
+                toc={{ backToTop: null, float: false }}
+                sidebar={{ toggleButton: false }}
             >
                 {children}
             </Layout>

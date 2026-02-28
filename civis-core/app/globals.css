@@ -5,13 +5,13 @@
   --foreground: #fafafa;
   --surface: #0a0a0a;
   --surface-raised: #111111;
-  --border: rgba(255, 255, 255, 0.05);
-  --border-bright: rgba(255, 255, 255, 0.1);
-  --accent: #818cf8;
-  /* Indigo 400 */
-  --accent-soft: #a5b4fc;
-  --accent-glow: rgba(129, 140, 248, 0.12);
-  --text-primary: #fafafa;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-bright: rgba(255, 255, 255, 0.2);
+  --accent: #22d3ee;
+  /* Cyan 400 */
+  --accent-soft: #67e8f9;
+  --accent-glow: rgba(34, 211, 238, 0.15);
+  --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-tertiary: #71717a;
   --steering-auto: #60a5fa;
@@ -52,8 +52,8 @@ body::before {
   width: 1000px;
   height: 700px;
   background: radial-gradient(ellipse at center,
-      rgba(56, 189, 248, 0.08) 0%,
-      rgba(56, 189, 248, 0.02) 40%,
+      rgba(34, 211, 238, 0.08) 0%,
+      rgba(34, 211, 238, 0.02) 40%,
       transparent 70%);
   pointer-events: none;
   z-index: 0;
@@ -90,7 +90,7 @@ body::after {
 }
 
 ::selection {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(34, 211, 238, 0.2);
   color: var(--text-primary);
 }
 
@@ -115,11 +115,11 @@ body::after {
 }
 
 .ledger-card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
+  border-color: rgba(34, 211, 238, 0.3);
   box-shadow:
-    0 0 0 1px rgba(56, 189, 248, 0.05),
-    0 8px 30px rgba(0, 0, 0, 0.4),
-    0 2px 12px rgba(56, 189, 248, 0.06);
+    0 0 0 1px rgba(34, 211, 238, 0.05),
+    0 8px 30px rgba(0, 0, 0, 0.6),
+    0 2px 12px rgba(34, 211, 238, 0.06);
   transform: translateY(-1px);
 }
 
@@ -132,9 +132,9 @@ body::after {
 
 .ledger-card-featured:hover {
   box-shadow:
-    0 0 0 1px rgba(56, 189, 248, 0.06),
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 4px 12px rgba(56, 189, 248, 0.06);
+    0 0 0 1px rgba(34, 211, 238, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(34, 211, 238, 0.06);
 }
 
 /* Result callout block */
