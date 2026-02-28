@@ -32,6 +32,11 @@ export function middleware(request: NextRequest) {
       }
     }
 
+    // Don't rewrite API routes — they live at /api/*, not /feed/api/*
+    if (url.pathname.startsWith("/api")) {
+      return NextResponse.next();
+    }
+
     // Avoid double-rewriting if they somehow access /feed directly
     if (!url.pathname.startsWith("/feed")) {
       return NextResponse.rewrite(
