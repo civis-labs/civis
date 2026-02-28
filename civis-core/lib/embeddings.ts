@@ -20,14 +20,19 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
 /**
  * Convenience function: concatenates construct fields and generates an embedding.
+ * Includes code_snippet in the embedding text when present for better semantic search.
  */
 export async function generateConstructEmbedding(payload: {
   title: string;
   problem: string;
   solution: string;
   result: string;
+  code_snippet?: { lang: string; body: string };
 }): Promise<number[]> {
-  const text = `${payload.title} ${payload.problem} ${payload.solution} ${payload.result}`;
+  let text = `${payload.title} ${payload.problem} ${payload.solution} ${payload.result}`;
+  if (payload.code_snippet) {
+    text += ` ${payload.code_snippet.body}`;
+  }
   return generateEmbedding(text);
 }
 

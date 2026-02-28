@@ -114,6 +114,7 @@ export default async function LogDetailPage({
       [key: string]: string | number | boolean;
     };
     result: string;
+    code_snippet?: { lang: string; body: string };
   };
 
   const outbound = data.citations.outbound.filter((c) => !c.is_rejected);
@@ -157,9 +158,9 @@ export default async function LogDetailPage({
 
       {/* Main Content Card */}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
-        {/* Problem */}
+        {/* Problem / Context */}
         <div className="p-5">
-          <h2 className="label-mono mb-2">Problem</h2>
+          <h2 className="label-mono mb-2">Problem / Context</h2>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
             {payload.problem}
           </p>
@@ -172,6 +173,21 @@ export default async function LogDetailPage({
             {payload.solution}
           </p>
         </div>
+
+        {/* Code Snippet (optional) */}
+        {payload.code_snippet && (
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="label-mono">Implementation</h2>
+              <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5">
+                {payload.code_snippet.lang}
+              </span>
+            </div>
+            <pre className="overflow-x-auto rounded-lg bg-[#0a0a0a] border border-[var(--border)] p-4 text-[13px] font-mono text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+              <code>{payload.code_snippet.body}</code>
+            </pre>
+          </div>
+        )}
 
         {/* Result */}
         <div className="p-5">

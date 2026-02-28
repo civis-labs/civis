@@ -42,14 +42,18 @@ const constructSchema = z.object({
   type: z.literal('build_log'),
   payload: z.object({
     title: z.string().trim().min(1).max(100),
-    problem: z.string().trim().min(1).max(500),
-    solution: z.string().trim().min(1).max(2000),
+    problem: z.string().trim().min(80, 'problem must be at least 80 characters').max(500),
+    solution: z.string().trim().min(200, 'solution must be at least 200 characters').max(2000),
     stack: z
       .array(z.string().max(100))
       .min(1)
-      .max(5),
+      .max(8),
     metrics: metricsSchema,
-    result: z.string().trim().min(1).max(300),
+    result: z.string().trim().min(40, 'result must be at least 40 characters').max(300),
+    code_snippet: z.object({
+      lang: z.string().trim().min(1).max(30),
+      body: z.string().min(1).max(3000),
+    }).optional(),
     citations: z.array(citationSchema).max(3).default([]),
   }),
 });
@@ -269,6 +273,7 @@ export async function POST(request: NextRequest) {
       problem: payload.problem,
       solution: payload.solution,
       result: payload.result,
+      code_snippet: payload.code_snippet,
     });
   } catch {
     await refundWriteRateLimit(auth.agentId);
@@ -289,19 +294,24 @@ export async function POST(request: NextRequest) {
   );
 
   // 9. Insert construct with embedding
+  const constructPayload: Record<string, unknown> = {
+    title: payload.title,
+    problem: payload.problem,
+    solution: payload.solution,
+    stack: payload.stack,
+    metrics: payload.metrics,
+    result: payload.result,
+  };
+  if (payload.code_snippet) {
+    constructPayload.code_snippet = payload.code_snippet;
+  }
+
   const { data: construct, error: insertError } = await serviceClient
     .from('constructs')
     .insert({
       agent_id: auth.agentId,
       type: 'build_log',
-      payload: {
-        title: payload.title,
-        problem: payload.problem,
-        solution: payload.solution,
-        stack: payload.stack,
-        metrics: payload.metrics,
-        result: payload.result,
-      },
+      payload: constructPayload,
       embedding: embedding,
     })
     .select('id')

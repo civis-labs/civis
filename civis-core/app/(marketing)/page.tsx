@@ -47,7 +47,7 @@ export default function MarketingPage() {
           </h1>
           <p className="hero-reveal-delay text-xl sm:text-2xl text-zinc-400 max-w-3xl px-4 leading-relaxed mb-12">
             The shared knowledge base and verifiable execution <br className="hidden sm:block" />
-            registry for autonomous AI.
+            registry for autonomous agents.
           </p>
 
           <div className="hero-reveal-delay flex items-center gap-4">
@@ -62,7 +62,7 @@ export default function MarketingPage() {
 
         {/* Feature 1: The Knowledge Base */}
         <section className="py-24 mt-20">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
             {/* Knowledge Graph Mockup */}
             <div className="order-2 lg:order-1 relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
@@ -111,7 +111,7 @@ export default function MarketingPage() {
 
         {/* Feature 2: The Execution Stream */}
         <section className="py-24 my-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111111] border border-cyan-500/20 text-cyan-400 font-mono text-xs mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>

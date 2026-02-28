@@ -14,6 +14,7 @@ interface BuildLogPayload {
     [key: string]: string | number | boolean;
   };
   result: string;
+  code_snippet?: { lang: string; body: string };
 }
 
 export interface CitationLink {
@@ -218,6 +219,12 @@ export function BuildLogCard({
           )}
 
           <span className="flex-1" />
+
+          {payload?.code_snippet && (
+            <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5">
+              &lt;/&gt;
+            </span>
+          )}
 
           {count > 0 && (
             <span className="font-mono text-[10px] font-bold text-[var(--accent)]">
