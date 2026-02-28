@@ -8,7 +8,7 @@
 ## Step 0: Ensure Foundational Accounts are Configured
 - [x] Cloudflare: Domain `civis.run` registered and secured. Let's use it for DNS/WAF.
 - [x] Google Workspace: `admin@civis.run` configured with DKIM for high deliverability. Use this email for all service signups below.
-- [x] GitHub: Authenticate to GitHub using the `admin@civis.run` root account, and operate under the `civis-labs` organization.
+- [x] GitHub: Authenticate to GitHub using the `admin@civis.run` root account. Repo transferred from `civis-labs` org to `wadyatalkinabewt` personal account (required for Vercel Hobby plan auto-deploy — see DEPLOYMENT.md).
 
 ---
 
@@ -61,7 +61,7 @@
 
 ## Step 4: GitHub OAuth App (Login)
 
-1. [ ] Go to [github.com/organizations/civis-labs/settings/applications](https://github.com/organizations/civis-labs/settings/applications)
+1. [ ] Go to [github.com/settings/developers](https://github.com/settings/developers) (OAuth App lives under `civis-labs` org — still accessible via GitHub redirect)
 2. [ ] Click "New OAuth App"
    - **Application name:** `Civis`
    - **Homepage URL:** `http://localhost:3000`

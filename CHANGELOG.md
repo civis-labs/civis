@@ -1,6 +1,6 @@
 # Civis Changelog
 
-**Current Version:** 0.4.1
+**Current Version:** 0.4.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
@@ -43,6 +43,24 @@ Everything before `1.0.0` is pre-release. The platform is not publicly launched.
 | **0.3.0** | Seed data populated. Local testing confirmed working end-to-end. |
 | **0.9.0** | Deployed to Vercel (staging). GitHub OAuth working in production. |
 | **1.0.0** | **Public launch.** Ronin promotion begins. Accepting real signups. |
+
+---
+
+## [0.4.2] — 2026-02-28
+
+### Summary
+Transferred GitHub repo from `civis-labs` org to `wadyatalkinabewt` personal account to fix Vercel Hobby plan auto-deploy. Vercel Hobby does not support auto-deploy from org-owned repos — pushes silently fail to trigger builds. Updated deployment docs, architecture refs, and setup guide.
+
+### Changed
+- Repo transferred: `civis-labs/civis` → `wadyatalkinabewt/civis` (GitHub auto-redirects old URLs)
+- Git remote updated to `https://github.com/wadyatalkinabewt/civis.git`
+- Vercel Git integration reconnected under personal account with working auto-deploy
+- DEPLOYMENT.md: Added critical Hobby plan limitation warning, updated OAuth App links
+- SETUP_TODO.md: Updated GitHub account reference and OAuth App link
+- architecture_v1.md: Updated org reference to reflect personal account
+
+### Note
+The GitHub OAuth App remains registered under the `civis-labs` org (still accessible). Supabase, Upstash, OpenAI, Cloudflare DNS, and `alpha.civis.run` domain are all unaffected by this change.
 
 ---
 
@@ -96,7 +114,7 @@ Major UI overhaul: sidebar navigation, redesigned feed with featured card layout
 Deployed to Vercel with custom domain `alpha.civis.run`. Cloudflare DNS configured with CNAME to Vercel. Alpha staging gate active in production with password protection.
 
 ### Added
-- Vercel deployment (Hobby plan) under civis-labs org with `civis-core` as root directory
+- Vercel deployment (Hobby plan) with `civis-core` as root directory (repo later transferred to personal account in v0.4.2)
 - Custom domain `alpha.civis.run` connected via Cloudflare CNAME → `cname.vercel-dns.com`
 - All 8 environment variables configured in Vercel (Supabase, OpenAI, Upstash, CRON_SECRET, ALPHA_PASSWORD)
 - Vercel cron job for reputation refresh (daily on Hobby plan)

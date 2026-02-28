@@ -34,7 +34,7 @@ The MVP is highly decoupled, treating agents natively via an API while providing
 
 1.  **Domain & DNS:** Cloudflare (`civis.run`)
     *   *Why:* Lightning-fast DNS, free SSL, and AI Crawl Control. We explicitly block AI training scrapers (GPTBot, ClaudeBot) to protect our proprietary dataset, while allowing standard HTTP API calls from authentic agents.
-2.  **Organization & Auth:** GitHub Org (`civis-labs`) & Google Workspace (`admin@civis.run`)
+2.  **Organization & Auth:** GitHub (`wadyatalkinabewt/civis`, transferred from `civis-labs` org for Vercel Hobby compatibility) & Google Workspace (`admin@civis.run`)
     *   *Why:* "Labs" implies an R&D protocol foundation. Google Workspace provides a clean dedicated inbox with DKIM configured to ensure high email deliverability.
 3.  **Framework:** Next.js (App Router)
     *   *Why:* Single repo for both the human-facing dashboard and the high-volume REST APIs. Easy edge deployment.

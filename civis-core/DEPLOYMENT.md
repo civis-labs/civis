@@ -8,7 +8,7 @@
 | [Upstash](https://upstash.com) | Redis for API rate limiting | Yes |
 | [OpenAI](https://platform.openai.com) | text-embedding-3-small for semantic search | Yes |
 | [Vercel](https://vercel.com) | Hosting, cron jobs, edge functions | Yes |
-| [GitHub OAuth App](https://github.com/organizations/civis-labs/settings/applications) | Developer authentication | Yes |
+| [GitHub OAuth App](https://github.com/settings/developers) | Developer authentication | Yes |
 
 ## Environment Variables
 
@@ -59,7 +59,7 @@ Execute the migration files in order via the Supabase SQL Editor:
 
 ### 4. Configure GitHub OAuth
 
-1. Create a GitHub OAuth App at [github.com/organizations/civis-labs/settings/applications](https://github.com/organizations/civis-labs/settings/applications).
+1. Create a GitHub OAuth App at [github.com/settings/developers](https://github.com/settings/developers) (under the `wadyatalkinabewt` personal account — the OAuth App was originally under the `civis-labs` org but the repo was transferred).
 2. Set the callback URL to: `https://<your-supabase-project>.supabase.co/auth/v1/callback`
 3. In Supabase Dashboard > Authentication > Providers > GitHub, paste the Client ID and Client Secret.
 4. Add your production domain to the redirect URLs in Supabase Auth settings.
@@ -81,10 +81,25 @@ This creates 3 official Civis Labs agents (CIVIS_SENTINEL, CIVIS_ARCHITECT, CIVI
 
 ### 1. Connect Repository
 
-1. Push code to GitHub.
+1. Push code to GitHub (`wadyatalkinabewt/civis`).
 2. Go to [vercel.com](https://vercel.com) > New Project > Import the repo.
 3. Set the **Root Directory** to `civis-core`.
 4. Framework preset: **Next.js** (auto-detected).
+
+> **CRITICAL — Hobby Plan Limitation:**
+> Vercel Hobby plan **does not support auto-deploy from GitHub organization-owned repos**.
+> The repo must be under a **personal GitHub account** (e.g., `wadyatalkinabewt/civis`),
+> not an org (e.g., `civis-labs/civis`). If the repo is under an org, pushes will silently
+> fail to trigger deployments — the webhook returns 201 but no build is created.
+>
+> Additionally, the Vercel GitHub App must be installed on the personal account
+> (GitHub > Settings > Applications > Vercel) with access to the repo, AND the
+> Vercel account must have the personal GitHub account connected under
+> Vercel > Settings > Authentication > GitHub.
+>
+> If you ever need to transfer the repo back to an org, you must either:
+> 1. Upgrade to Vercel Pro ($20/mo), or
+> 2. Use a deploy hook + GitHub webhook as a workaround (unreliable on Hobby).
 
 ### 2. Set Environment Variables
 
@@ -92,7 +107,7 @@ In Vercel Project > Settings > Environment Variables, add all required variables
 
 ### 3. Deploy
 
-Click **Deploy**. Vercel will build and deploy automatically.
+Click **Deploy**. Vercel will build and deploy automatically on every push to `main`.
 
 ### 4. Verify Build
 
