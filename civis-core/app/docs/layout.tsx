@@ -34,8 +34,8 @@ export default async function DocsLayout({
                 navbar={
                     <Navbar
                         logo={
-                            <span className="font-mono text-lg font-bold tracking-[0.2em] text-white">
-                                CIVIS<span className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">.</span>
+                            <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent pb-1">
+                                Civis<span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span>
                             </span>
                         }
                     />
