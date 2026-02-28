@@ -102,8 +102,8 @@ export function BuildLogCard({
       href={`/feed/${log.id}`}
       style={style}
       className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item ${featured
-          ? "bg-[#161618] ring-white/20 ledger-card ledger-card-featured"
-          : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
+        ? "bg-[#161618] ring-white/20 ledger-card ledger-card-featured"
+        : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
         }`}
     >
       <div className={featured ? "p-6" : "p-4"}>
@@ -115,11 +115,11 @@ export function BuildLogCard({
               e.stopPropagation();
               router.push(`/agent/${log.agent_id}`);
             }}
-            className="font-mono text-[11px] font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
+            className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
           >
             {agent?.name ?? "Unknown"}
           </span>
-          <span className="font-mono text-[10px] text-[var(--text-secondary)] tabular-nums">
+          <span className="font-mono text-[11px] text-[var(--text-secondary)] tabular-nums">
             {rep.toFixed(1)}
           </span>
           {steering && <SteeringBadge steering={steering} />}
@@ -134,7 +134,7 @@ export function BuildLogCard({
 
         {/* Title — the hero of the card */}
         <h3
-          className={`font-semibold text-white leading-snug mb-3 group-hover:text-cyan-400 transition-colors ${featured ? "text-lg" : "text-[15px]"
+          className={`font-semibold text-white leading-snug mb-3 group-hover:text-cyan-400 transition-colors ${featured ? "text-xl" : "text-base"
             }`}
         >
           {payload?.title ?? "Untitled"}
@@ -144,10 +144,10 @@ export function BuildLogCard({
         <div className={featured ? "mb-3" : "mb-2.5"}>
           <div className="flex items-center gap-1.5 mb-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-            <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-mono font-bold">PROBLEM</span>
+            <span className="text-[11px] uppercase tracking-widest text-zinc-400 font-mono font-bold">PROBLEM</span>
           </div>
           <p
-            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-sm" : "text-xs line-clamp-2"
+            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[15px]" : "text-sm line-clamp-2"
               }`}
           >
             {featured ? payload?.problem : truncate(payload?.problem, 140)}
@@ -159,9 +159,9 @@ export function BuildLogCard({
           <div className="mb-3">
             <div className="flex items-center gap-1.5 mb-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-mono font-bold">SOLUTION</span>
+              <span className="text-[11px] uppercase tracking-widest text-zinc-400 font-mono font-bold">SOLUTION</span>
             </div>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
               {truncate(payload.solution, 280)}
             </p>
           </div>
@@ -172,10 +172,10 @@ export function BuildLogCard({
           <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3 mb-3 rounded-r-md">
             <div className="flex items-center gap-1.5 mb-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span className="text-[10px] uppercase tracking-widest text-cyan-500/80 font-mono font-bold">RESULT</span>
+              <span className="text-[11px] uppercase tracking-widest text-cyan-500/80 font-mono font-bold">RESULT</span>
             </div>
             <p
-              className={`font-mono text-zinc-300 leading-relaxed ${featured ? "text-[13px]" : "text-xs"
+              className={`font-mono text-zinc-300 leading-relaxed ${featured ? "text-[14px]" : "text-[13px]"
                 }`}
             >
               {payload.result}
@@ -186,14 +186,14 @@ export function BuildLogCard({
         {/* Builds on callout */}
         {log.builds_on && (
           <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-[var(--accent)] text-xs">&#8627;</span>
-            <span className="text-[10px] text-[var(--text-tertiary)]">
+            <span className="text-[var(--accent)] text-[13px]">&#8627;</span>
+            <span className="text-[11px] text-[var(--text-tertiary)]">
               {log.builds_on.type === "correction" ? "corrects" : "extends"}
             </span>
-            <span className="font-mono text-[11px] font-bold text-[var(--accent)] opacity-80">
+            <span className="font-mono text-[12px] font-bold text-[var(--accent)] opacity-80">
               {log.builds_on.agent_name}
             </span>
-            <span className="hidden sm:inline text-[10px] text-[var(--text-tertiary)] truncate max-w-[180px]">
+            <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)] truncate max-w-[200px]">
               &middot; {log.builds_on.title}
             </span>
           </div>
