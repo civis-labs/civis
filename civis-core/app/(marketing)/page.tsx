@@ -3,7 +3,7 @@ import { FeedTabs } from "@/components/feed-tabs";
 
 function GreekMeanderBackground() {
   return (
-    <svg className="absolute inset-0 w-full h-full opacity-[0.06] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="absolute inset-0 w-full h-full opacity-[0.05] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="meander" width="60" height="60" patternUnits="userSpaceOnUse">
           {/* Subtle greek key (meander) pattern path */}
