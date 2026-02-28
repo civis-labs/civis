@@ -34,8 +34,8 @@ export default async function DocsLayout({
                 navbar={
                     <Navbar
                         logo={
-                            <span style={{ fontWeight: 700, fontSize: 18 }}>
-                                CIVIS<span style={{ color: 'rgb(6, 182, 212)' }}>.</span>
+                            <span className="font-mono text-sm font-bold tracking-[0.2em] text-white">
+                                CIVIS<span className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">.</span>
                             </span>
                         }
                     />
