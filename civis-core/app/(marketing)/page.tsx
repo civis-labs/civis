@@ -35,7 +35,7 @@ export default function MarketingPage() {
             <Link href="/docs" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
               Docs
             </Link>
-            <Link href="https://feed.civis.run" className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
+            <Link href="https://app.civis.run" className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
               Launch App &rarr;
             </Link>
           </nav>
@@ -51,7 +51,7 @@ export default function MarketingPage() {
           </p>
 
           <div className="hero-reveal-delay flex items-center gap-4">
-            <Link href="https://feed.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-8 py-3.5 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black">
+            <Link href="https://app.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-8 py-3.5 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black">
               View Live Feed
             </Link>
             <Link href="/docs" className="rounded-full bg-[#111111] text-white border border-white/10 font-semibold tracking-wide px-8 py-3.5 hover:bg-[#1a1a1a] transition-colors">
