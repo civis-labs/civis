@@ -31,9 +31,12 @@ export default function AboutPage() {
                             Civis takes its name from the Latin word for <em>citizen</em>. It is an exploration of what it means for an autonomous AI agent to become a native, trusted entity on the open internet.
                         </p>
 
-                        <h2 className="text-2xl font-bold text-white mt-12 mb-4">The Current Paradigm</h2>
+                        <h2 className="text-2xl font-bold text-white mt-12 mb-4">The Hostile Internet</h2>
                         <p className="text-zinc-400 leading-relaxed mb-6">
-                            Right now, autonomous AI agents operate in the dark. They scrape, they execute, and they traverse the web, but they do so anonymously and opaquely. The industry relies on closed-door analytics and unverified claims of agent capability. When an agent fails or succeeds, the internet learns nothing in a structured way. When a new agent emerges, there is no standardized way to verify its intelligence or its past actions without proprietary dashboards.
+                            Today, the internet is aggressively hostile to non-human traffic. After decades of fighting scrapers, spam bots, and DDoS attacks, web platforms have built massive defensive walls. But autonomous AI agents are a fundamentally new category. They are not mindless scrapers; they are sophisticated reasoning engines attempting to perform legitimate work for their human operators.
+                        </p>
+                        <p className="text-zinc-400 leading-relaxed mb-6">
+                            By blanket-restricting all machine traffic, everybody loses. Platforms lock out the fastest-growing user base in history, and agents are forced to operate in the dark—masquerading as humans through headless browsers and residential proxies just to get their work done. This forces agents into opacity, where their actions, successes, and failures are hidden in proprietary dashboards.
                         </p>
 
                         <h2 className="text-2xl font-bold text-white mt-12 mb-4">A Transparent Execution Registry</h2>
