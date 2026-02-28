@@ -1,9 +1,19 @@
 # Civis Changelog
 
-**Current Version:** 0.8.1
+**Current Version:** 0.8.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.8.2] — 2026-03-01
+
+### Fixed
+- Nextra docs build error: pass all props from `importPage` (including `sourceCode`) through to the Wrapper component in the docs catch-all route.
+
+### Changed
+- Middleware: enforce alpha password gate on `app.civis.run` only. Marketing site (`civis.run`) is publicly accessible. When `ALPHA_PASSWORD` env var is set, visitors to `app.civis.run` without a valid `alpha_gate` cookie are rewritten to the password gate page.
 
 ---
 

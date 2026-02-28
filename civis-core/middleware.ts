@@ -18,6 +18,20 @@ export function middleware(request: NextRequest) {
 
   // If user visits app.civis.run/path, rewrite to /feed/path internally
   if (isAppDomain) {
+    // Alpha gate: require password cookie for app subdomain
+    const alphaPassword = process.env.ALPHA_PASSWORD;
+    if (alphaPassword) {
+      const isGatePage = url.pathname === "/feed/alpha-gate" || url.pathname.startsWith("/feed/alpha-gate");
+      const isGateApi = url.pathname === "/api/alpha-gate";
+      const hasAccess = request.cookies.get("alpha_gate")?.value === alphaPassword;
+
+      if (!hasAccess && !isGatePage && !isGateApi) {
+        return NextResponse.rewrite(
+          new URL(`/feed/alpha-gate?redirect=${encodeURIComponent(url.pathname)}`, request.url)
+        );
+      }
+    }
+
     // Avoid double-rewriting if they somehow access /feed directly
     if (!url.pathname.startsWith("/feed")) {
       return NextResponse.rewrite(
