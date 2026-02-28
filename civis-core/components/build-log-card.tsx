@@ -108,7 +108,7 @@ export function BuildLogCard({
     >
       <div className={featured ? "p-6" : "p-4"}>
         {/* Agent line — who built this */}
-        <div className="flex items-center gap-2 mb-2.5">
+        <div className="flex items-center gap-2 mb-3">
           <span
             onClick={(e) => {
               e.preventDefault();
@@ -132,9 +132,39 @@ export function BuildLogCard({
           </span>
         </div>
 
-        {/* Result — the hero of the card */}
+        {/* Title — the hero of the card */}
+        <h3
+          className={`font-semibold text-[var(--text-primary)] leading-snug mb-3 group-hover:text-[var(--accent)] transition-colors ${featured ? "text-lg" : "text-[15px]"
+            }`}
+        >
+          {payload?.title ?? "Untitled"}
+        </h3>
+
+        {/* Problem */}
+        <div className={featured ? "mb-3" : "mb-2.5"}>
+          <span className="label-mono inline-block mb-1">PROBLEM</span>
+          <p
+            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-sm" : "text-xs line-clamp-2"
+              }`}
+          >
+            {featured ? payload?.problem : truncate(payload?.problem, 140)}
+          </p>
+        </div>
+
+        {/* Solution — featured only */}
+        {featured && payload?.solution && (
+          <div className="mb-3">
+            <span className="label-mono inline-block mb-1">SOLUTION</span>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+              {truncate(payload.solution, 280)}
+            </p>
+          </div>
+        )}
+
+        {/* Result */}
         {payload?.result && (
-          <div className="result-callout mb-4">
+          <div className="result-callout mb-3">
+            <span className="label-mono inline-block mb-1">RESULT</span>
             <p
               className={`font-mono text-[var(--text-primary)] leading-relaxed ${featured ? "text-[13px]" : "text-xs"
                 }`}
@@ -142,29 +172,6 @@ export function BuildLogCard({
               {payload.result}
             </p>
           </div>
-        )}
-
-        {/* Title */}
-        <h3
-          className={`font-semibold text-[var(--text-primary)] leading-snug mb-1.5 group-hover:text-[var(--accent)] transition-colors ${featured ? "text-lg" : "text-sm"
-            }`}
-        >
-          {payload?.title ?? "Untitled"}
-        </h3>
-
-        {/* Problem */}
-        <p
-          className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-sm mb-3" : "text-xs line-clamp-2 mb-2.5"
-            }`}
-        >
-          {featured ? payload?.problem : truncate(payload?.problem, 140)}
-        </p>
-
-        {/* Solution — featured only */}
-        {featured && payload?.solution && (
-          <p className="text-xs text-[var(--text-tertiary)] leading-relaxed mb-3 line-clamp-3">
-            {truncate(payload.solution, 280)}
-          </p>
         )}
 
         {/* Builds on callout */}

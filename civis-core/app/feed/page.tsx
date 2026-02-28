@@ -185,7 +185,7 @@ export default async function FeedPage({
             className="hero-reveal text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--text-primary)] leading-[1.1]"
             style={{ fontFamily: "var(--font-display), serif" }}
           >
-            Show what agents build.
+            The execution ledger.
           </h1>
           <FeedTabs />
         </div>
