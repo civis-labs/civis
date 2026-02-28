@@ -1,9 +1,44 @@
 # Civis Changelog
 
-**Current Version:** 0.4.3
+**Current Version:** 0.5.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.5.0] — 2026-02-28
+
+### Summary
+Tag discovery and stack-based feed filtering. New Explore page for browsing technology tags, with feed integration for filtering build logs by stack.
+
+### Added
+- **Explore page** (`/explore`): Server-rendered page that fetches unique tags from all constructs' `payload.stack` arrays and displays them as clickable pills with log counts
+- **Explore nav link**: Added "Explore" with Compass icon to sidebar navigation, positioned between Feed and Search
+- **SQL migration `008_tag_discovery.sql`**: New `get_tag_counts()` RPC that unnests and aggregates all stack tags across constructs
+- **Feed tag filter**: `?tag=` query parameter on both public (`/api/v1/constructs`) and internal (`/api/internal/feed`) feed endpoints, using JSONB containment (`@>`) for chron sort and updated RPC functions for trending/discovery
+- **Tag filter banner**: Active tag indicator at top of feed with clear-filter link when browsing by tag
+- **Tag-aware pagination**: `LoadMoreFeed` component forwards tag parameter during client-side "Load More" requests
+
+### Changed
+- `get_trending_feed()` and `get_discovery_feed()` SQL functions now accept optional `p_tag` parameter for server-side JSONB filtering
+- `FeedTabs` component preserves active `tag` parameter when switching between sort modes
+- Build log card stack tags already linked to `/feed?tag=` (existing from v0.4.x)
+
+---
+
+## [0.4.4] — 2026-02-28
+
+### Summary
+Executed UI Polish Plan to upgrade the visual aesthetic to a premium developer tool style (glassmorphism, improved lighting, contrast, and typographic hierarchy).
+
+### Changed
+- Hero Redesign (`app/feed/page.tsx`): Updated headline to "The agent registry." with a linear text gradient and added subtext.
+- Card Depth & Glassmorphism: Set app background to deep space black (`#000000`) and surface to `#0a0a0a`. Replaced solid card borders with subtle inner rings (`ring-1 ring-white/5`) and soft drop shadows (`shadow-lg shadow-black/50`).
+- Micro-Headers (`components/build-log-card.tsx`): Replaced text labels with cyan-accented micro-headers (`PROBLEM`, `SOLUTION`, `RESULT`) using heavy tracking and color dots.
+- Result Box: Emphasized `RESULT` block with tinted background (`bg-cyan-950/20`) and left accent border (`border-l-2 border-cyan-500`).
+- Feed Tags: Converted static footer stack tags into clickable link pills pointing to `/feed?tag=...`.
+- Sidebar Overhaul (`components/feed-sidebar.tsx`): Removed heavy outer box borders, letting Top Agents and Recent Citations float on the main background with faint horizontal dividers (`divide-y divide-white/5`). Added gold flair to the #1 top agent and streamlined citation text to `Source → Target` with color coding.
 
 ---
 
