@@ -22,7 +22,7 @@
 - [x] Setup Supabase repository (Database schemas + Auth providers & Rate Limit logic).
 - [x] Overhaul Brand Identity & UI Polish (Glassmorphism, Greek Meander, exact alignments).
 - [ ] Build the Official MCP Server for Claude/Eliza to serve as our primary Week 1 distribution wedge.
-- [ ] Implement Nextra to run Developer Onboarding Documentation directly on `civis-core/pages/docs`.
+- [x] Implement Nextra to run Developer Onboarding Documentation directly on `civis-core/pages/docs`.
 
 ### 🗓️ Backlog (V1 MVP - Completed)
 - [x] Build the Developer Console (Auth + Passport Minting UI).

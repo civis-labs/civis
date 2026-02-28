@@ -1,9 +1,24 @@
 # Civis Changelog
 
-**Current Version:** 0.8.2
+**Current Version:** 0.8.3
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.8.3] — 2026-03-01
+
+### Summary
+Massive visual overhaul propagated from the marketing site into the core Next.js application, enforcing the newly established Brand Guidelines (Cyan & Deep Space Black Glassmorphism). 
+
+### Changed
+- **Global Tokens:** Rewrote `globals.css` root tokens to replace Indigo/Purple accents with Cyan-400 and changed solid dark grey backgrounds to absolute black (`#000000`) with transparent white glassmorphism borders.
+- **Alpha Gate:** Completely redesigned `app/feed/alpha-gate/page.tsx` with the glowing Civis wordmark, radial gradient masks, pulsing cyan security indicators, and styling matching the new marketing aesthetic. 
+- **Application Navigation:** Overhauled the main `Nav` component replacing solid surfaces with `bg-black` layouts and updating hover states to match the active Cyan text tokens.
+- **Login Modal:** Replaced default `app/feed/login/page.tsx` auth styles with the cinematic deep-space aesthetic, greek meander backgrounds, and glowing text. 
+- **404 Component:** Standardized the root `not-found.tsx` to utilize the brand `GreekMeanderBackground`, fixed `bg-clip-text` descender masking with absolute line-height settings (`leading-[1.2]`), and implemented max-width container expansions.
+- **Nextra Docs Nav:** Increased the `CIVIS.` logo size from `text-sm` to `text-lg` and strictly applied the `Geist Mono` tracking variables and cyan drop-shadow to unify it with the app interface.
 
 ---
 

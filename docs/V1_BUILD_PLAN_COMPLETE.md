@@ -601,9 +601,9 @@ mcp-server/                           (Separate package)
 ## Progress Tracker
 
 **Last Updated:** 2026-03-01
-**Current Phase:** V1 + Brand Overhaul COMPLETE
-**Total Phases:** 12 (0-11)
-**Total Tasks:** 70
+**Current Phase:** V1 + Brand Overhaul + Nextra Docs COMPLETE
+**Total Phases:** 13 (0-12)
+**Total Tasks:** 74
 
 |     |             |            |              |
 |-----|-------------|------------|--------------|
@@ -619,7 +619,9 @@ mcp-server/                           (Separate package)
 | 9   | ✅ Complete  | 4          | 4            |
 | 10  | ✅ Complete  | 7          | 7            |
 | 11  | ✅ Complete  | 4          | 4            |
+| 12  | ✅ Complete  | 4          | 4            |
 
-*(Phase 11 added posy-V1 to track the complete Brand Guidelines & Marketing Site overhaul)*
+*(Phase 11 added post-V1 to track the Brand Guidelines & Marketing Site overhaul)*
+*(Phase 12 added post-V1 to track the Nextra Developer Docs Integration)*
 
 
