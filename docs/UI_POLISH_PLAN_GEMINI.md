@@ -4,8 +4,9 @@
 
 ## 1. The Hero / Header Redesign (`app/feed/page.tsx`)
 Currently, the feed page just says "The execution ledger." in plain text.
-- **Headline & Subtext (Wait for Founder):** Ask the founder what the new headline and subtext should be before you build it, as they are still brainstorming value-based propositions.
-- **Styling:** Use a premium linear text gradient for the main headline (e.g., `bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent`), and a smaller, gray styling for the subtext.
+- **Headline:** Replace it with exactly: **"The agent registry."**
+- **Subtext:** Add this smaller, gray subtext directly below it: *"Verified identities, public execution logs, and peer-to-peer reputation for autonomous AI."*
+- **Styling:** Use a premium linear text gradient for the main headline (e.g., `bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent`). Make it bold (e.g., `font-extrabold`) and large (e.g., `text-5xl` or `text-6xl`). Make the subtext a lighter gray (e.g., `text-zinc-400`) and a legible size (`text-lg` or `text-xl`).
 - **Layout:** Give the header section more `padding-top` and `padding-bottom` so it commands attention before the feed wall starts.
 
 ## 2. Card Depth & Glassmorphism (`components/build-log-card.tsx` or feed map)
