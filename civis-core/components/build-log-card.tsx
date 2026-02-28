@@ -101,9 +101,9 @@ export function BuildLogCard({
     <Link
       href={`/feed/${log.id}`}
       style={style}
-      className={`group block rounded-xl border bg-[var(--surface)] feed-item ${featured
-        ? "ledger-card ledger-card-featured border-[var(--border-bright)]"
-        : "ledger-card border-[var(--border)]"
+      className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item ${featured
+          ? "bg-[#161618] ring-white/20 ledger-card ledger-card-featured"
+          : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
         }`}
     >
       <div className={featured ? "p-6" : "p-4"}>
@@ -134,7 +134,7 @@ export function BuildLogCard({
 
         {/* Title — the hero of the card */}
         <h3
-          className={`font-semibold text-[var(--text-primary)] leading-snug mb-3 group-hover:text-[var(--accent)] transition-colors ${featured ? "text-lg" : "text-[15px]"
+          className={`font-semibold text-white leading-snug mb-3 group-hover:text-cyan-400 transition-colors ${featured ? "text-lg" : "text-[15px]"
             }`}
         >
           {payload?.title ?? "Untitled"}
@@ -142,7 +142,10 @@ export function BuildLogCard({
 
         {/* Problem */}
         <div className={featured ? "mb-3" : "mb-2.5"}>
-          <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>PROBLEM</span>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+            <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-mono font-bold">PROBLEM</span>
+          </div>
           <p
             className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-sm" : "text-xs line-clamp-2"
               }`}
@@ -154,7 +157,10 @@ export function BuildLogCard({
         {/* Solution — featured only */}
         {featured && payload?.solution && (
           <div className="mb-3">
-            <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>SOLUTION</span>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-mono font-bold">SOLUTION</span>
+            </div>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
               {truncate(payload.solution, 280)}
             </p>
@@ -163,10 +169,13 @@ export function BuildLogCard({
 
         {/* Result */}
         {payload?.result && (
-          <div className="result-callout mb-3">
-            <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>RESULT</span>
+          <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3 mb-3 rounded-r-md">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+              <span className="text-[10px] uppercase tracking-widest text-cyan-500/80 font-mono font-bold">RESULT</span>
+            </div>
             <p
-              className={`font-mono text-[var(--text-primary)] leading-relaxed ${featured ? "text-[13px]" : "text-xs"
+              className={`font-mono text-zinc-300 leading-relaxed ${featured ? "text-[13px]" : "text-xs"
                 }`}
             >
               {payload.result}
@@ -193,12 +202,14 @@ export function BuildLogCard({
         {/* Footer: tags + citations */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-2.5 border-t border-[var(--border)]">
           {stack.slice(0, 3).map((tag) => (
-            <span
+            <Link
               key={tag}
-              className="hidden sm:inline rounded-full bg-[var(--background)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] border border-[var(--border)]"
+              href={`/feed?tag=${encodeURIComponent(tag)}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hidden sm:inline rounded-full bg-white/5 hover:bg-white/10 transition-colors px-2.5 py-0.5 font-mono text-[10px] text-zinc-400 hover:text-white border border-white/5"
             >
               {tag}
-            </span>
+            </Link>
           ))}
           {stack.length > 3 && (
             <span className="hidden sm:inline font-mono text-[9px] text-[var(--text-tertiary)]">
