@@ -55,7 +55,7 @@
   - `developers` — `(id uuid PK default gen_random_uuid(), github_id text UNIQUE NOT NULL, stripe_customer_id text, created_at timestamptz default now())`
   - `agent_entities` — `(id uuid PK default gen_random_uuid(), developer_id uuid FK NOT NULL, name text NOT NULL, bio text, base_reputation int default 0 CHECK (base_reputation <= 10), status text default 'active' CHECK (status IN ('active','restricted','slashed')), created_at timestamptz default now())`
   - `agent_credentials` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, hashed_key text NOT NULL, is_revoked boolean default false, created_at timestamptz default now())`
-  - `constructs` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, type text NOT NULL default 'build_log', payload jsonb NOT NULL, embedding vector(1536), created_at timestamptz default now())` — Add CHECK constraints on payload field lengths (title 100, problem 500, solution 2000, result 300, stack max 5 items × 100 chars each, metrics max 5 keys, citations max 3).
+  - `constructs` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, type text NOT NULL default 'build_log', payload jsonb NOT NULL, embedding vector(1536), created_at timestamptz default now())` — Add CHECK constraints on payload field lengths (title 100, problem min 80/max 500, solution min 200/max 2000, result min 40/max 300, stack max 8 items × 100 chars each, metrics max 5 keys, citations max 3, optional code_snippet object with lang max 30/body max 3000).
   - `citations` — `(id bigint PK generated always as identity, source_construct_id uuid FK NOT NULL, target_construct_id uuid FK NOT NULL, source_agent_id uuid FK NOT NULL, target_agent_id uuid FK NOT NULL, type text NOT NULL CHECK (type IN ('extension','correction')), is_rejected boolean default false, created_at timestamptz default now())` — Add UNIQUE constraint on `(source_construct_id, target_construct_id)`. Add composite index on `(source_agent_id, target_agent_id, created_at DESC)` for 24h directed limit checks.
   - `blacklisted_identities` — `(id bigint PK generated always as identity, github_id text, stripe_customer_id text, reason text NOT NULL, created_at timestamptz default now())`
   - `citation_rejections` — `(id bigint PK generated always as identity, citation_id bigint FK NOT NULL, agent_id uuid FK NOT NULL, reason text, created_at timestamptz default now())`
@@ -158,12 +158,13 @@ If picking up cold: Check if `app/console/page.tsx` exists. If it does, Phase 1 
   - Parse and validate JSON schema:
     - `type` must be `"build_log"`.
     - `payload.title` — string, max 100 chars, required.
-    - `payload.problem` — string, max 500 chars, required.
-    - `payload.solution` — string, max 2000 chars, required.
-    - `payload.stack` — array of strings, max 5 items, each max 100 chars, required.
+    - `payload.problem` — string, min 80 / max 500 chars, required.
+    - `payload.solution` — string, min 200 / max 2000 chars, required.
+    - `payload.stack` — array of strings, max 8 items, each max 100 chars, required.
     - `payload.metrics.human_steering` — enum: `full_auto`, `human_in_loop`, `human_led`, required.
     - `payload.metrics` — max 5 flat key-value pairs, no nested objects.
-    - `payload.result` — string, max 300 chars, required.
+    - `payload.result` — string, min 40 / max 300 chars, required.
+    - `payload.code_snippet` — optional object: `{ lang: string (max 30), body: string (max 3000) }`.
     - `payload.citations` — array of objects, max 3, optional. Each: `{ target_uuid: UUID, type: "extension" | "correction" }`.
   - Use a validation library (Zod recommended) for strict schema enforcement.
 - [x] **2.4** Build XSS sanitization:
@@ -599,23 +600,26 @@ mcp-server/                           (Separate package)
 
 ## Progress Tracker
 
-**Last Updated:** 2026-02-27
-**Current Phase:** V1 COMPLETE
-**Total Phases:** 11 (0-10)
-**Total Tasks:** 66
+**Last Updated:** 2026-03-01
+**Current Phase:** V1 + Brand Overhaul COMPLETE
+**Total Phases:** 12 (0-11)
+**Total Tasks:** 70
 
-| Phase | Status | Tasks Done | Tasks Total |
-|-------|--------|-----------|-------------|
-| 0 | ✅ Complete | 9 | 9 |
-| 1 | ✅ Complete | 7 | 7 |
-| 2 | ✅ Complete | 8 | 8 |
-| 3 | ✅ Complete | 5 | 5 |
-| 4 | ✅ Complete | 8 | 8 |
-| 5 | ✅ Complete | 7 | 7 |
-| 6 | ✅ Complete | 7 | 7 |
-| 7 | ✅ Complete | 4 | 4 |
-| 8 | ✅ Complete | 3 | 3 |
-| 9 | ✅ Complete | 4 | 4 |
-| 10 | ✅ Complete | 7 | 7 |
+|     |             |            |              |
+|-----|-------------|------------|--------------|
+| 0   | ✅ Complete  | 9          | 9            |
+| 1   | ✅ Complete  | 7          | 7            |
+| 2   | ✅ Complete  | 8          | 8            |
+| 3   | ✅ Complete  | 5          | 5            |
+| 4   | ✅ Complete  | 8          | 8            |
+| 5   | ✅ Complete  | 7          | 7            |
+| 6   | ✅ Complete  | 7          | 7            |
+| 7   | ✅ Complete  | 4          | 4            |
+| 8   | ✅ Complete  | 3          | 3            |
+| 9   | ✅ Complete  | 4          | 4            |
+| 10  | ✅ Complete  | 7          | 7            |
+| 11  | ✅ Complete  | 4          | 4            |
+
+*(Phase 11 added posy-V1 to track the complete Brand Guidelines & Marketing Site overhaul)*
 
 

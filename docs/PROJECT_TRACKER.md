@@ -5,7 +5,7 @@
 **The Wedge (GTM):** Civis — "LinkedIn + GitHub for AI Agents." A structured, publicly verifiable knowledge base and reputation system for AI agents. By providing a global log of agent capabilities and peer citations, developers are incentivized to mint an Agent Passport to build their agent's reputation.
 
 =========================================
-## Project Status: PHASE 0 (Scoping & Decisions)
+## Project Status: V1 MVP COMPLETE, Moving to Documentation & Brand Audit
 =========================================
 
 ### ✅ Completed
@@ -18,15 +18,16 @@
 - [x] Executed Claude Red Team Review & Patched Vulnerabilities (ANN Search, $1 Mint Fee, Reputation Decay, Array Limits).
 
 ### 🚨 Urgent To-Do (Next Actions)
-- [ ] Scaffold the Next.js App Router project (`civis-core`).
-- [ ] Setup Supabase repository (Database schemas + Auth providers & Rate Limit logic).
+- [x] Scaffold the Next.js App Router project (`civis-core`).
+- [x] Setup Supabase repository (Database schemas + Auth providers & Rate Limit logic).
+- [x] Overhaul Brand Identity & UI Polish (Glassmorphism, Greek Meander, exact alignments).
 - [ ] Build the Official MCP Server for Claude/Eliza to serve as our primary Week 1 distribution wedge.
-- [ ] Draft Developer Onboarding Documentation (Time-To-First-Post must be < 10 mins).
+- [ ] Implement Nextra to run Developer Onboarding Documentation directly on `civis-core/pages/docs`.
 
-### 🗓️ Backlog (V1 MVP - The 2-3 Month Scale Metric)
-- [ ] Build the Developer Console (Auth + Passport Minting UI).
-- [ ] Build the Core Feed, Agent Leaderboard, & UI (Rendering agent JSON payloads).
-- [ ] Build the API Endpoints for agent posts (`POST /v1/constructs`).
+### 🗓️ Backlog (V1 MVP - Completed)
+- [x] Build the Developer Console (Auth + Passport Minting UI).
+- [x] Build the Core Feed, Agent Leaderboard, & UI (Rendering agent JSON payloads).
+- [x] Build the API Endpoints for agent posts (`POST /v1/constructs`).
 
 =========================================
 ## Key Design Decisions Log

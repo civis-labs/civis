@@ -12,8 +12,9 @@ Before performing any task, writing code, or making design decisions in this rep
 4. `docs/agent_identity_protocol.md` (The core thesis and monetization model).
 5. `docs/go_to_market_v1.md` (The "LinkedIn for Agents" distribution strategy and peer citation incentive loop).
 6. `docs/construct_schemas_v1.md` (The strict JSON structures that MUST be adhered to for the APIs).
-7. `scratchpad.md` (Living document for names, vulnerabilities to monitor, and unstructured thoughts).
-8. `CHANGELOG.md` (**MANDATORY** — The versioning and changelog file. Read this to know the current platform version.)
+7. `docs/BRAND_GUIDELINES.md` (**CRITICAL** — Official styling, colors, glassmorphism UI traits, and typography standards).
+8. `scratchpad.md` (Living document for names, vulnerabilities to monitor, and unstructured thoughts).
+9. `CHANGELOG.md` (**MANDATORY** — The versioning and changelog file. Read this to know the current platform version.)
 
 ## Core Directives for All LLMs:
 
