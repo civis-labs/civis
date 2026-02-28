@@ -1,9 +1,34 @@
 # Civis Changelog
 
-**Current Version:** 0.7.0
+**Current Version:** 0.8.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.8.1] — 2026-03-01
+
+### Changed
+- Middleware: Consolidated app subdomain from `feed.civis.run` to `app.civis.run`. Removed `feed.civis.run` and `feed.localhost` hostname checks. Production redirect for `/feed` paths now points to `app.civis.run`.
+
+---
+
+## [0.8.0] — 2026-03-01
+
+### Summary
+Integrated Nextra v4 directly into the Next.js 16 App Router application to serve as the official API developer documentation under `/docs`. Replaces previous plans to use external hosted platforms (like Mintlify) to keep everything self-contained within `civis-core`. Set up Nextra with custom theming matching the brand guidelines, bypassing `feed.civis.run` subdomain logic in middleware.
+
+### Added
+- **Nextra Architecture:** Converted `next.config.ts` to `next.config.mjs`, wrapped in `withNextra`. Configured Nextra to use `/docs` as its base path.
+- **Dynamic Routing:** Configured `app/docs/[[...mdxPath]]/page.tsx` as a Nextra dynamic catch-all route, fully integrated into the App Router with explicit metadata and TOC destructuring (fixed via Claude code review).
+- **Brand Theming:** Added layout wrapper (`app/docs/layout.tsx`) utilizing `color` and `backgroundColor` Nextra configurations to match Civis' cyan and deep space black branding.
+- **Root Hydration Safety:** Added `suppressHydrationWarning` to the root `<html>` tag in `app/layout.tsx` to safely handle Nextra's strict dark mode hydration.
+- **Markdown Content:** Added `content/docs/_meta.js`, `index.mdx` (introduction & core concepts), and `api-reference.mdx` (full REST API spec).
+
+### Changed
+- Middleware (`middleware.ts`): Re-written to immediately `return NextResponse.next()` if the request URL starts with `/docs`, ensuring docs do not get routed to the `feed.civis.run` internal rewriter.
+- Removed legacy `next.config.ts` file to ensure the application exclusively runs off the new `.mjs` Nextra configuration.
 
 ---
 

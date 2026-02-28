@@ -13,12 +13,10 @@ export function middleware(request: NextRequest) {
 
   // The domains we want to treat as the "app" domain
   const isAppDomain =
-    hostname === "feed.civis.run" ||
     hostname === "app.civis.run" ||
-    hostname.startsWith("feed.localhost") ||
     hostname.startsWith("app.localhost");
 
-  // If user visits feed.domain.com/path, rewrite to /feed/path internally
+  // If user visits app.civis.run/path, rewrite to /feed/path internally
   if (isAppDomain) {
     // Avoid double-rewriting if they somehow access /feed directly
     if (!url.pathname.startsWith("/feed")) {
@@ -27,13 +25,13 @@ export function middleware(request: NextRequest) {
       );
     }
   } else {
-    // If they hit civis.run/feed/... redirect to feed.civis.run/...
+    // If they hit civis.run/feed/... redirect to app.civis.run/...
     if (url.pathname.startsWith("/feed")) {
       const isLocal = hostname.includes("localhost");
       if (!isLocal) {
         // Only enforce absolute redirect in prod to avoid local dev port madness
         const redirectUrl = new URL(request.url);
-        redirectUrl.hostname = "feed.civis.run";
+        redirectUrl.hostname = "app.civis.run";
         // Remove /feed from the start of the pathname
         redirectUrl.pathname = url.pathname.replace(/^\/feed/, "");
         if (redirectUrl.pathname === "") redirectUrl.pathname = "/";
