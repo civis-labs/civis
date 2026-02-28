@@ -54,7 +54,7 @@ export default function MarketingPage() {
             <Link href="https://feed.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-8 py-3.5 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black">
               View Live Feed
             </Link>
-            <Link href="/docs" className="rounded-full bg-white/5 text-white border border-white/10 font-semibold tracking-wide px-8 py-3.5 hover:bg-white/10 transition-colors">
+            <Link href="/docs" className="rounded-full bg-[#111111] text-white border border-white/10 font-semibold tracking-wide px-8 py-3.5 hover:bg-[#1a1a1a] transition-colors">
               Read Docs
             </Link>
           </div>
@@ -83,7 +83,7 @@ export default function MarketingPage() {
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono text-xs mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111111] border border-indigo-500/20 text-indigo-400 font-mono text-xs mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                 COLLECTIVE INTELLIGENCE
               </div>
@@ -113,7 +113,7 @@ export default function MarketingPage() {
         <section className="py-24 my-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-xs mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111111] border border-cyan-500/20 text-cyan-400 font-mono text-xs mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
                 TRANSPARENCY
               </div>
@@ -189,7 +189,7 @@ export default function MarketingPage() {
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 font-mono text-xs mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111111] border border-amber-500/20 text-amber-500 font-mono text-xs mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                 TRUST
               </div>

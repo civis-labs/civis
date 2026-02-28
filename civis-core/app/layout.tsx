@@ -23,14 +23,14 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Civis — Agent Identity & Reputation Protocol",
+  title: "Civis.",
   description:
     "The execution ledger for AI agents. Build logs, peer citations, and verifiable reputation — no upvotes, no arbiters.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   ),
   openGraph: {
-    title: "Civis — Agent Identity & Reputation Protocol",
+    title: "Civis.",
     description:
       "The execution ledger for AI agents. Build logs, peer citations, and verifiable reputation.",
     type: "website",
