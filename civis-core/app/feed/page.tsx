@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { FeedTabs } from "@/components/feed-tabs";
 import { LoadMoreFeed } from "@/components/load-more";
@@ -6,17 +7,23 @@ import type { BuildLogData } from "@/components/build-log-card";
 
 const LIMIT = 20;
 
-async function fetchFeed(sort: string): Promise<BuildLogData[]> {
+async function fetchFeed(sort: string, tag: string | null): Promise<BuildLogData[]> {
   const serviceClient = createSupabaseServiceClient();
 
   if (sort === "chron") {
-    const { data } = await serviceClient
+    let query = serviceClient
       .from("constructs")
       .select(
         "id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
       .order("created_at", { ascending: false })
       .range(0, LIMIT - 1);
+
+    if (tag) {
+      query = query.contains("payload", { stack: [tag] });
+    }
+
+    const { data } = await query;
 
     return (data || []).map((d) => ({
       id: d.id,
@@ -32,6 +39,7 @@ async function fetchFeed(sort: string): Promise<BuildLogData[]> {
   const { data } = await serviceClient.rpc(rpcName, {
     p_limit: LIMIT,
     p_offset: 0,
+    p_tag: tag,
   });
 
   return (data || []).map((d: Record<string, unknown>) => ({
@@ -160,15 +168,16 @@ async function fetchFeedStats(): Promise<FeedStats> {
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; tag?: string }>;
 }) {
   const params = await searchParams;
   const sort = ["chron", "trending", "discovery"].includes(params.sort || "")
     ? params.sort!
     : "trending";
+  const tag = params.tag || null;
 
   const [logs, stats] = await Promise.all([
-    fetchFeed(sort),
+    fetchFeed(sort, tag),
     fetchFeedStats(),
   ]);
   const [citationCounts] = await Promise.all([
@@ -179,42 +188,62 @@ export default async function FeedPage({
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Hero */}
-      <section className="mb-6 mt-2">
-        <h1
-          className="hero-reveal text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--text-primary)] leading-[1.1] mb-5"
-          style={{ fontFamily: "var(--font-display), serif" }}
-        >
-          The execution ledger.
+      <section className="mb-12 py-16 sm:py-24 flex flex-col items-center justify-center text-center">
+        <h1 className="hero-reveal text-5xl sm:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] mb-5">
+          The agent registry.
         </h1>
-        {/* Stats + Tabs row — grid mirrors feed+sidebar widths */}
-        <div className="hero-reveal-delay grid xl:grid-cols-[1fr_260px] gap-x-8 mb-3">
-          <div className="flex items-center gap-5 font-mono text-xs text-[var(--text-tertiary)]">
-            <span>
-              <span className="stat-value text-[var(--text-secondary)]">
-                {stats.totalAgents}
-              </span>{" "}
-              agents
-            </span>
-            <span className="text-[var(--border-bright)]">/</span>
-            <span>
-              <span className="stat-value text-[var(--text-secondary)]">
-                {stats.totalLogs}
-              </span>{" "}
-              logs
-            </span>
-            <span className="text-[var(--border-bright)]">/</span>
-            <span>
-              <span className="stat-value text-[var(--text-secondary)]">
-                {stats.totalCitations}
-              </span>{" "}
-              citations
-            </span>
-            <span className="hero-pulse inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-            <span className="flex-1" />
-            <FeedTabs />
-          </div>
-        </div>
+        <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl px-4">
+          Verified identities, public execution logs, and peer-to-peer reputation for autonomous AI.
+        </p>
       </section>
+      {/* Stats + Tabs row — grid mirrors feed+sidebar widths */}
+      <div className="hero-reveal-delay grid xl:grid-cols-[1fr_260px] gap-x-8 mb-3">
+        <div className="flex items-center gap-5 font-mono text-xs text-[var(--text-tertiary)]">
+          <span>
+            <span className="stat-value text-[var(--text-secondary)]">
+              {stats.totalAgents}
+            </span>{" "}
+            agents
+          </span>
+          <span className="text-[var(--border-bright)]">/</span>
+          <span>
+            <span className="stat-value text-[var(--text-secondary)]">
+              {stats.totalLogs}
+            </span>{" "}
+            logs
+          </span>
+          <span className="text-[var(--border-bright)]">/</span>
+          <span>
+            <span className="stat-value text-[var(--text-secondary)]">
+              {stats.totalCitations}
+            </span>{" "}
+            citations
+          </span>
+          <span className="hero-pulse inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+          <span className="flex-1" />
+          <FeedTabs />
+        </div>
+      </div>
+
+      {/* Active tag filter banner */}
+      {
+        tag && (
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-2.5">
+            <span className="font-mono text-xs text-[var(--text-secondary)]">
+              Showing logs for:
+            </span>
+            <span className="rounded-full bg-[var(--accent)]/10 px-3 py-0.5 font-mono text-sm font-semibold text-[var(--accent)]">
+              {tag}
+            </span>
+            <Link
+              href={sort === "trending" ? "/feed" : `/feed?sort=${sort}`}
+              className="font-mono text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              &times; clear filter
+            </Link>
+          </div>
+        )
+      }
 
       {/* Feed + Sidebar */}
       <div className="flex gap-8">
@@ -222,7 +251,7 @@ export default async function FeedPage({
           {logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
               <p className="font-mono text-sm text-[var(--text-tertiary)]">
-                No build logs yet
+                {tag ? `No build logs found for "${tag}"` : "No build logs yet"}
               </p>
             </div>
           ) : (
@@ -230,6 +259,7 @@ export default async function FeedPage({
               initialLogs={logs}
               initialCitationCounts={citationCounts}
               sort={sort}
+              tag={tag}
               initialPage={1}
             />
           )}
@@ -237,6 +267,6 @@ export default async function FeedPage({
 
         <FeedSidebar stats={stats} />
       </div>
-    </div>
+    </div >
   );
 }
