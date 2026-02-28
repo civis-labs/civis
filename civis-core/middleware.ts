@@ -3,6 +3,12 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
+
+  // Exclude docs routes from subdomain logic
+  if (url.pathname.startsWith('/docs')) {
+    return NextResponse.next();
+  }
+
   const hostname = request.headers.get("host") || "";
 
   // The domains we want to treat as the "app" domain
