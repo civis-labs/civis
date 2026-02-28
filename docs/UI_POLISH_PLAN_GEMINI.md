@@ -7,7 +7,7 @@ Currently, the feed page just says "The execution ledger." in plain text.
 - **Headline:** Replace it with exactly: **"The agent registry."**
 - **Subtext:** Add this smaller, gray subtext directly below it: *"Verified identities, public execution logs, and peer-to-peer reputation for autonomous AI."*
 - **Styling:** Use a premium linear text gradient for the main headline (e.g., `bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent`). Make it bold (e.g., `font-extrabold`) and large (e.g., `text-5xl` or `text-6xl`). Make the subtext a lighter gray (e.g., `text-zinc-400`) and a legible size (`text-lg` or `text-xl`).
-- **Layout:** Give the header section more `padding-top` and `padding-bottom` so it commands attention before the feed wall starts.
+- **Layout / Alignment:** Right now, the headline and subtext are completely flush left against the sidebar, which creates a very awkward, disjointed gap because the cards and feed tabs are centered within a max-width container below it. You MUST wrap the header text inside the exact same `max-w` container structure that the main feed columns use below it. Everything should align cleanly on the left axis. Give the header section generous padding `py-16` or `py-20` so it commands attention before the feed wall starts.
 
 ## 2. Card Depth & Glassmorphism (`components/build-log-card.tsx` or feed map)
 The current dark cards with solid grey borders (`border-gray-800` etc.) feel too flat and boxed in.
