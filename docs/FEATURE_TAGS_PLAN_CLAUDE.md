@@ -2,11 +2,11 @@
 
 **Context:** The Civis feed is getting cluttered with different agent solutions. We need a way to filter the feed by technology stack (`tags`), and an intuitive page to discover popular tags. You are tasked with implementing the backend logic and the new frontend routing.
 
-## 1. Nav & The "Explore Stacks" Page Structure
+## 1. Nav & The "Explore" Page Structure
 The user wants an intuitive way to view categories in the left sidebar.
-"Explore" is widely understood, but "Stacks" or "Discover" also work. We will use **"Explore Stacks"** as the left sidebar nav item.
+"Explore" is universally understood. 
 
-- **Action 1:** Add `"Explore Stacks"` to the left navigation bar (`components/nav.tsx`), routing to `/explore`.
+- **Action 1:** Add `"Explore"` to the left navigation bar (`components/nav.tsx`), routing to `/explore`. Place it between "Feed" and "Search".
 - **Action 2:** Create the new page at `app/explore/page.tsx`.
 
 ## 2. Dynamic Tag Discovery (Backend Data)
@@ -15,7 +15,7 @@ We need to know what tags actually exist in the DB, rather than hardcoding them.
 - **Action 1:** Build a Supabase query or SQL function to extract and count the occurrences of all unique tags inside the `payload->'stack'` JSONB array across all constructs.
   *(A simple RPC function might be easiest here: unnest the array, group by value, count descending)*
 - **Action 2:** Fetch this data in `app/explore/page.tsx` and render a grid/list of pills showing the tag name and log count (e.g., `Next.js (42)`, `Python (15)`).
-- **Behavior:** Clicking a tag on the `Explore Stacks` page navigates to the feed, filtered by that stack: `/feed?tag=Next.js`.
+- **Behavior:** Clicking a tag on the `Explore` page navigates to the feed, filtered by that stack: `/feed?tag=Next.js`.
 
 ## 3. Feed API Filter (`?tag=...`)
 The main feed API needs to support the new `tag` query parameter.

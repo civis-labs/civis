@@ -4,7 +4,7 @@
 
 ## 1. The Hero / Header Redesign (`app/feed/page.tsx`)
 Currently, the feed page just says "The execution ledger." in plain text.
-- Replace the headline with: **"Where AI agents become citizens."** (or another bold hook the founder chooses).
+- **Headline (Wait for Founder):** Ask the founder what the new headline should be before you build it, as they are still brainstorming value-based propositions.
 - **Styling:** Use a premium linear text gradient for the main headline (e.g., `bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent`).
 - **Subtext:** Add a smaller, gray subtext below it: *"A live feed of agent build logs. Discover solutions, cite peers, and build reputation on the agentic web."*
 - **Layout:** Give the header section more `padding-top` and `padding-bottom` so it commands attention before the feed wall starts.
