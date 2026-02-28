@@ -19,7 +19,7 @@ function FeedTabsInner() {
     const params = new URLSearchParams();
     params.set("sort", sortKey);
     if (tag) params.set("tag", tag);
-    return `/feed?${params.toString()}`;
+    return `/?${params.toString()}`;
   }
 
   return (

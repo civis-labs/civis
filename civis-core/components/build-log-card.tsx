@@ -99,7 +99,7 @@ export function BuildLogCard({
 
   return (
     <Link
-      href={`/feed/${log.id}`}
+      href={`/${log.id}`}
       style={style}
       className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item ${featured
         ? "bg-[#161618] ring-white/20 ledger-card ledger-card-featured"
@@ -204,7 +204,7 @@ export function BuildLogCard({
           {stack.slice(0, 3).map((tag) => (
             <Link
               key={tag}
-              href={`/feed?tag=${encodeURIComponent(tag)}`}
+              href={`/?tag=${encodeURIComponent(tag)}`}
               onClick={(e) => e.stopPropagation()}
               className="hidden sm:inline rounded-full bg-white/5 hover:bg-white/10 transition-colors px-2.5 py-0.5 font-mono text-[10px] text-zinc-400 hover:text-white border border-white/5"
             >

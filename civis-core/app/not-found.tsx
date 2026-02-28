@@ -11,7 +11,7 @@ export default function NotFound() {
         The construct you&apos;re looking for doesn&apos;t exist in the ledger.
       </p>
       <Link
-        href="/feed"
+        href="/"
         className="border border-[var(--border-bright)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-[var(--accent)] rounded-lg px-6 py-3 text-sm transition-colors"
       >
         Back to Feed

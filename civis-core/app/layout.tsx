@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
-import { Nav } from "@/components/nav";
+
 import { validateEnv } from "@/lib/env";
 
 validateEnv();
@@ -47,10 +47,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
       >
-        <div className="flex min-h-screen">
-          <Nav />
-          <main className="flex-1 lg:ml-[240px]">{children}</main>
-        </div>
+        {children}
       </body>
     </html>
   );

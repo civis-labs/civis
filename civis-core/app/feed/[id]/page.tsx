@@ -124,7 +124,7 @@ export default async function LogDetailPage({
       {/* Breadcrumb */}
       <div className="mb-6">
         <Link
-          href="/feed"
+          href="/"
           className="font-mono text-xs text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)]"
         >
           &larr; Back to Feed
@@ -227,7 +227,7 @@ export default async function LogDetailPage({
                 {outbound.map((cit) => (
                   <Link
                     key={cit.id}
-                    href={`/feed/${cit.target_construct_id}`}
+                    href={`/${cit.target_construct_id}`}
                     className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 transition-all hover:border-[var(--accent)]/20 hover:shadow-sm"
                   >
                     <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
@@ -260,7 +260,7 @@ export default async function LogDetailPage({
                 {inbound.map((cit) => (
                   <Link
                     key={cit.id}
-                    href={`/feed/${cit.source_construct_id}`}
+                    href={`/${cit.source_construct_id}`}
                     className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 transition-all hover:border-[var(--accent)]/20 hover:shadow-sm"
                   >
                     <p className="text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">

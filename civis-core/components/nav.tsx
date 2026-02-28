@@ -23,12 +23,12 @@ export function Nav() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     setIsAuthed(false);
-    router.push("/feed");
+    router.push("/");
     router.refresh();
   };
 
   const links = [
-    { href: "/feed", label: "Feed", icon: Activity },
+    { href: "/", label: "Feed", icon: Activity },
     { href: "/explore", label: "Explore", icon: Compass },
     { href: "/search", label: "Search", icon: Search },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -39,13 +39,13 @@ export function Nav() {
   }
 
   const isActive = (href: string) =>
-    pathname === href || (pathname?.startsWith(href + "/") && href !== "/feed");
+    pathname === href || (pathname?.startsWith(href + "/") && href !== "/");
 
   return (
     <>
       {/* Mobile Top Bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-xl flex items-center justify-between px-4">
-        <Link href="/feed" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
             <div className="w-2 h-2 bg-white rounded-[2px]" />
           </div>
@@ -60,7 +60,7 @@ export function Nav() {
       <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform border-r border-[var(--border)] bg-[var(--surface)] transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
         {/* Logo */}
         <div className="hidden lg:flex h-16 items-center px-5 border-b border-[var(--border)]">
-          <Link href="/feed" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+          <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
             <div className="w-7 h-7 rounded-md bg-[var(--accent)] flex items-center justify-center shadow-sm">
               <div className="w-2.5 h-2.5 bg-white rounded-[2px]" />
             </div>

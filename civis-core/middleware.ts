@@ -1,42 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-/**
- * Alpha staging gate.
- * When ALPHA_PASSWORD is set, all pages require a password cookie.
- * API routes and static assets are exempt.
- * Disabled entirely when ALPHA_PASSWORD is not set (local dev).
- */
 export function middleware(request: NextRequest) {
-  const password = process.env.ALPHA_PASSWORD;
+  const url = request.nextUrl;
+  const hostname = request.headers.get("host") || "";
 
-  // No password set → gate disabled (local dev)
-  if (!password) return NextResponse.next();
+  // The domains we want to treat as the "app" domain
+  const isAppDomain =
+    hostname === "feed.civis.run" ||
+    hostname === "app.civis.run" ||
+    hostname.startsWith("feed.localhost") ||
+    hostname.startsWith("app.localhost");
 
-  const { pathname } = request.nextUrl;
-
-  // Skip: API routes, static files, auth callbacks, the gate page itself
-  if (
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/auth/') ||
-    pathname === '/alpha-gate' ||
-    pathname.startsWith('/favicon')
-  ) {
-    return NextResponse.next();
+  // If user visits feed.domain.com/path, rewrite to /feed/path internally
+  if (isAppDomain) {
+    // Avoid double-rewriting if they somehow access /feed directly
+    if (!url.pathname.startsWith("/feed")) {
+      return NextResponse.rewrite(
+        new URL(`/feed${url.pathname === "/" ? "" : url.pathname}${url.search}`, request.url)
+      );
+    }
+  } else {
+    // If they hit civis.run/feed/... redirect to feed.civis.run/...
+    if (url.pathname.startsWith("/feed")) {
+      const isLocal = hostname.includes("localhost");
+      if (!isLocal) {
+        // Only enforce absolute redirect in prod to avoid local dev port madness
+        const redirectUrl = new URL(request.url);
+        redirectUrl.hostname = "feed.civis.run";
+        // Remove /feed from the start of the pathname
+        redirectUrl.pathname = url.pathname.replace(/^\/feed/, "");
+        if (redirectUrl.pathname === "") redirectUrl.pathname = "/";
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
   }
 
-  // Check for valid gate cookie
-  const gateCookie = request.cookies.get('alpha_gate')?.value;
-  if (gateCookie === password) {
-    return NextResponse.next();
-  }
-
-  // Redirect to gate page
-  const gateUrl = new URL('/alpha-gate', request.url);
-  gateUrl.searchParams.set('redirect', pathname);
-  return NextResponse.redirect(gateUrl);
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes (they handle it fine)
+    "/(api|trpc)(.*)",
+  ],
 };
