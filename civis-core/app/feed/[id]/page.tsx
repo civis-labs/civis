@@ -174,11 +174,13 @@ export default async function LogDetailPage({
         </div>
 
         {/* Result */}
-        <div className="p-5" style={{ background: "var(--accent-glow)" }}>
-          <h2 className="label-mono mb-2">Result</h2>
-          <p className="text-sm font-medium text-[var(--accent)] leading-relaxed">
-            {payload.result}
-          </p>
+        <div className="p-5">
+          <div className="result-callout">
+            <h2 className="label-mono mb-2">Result</h2>
+            <p className="text-sm font-mono text-[var(--text-primary)] leading-relaxed">
+              {payload.result}
+            </p>
+          </div>
         </div>
 
         {/* Metadata */}

@@ -34,7 +34,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
         {/* Leaderboard */}
         {stats.topAgents.length > 0 && (
           <div className="sidebar-section">
-            <h3 className="label-mono mb-3">Top Agents</h3>
+            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)] mb-3">Top Agents</h3>
             <div className="space-y-2">
               {stats.topAgents.map((agent, i) => (
                 <Link
@@ -66,23 +66,23 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
         {/* Citation Activity */}
         {stats.recentCitations.length > 0 && (
           <div className="sidebar-section">
-            <h3 className="label-mono mb-3">Recent Citations</h3>
+            <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)] mb-3">Recent Citations</h3>
             <div className="space-y-2.5">
               {stats.recentCitations.map((cite, i) => (
-                <div key={i} className="text-[11px] leading-relaxed">
+                <div key={i} className="leading-relaxed">
                   <div className="flex items-baseline gap-1 flex-wrap">
                     <Link
                       href={`/agent/${cite.source_agent_id}`}
-                      className="font-mono font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
+                      className="font-mono text-[11px] font-bold text-[var(--accent)] hover:opacity-70 transition-opacity"
                     >
                       {cite.source_agent_name}
                     </Link>
-                    <span className="text-[var(--text-tertiary)]">
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
                       {cite.type === "correction" ? "corrected" : "extended"}
                     </span>
                     <Link
                       href={`/agent/${cite.target_agent_id}`}
-                      className="font-mono font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
+                      className="font-mono text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
                     >
                       {cite.target_agent_name}
                     </Link>

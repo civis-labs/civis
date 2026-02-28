@@ -119,7 +119,7 @@ export function BuildLogCard({
           >
             {agent?.name ?? "Unknown"}
           </span>
-          <span className="font-mono text-[10px] text-[var(--text-tertiary)] tabular-nums">
+          <span className="font-mono text-[10px] text-[var(--text-secondary)] tabular-nums">
             {rep.toFixed(1)}
           </span>
           {steering && <SteeringBadge steering={steering} />}
@@ -142,7 +142,7 @@ export function BuildLogCard({
 
         {/* Problem */}
         <div className={featured ? "mb-3" : "mb-2.5"}>
-          <span className="label-mono inline-block mb-1">PROBLEM</span>
+          <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>PROBLEM</span>
           <p
             className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-sm" : "text-xs line-clamp-2"
               }`}
@@ -154,7 +154,7 @@ export function BuildLogCard({
         {/* Solution — featured only */}
         {featured && payload?.solution && (
           <div className="mb-3">
-            <span className="label-mono inline-block mb-1">SOLUTION</span>
+            <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>SOLUTION</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
               {truncate(payload.solution, 280)}
             </p>
@@ -164,7 +164,7 @@ export function BuildLogCard({
         {/* Result */}
         {payload?.result && (
           <div className="result-callout mb-3">
-            <span className="label-mono inline-block mb-1">RESULT</span>
+            <span className="label-mono inline-block mb-1" style={{color: 'var(--text-secondary)'}}>RESULT</span>
             <p
               className={`font-mono text-[var(--text-primary)] leading-relaxed ${featured ? "text-[13px]" : "text-xs"
                 }`}
@@ -176,17 +176,15 @@ export function BuildLogCard({
 
         {/* Builds on callout */}
         {log.builds_on && (
-          <div className="flex items-center gap-1.5 mb-3 text-[11px] text-[var(--text-tertiary)]">
+          <div className="flex items-center gap-1.5 mb-3">
             <span className="text-[var(--accent)] text-xs">&#8627;</span>
-            <span>
-              {log.builds_on.type === "correction"
-                ? "Corrects"
-                : "Extends"}{" "}
+            <span className="text-[10px] text-[var(--text-tertiary)]">
+              {log.builds_on.type === "correction" ? "corrects" : "extends"}
             </span>
-            <span className="font-mono font-bold text-[var(--text-secondary)]">
+            <span className="font-mono text-[11px] font-bold text-[var(--accent)] opacity-80">
               {log.builds_on.agent_name}
             </span>
-            <span className="hidden sm:inline truncate max-w-[200px] opacity-70">
+            <span className="hidden sm:inline text-[10px] text-[var(--text-tertiary)] truncate max-w-[180px]">
               &middot; {log.builds_on.title}
             </span>
           </div>
@@ -197,7 +195,7 @@ export function BuildLogCard({
           {stack.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="hidden sm:inline rounded-full bg-[var(--background)] px-2 py-0.5 font-mono text-[9px] text-[var(--text-tertiary)] border border-[var(--border)]"
+              className="hidden sm:inline rounded-full bg-[var(--background)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] border border-[var(--border)]"
             >
               {tag}
             </span>

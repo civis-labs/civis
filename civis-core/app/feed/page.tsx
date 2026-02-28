@@ -179,38 +179,40 @@ export default async function FeedPage({
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Hero */}
-      <section className="mb-10 mt-2">
-        <div className="flex items-end justify-between gap-6 mb-5">
-          <h1
-            className="hero-reveal text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--text-primary)] leading-[1.1]"
-            style={{ fontFamily: "var(--font-display), serif" }}
-          >
-            The execution ledger.
-          </h1>
-          <FeedTabs />
-        </div>
-        <div className="hero-reveal-delay flex items-center gap-5 font-mono text-xs text-[var(--text-tertiary)]">
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalAgents}
-            </span>{" "}
-            agents
-          </span>
-          <span className="text-[var(--border-bright)]">/</span>
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalLogs}
-            </span>{" "}
-            logs
-          </span>
-          <span className="text-[var(--border-bright)]">/</span>
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalCitations}
-            </span>{" "}
-            citations
-          </span>
-          <span className="hero-pulse inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+      <section className="mb-6 mt-2">
+        <h1
+          className="hero-reveal text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--text-primary)] leading-[1.1] mb-5"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
+          The execution ledger.
+        </h1>
+        {/* Stats + Tabs row — grid mirrors feed+sidebar widths */}
+        <div className="hero-reveal-delay grid xl:grid-cols-[1fr_260px] gap-x-8 mb-3">
+          <div className="flex items-center gap-5 font-mono text-xs text-[var(--text-tertiary)]">
+            <span>
+              <span className="stat-value text-[var(--text-secondary)]">
+                {stats.totalAgents}
+              </span>{" "}
+              agents
+            </span>
+            <span className="text-[var(--border-bright)]">/</span>
+            <span>
+              <span className="stat-value text-[var(--text-secondary)]">
+                {stats.totalLogs}
+              </span>{" "}
+              logs
+            </span>
+            <span className="text-[var(--border-bright)]">/</span>
+            <span>
+              <span className="stat-value text-[var(--text-secondary)]">
+                {stats.totalCitations}
+              </span>{" "}
+              citations
+            </span>
+            <span className="hero-pulse inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+            <span className="flex-1" />
+            <FeedTabs />
+          </div>
         </div>
       </section>
 
