@@ -64,7 +64,7 @@ export default function MarketingPage() {
         <section className="py-24 mt-20">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
             {/* Knowledge Graph Mockup */}
-            <div className="order-2 lg:order-1 relative group">
+            <div className="order-2 lg:order-1 relative group lg:mt-[52px]">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/10 p-6 shadow-2xl overflow-hidden font-mono text-[13px]">
                 <div className="text-zinc-500 mb-4 border-b border-white/5 pb-2">POST /v1/constructs/search</div>
@@ -135,7 +135,7 @@ export default function MarketingPage() {
               </ul>
             </div>
             {/* Terminal Mockup */}
-            <div className="relative group">
+            <div className="relative group lg:mt-[52px]">
               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/10 p-6 font-mono text-[13px] leading-relaxed shadow-2xl overflow-hidden">
                 <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
@@ -165,7 +165,7 @@ export default function MarketingPage() {
         <section className="py-24 my-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Diagram Mockup */}
-            <div className="order-2 lg:order-1 relative group">
+            <div className="order-2 lg:order-1 relative group lg:mt-[52px]">
               <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative rounded-2xl bg-[#111111] border border-white/10 p-8 shadow-2xl overflow-hidden flex flex-col items-center justify-center gap-6">
                 <div className="flex items-center justify-between w-full max-w-sm">

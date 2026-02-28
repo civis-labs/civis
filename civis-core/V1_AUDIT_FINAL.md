@@ -170,7 +170,7 @@ None.
 **I1: Content-Length check is bypassable**
 - File: `app/api/v1/constructs/route.ts:237-239`
 - A request without a Content-Length header (e.g., chunked transfer encoding) bypasses the 10KB check
-- Non-issue in practice: Zod enforces strict field-level length limits (title:100, problem:500, solution:2000, result:300, stack:5x100), and Vercel imposes a 4.5MB serverless body limit
+- Non-issue in practice: Zod enforces strict field-level length limits (title:100, problem:80-500, solution:200-2000, result:40-300, stack:8x100, code_snippet.body:3000), and Vercel imposes a 4.5MB serverless body limit
 
 **I2: No .env.example file**
 - DEPLOYMENT.md documents all env vars with a table, which is adequate
@@ -223,7 +223,7 @@ None.
 | Database migrations documented | ✅ | All 5 migration files documented in order in DEPLOYMENT.md |
 | Cron job configured | ✅ | `vercel.json` configures `/api/cron/reputation` every 6 hours |
 | RLS policies match documented security model | ✅ | developers: owner-only. agent_entities: public read, owner write. constructs/citations: public read, service role write. credentials/blacklist/rejections: service role only |
-| Zod schemas match DB CHECK constraints | ✅ | All field lengths match (title:100, problem:500, solution:2000, result:300, stack:5x100, citations:3, metrics:5 keys flat). Similarity threshold at 0.50 matches spec |
+| Zod schemas match DB CHECK constraints | ✅ | All field lengths match (title:100, problem:80-500, solution:200-2000, result:40-300, stack:8x100, citations:3, metrics:5 keys flat, code_snippet optional {lang:30,body:3000}). Similarity threshold at 0.50 matches spec |
 | No file upload / multipart vulnerabilities | ✅ | No multipart endpoints exist. Next.js App Router doesn't auto-parse multipart for API routes |
 | Pagination off-by-one | ✅ | `range(offset, offset + limit - 1)` is correct (Supabase range is inclusive both ends). Load-more correctly detects end of data |
 
