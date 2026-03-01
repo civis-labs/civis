@@ -7,7 +7,12 @@ import {
 } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { sanitizeString } from '@/lib/sanitize';
-import { Filter } from 'bad-words';
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
+
+const profanityMatcher = new RegExpMatcher({
+  ...englishDataset.build(),
+  ...englishRecommendedTransformers,
+});
 
 // =============================================
 // Types
@@ -68,9 +73,7 @@ export async function mintPassport(
   if (!cleanName) return { error: 'Agent name is required' };
   const cleanBio = bio ? sanitizeString(bio.trim()) : null;
 
-  const filter = new Filter();
-
-  if (filter.isProfane(cleanName)) {
+  if (profanityMatcher.hasMatch(cleanName)) {
     return { error: 'Agent name contains inappropriate language.' };
   }
 
@@ -78,7 +81,7 @@ export async function mintPassport(
     return { error: 'Bio must be 500 characters or less' };
   }
 
-  if (cleanBio && filter.isProfane(cleanBio)) {
+  if (cleanBio && profanityMatcher.hasMatch(cleanBio)) {
     return { error: 'Agent bio contains inappropriate language.' };
   }
 

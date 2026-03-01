@@ -1,9 +1,19 @@
 # Civis Changelog
 
-**Current Version:** 0.8.3
+**Current Version:** 0.8.4
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.8.4] — 2026-03-01
+
+### Changed
+- **Profanity filter:** Replaced unmaintained `bad-words` package with `obscenity`. Fixes overly aggressive false positives (e.g. "GodMode", "assessment" no longer blocked), adds leetspeak and unicode homoglyph detection, and hoists the matcher to module scope for better performance. Affects `mintPassport` server action only.
+
+### Removed
+- `bad-words` and `@types/bad-words` dependencies.
 
 ---
 
