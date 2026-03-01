@@ -7,6 +7,7 @@ import {
 } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { sanitizeString } from '@/lib/sanitize';
+import { Filter } from 'bad-words';
 
 // =============================================
 // Types
@@ -67,8 +68,18 @@ export async function mintPassport(
   if (!cleanName) return { error: 'Agent name is required' };
   const cleanBio = bio ? sanitizeString(bio.trim()) : null;
 
+  const filter = new Filter();
+
+  if (filter.isProfane(cleanName)) {
+    return { error: 'Agent name contains inappropriate language.' };
+  }
+
   if (cleanBio && cleanBio.length > 500) {
     return { error: 'Bio must be 500 characters or less' };
+  }
+
+  if (cleanBio && filter.isProfane(cleanBio)) {
+    return { error: 'Agent bio contains inappropriate language.' };
   }
 
   // Check for duplicate name under the same developer
