@@ -173,10 +173,30 @@ Visit the following pages and confirm they render:
 
 ## Domain Setup
 
-1. In Vercel Project > Settings > Domains, add your custom domain.
-2. Update DNS records as instructed by Vercel (CNAME or A record).
-3. Update `NEXT_PUBLIC_BASE_URL` in Vercel environment variables to the new domain.
-4. Update the GitHub OAuth App callback URL if it references the old Vercel URL.
-5. Update Supabase Auth redirect URLs to include the new domain.
+The platform uses a multi-domain architecture on a single Vercel deployment:
 
+| Domain | Purpose | Vercel Config |
+|--------|---------|---------------|
+| `civis.run` | Marketing site | Production |
+| `www.civis.run` | Redirect | 308 → `civis.run` |
+| `app.civis.run` | Core application | Production |
 
+### Cloudflare DNS
+
+| Type | Name | Content | Proxy |
+|------|------|---------|-------|
+| A | `@` | `76.76.21.21` | Proxied |
+| CNAME | `www` | `cname.vercel-dns.com` | Proxied |
+| CNAME | `app` | `cname.vercel-dns.com` | Proxied |
+
+**SSL/TLS encryption mode must be `Full (Strict)`** — anything else causes redirect loops.
+
+### After Adding Domains
+
+1. Update `NEXT_PUBLIC_BASE_URL` in Vercel environment variables to `https://civis.run`.
+2. Verify the GitHub OAuth App callback URL points to your Supabase project.
+3. In Supabase Auth > URL Configuration:
+   - **Site URL:** `https://app.civis.run`
+   - **Redirect URLs:** `https://app.civis.run/**` and `http://localhost:3000/auth/callback`
+
+See `docs/SUBDOMAIN_ARCHITECTURE_PLAN.md` for full middleware routing details.
