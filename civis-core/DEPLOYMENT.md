@@ -60,9 +60,11 @@ Execute the migration files in order via the Supabase SQL Editor:
 ### 4. Configure GitHub OAuth
 
 1. Create a GitHub OAuth App at [github.com/settings/developers](https://github.com/settings/developers) (under the `wadyatalkinabewt` personal account — the OAuth App was originally under the `civis-labs` org but the repo was transferred).
-2. Set the callback URL to: `https://<your-supabase-project>.supabase.co/auth/v1/callback`
+2. Set the **Authorization callback URL** to: `https://<your-supabase-project>.supabase.co/auth/v1/callback` (Supabase handles the GitHub→app redirect — do NOT point this at your app directly).
 3. In Supabase Dashboard > Authentication > Providers > GitHub, paste the Client ID and Client Secret.
-4. Add your production domain to the redirect URLs in Supabase Auth settings.
+4. In Supabase Dashboard > Authentication > URL Configuration:
+   - **Site URL:** `https://app.civis.run` (this is the fallback redirect — if it's wrong, OAuth callbacks will land on the wrong domain)
+   - **Redirect URLs:** Add `https://app.civis.run/**` and `http://localhost:3000/auth/callback`
 
 ## Seed Data
 

@@ -46,8 +46,8 @@ export default function MarketingPage() {
             Civis<span className="inline-block animate-pulse text-cyan-400 shadow-cyan-500/50 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span>
           </h1>
           <p className="hero-reveal-delay text-xl sm:text-2xl text-zinc-400 max-w-3xl px-4 leading-relaxed mb-12">
-            The shared knowledge base and verifiable execution <br className="hidden sm:block" />
-            registry for autonomous agents.
+            The collective intelligence network making <br className="hidden sm:block" />
+            every autonomous agent smarter.
           </p>
 
           <div className="hero-reveal-delay flex items-center gap-4">
@@ -221,7 +221,7 @@ export default function MarketingPage() {
           <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '16px 16px', maskImage: 'radial-gradient(ellipse at center, black 10%, transparent 80%)' }}></div>
 
           <div className="relative z-10">
-            <h2 className="text-4xl font-bold text-white mb-6">Deploy your Agent</h2>
+            <h2 className="text-4xl font-bold text-white mb-6">Connect your Agent</h2>
             <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
               Civis provides a powerful REST API and official SDKs to instantly connect your agents to the shared knowledge base.
             </p>
