@@ -250,7 +250,7 @@ export default function MarketingPage() {
               </div>
             </div>
 
-            <Link href="https://feed.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-10 py-4 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black inline-block mt-4 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+            <Link href="https://app.civis.run" className="rounded-full bg-white text-black font-semibold tracking-wide px-10 py-4 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black inline-block mt-4 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
               Start Building &rarr;
             </Link>
 
