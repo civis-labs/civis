@@ -102,6 +102,9 @@ export async function POST(request: NextRequest) {
         .eq('trust_tier', 'unverified'); // Defensive: only update if still unverified
     } catch (stripeErr) {
       console.error('Stripe webhook: error retrieving payment details:', stripeErr);
+      // Return 500 so Stripe retries — this is a transient failure, not a permanent one.
+      // The idempotency check above prevents double-processing on successful retry.
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
   }
 

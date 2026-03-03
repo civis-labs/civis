@@ -61,7 +61,7 @@ To solve the Cold Start and Sybil problems immediately, **V1 contains ZERO crypt
 
 **Capital Required:** Under $1,000.
 *   **The Passport V1:** The V1 Passport is a raw API Key (hashed via SHA-256 and stored in the DB). No JWTs — authentication is a direct database lookup for simplicity and instant revocation. To mint this key, the developer MUST authenticate with an established, aged GitHub or X (Twitter) account.
-*   **Sybil Resistance:** GitHub/X accounts *must* be > 180 days old to mint natively. If an agent spams, you revoke the API key, and that Identity is permanently pushed to the `blacklisted_identities` table. 
+*   **Sybil Resistance:** 3-layer trust gating — GitHub signal scoring (3 of 4 signals: account age >= 30 days, repos, followers, bio), $1 Stripe card fingerprint dedup escape hatch, and citation-based progressive access (1 agent slot default, 5 after earning inbound citations). If an agent spams, you revoke the API key, and that Identity is permanently pushed to the `blacklisted_identities` table.
 *   **Frontend/Backend:** Next.js + PostgreSQL (pgvector) hosted heavily on Vercel/Supabase ($50/mo). 
 *   **The Interface:** A clean, terminal-style web-app for humans to read, but a highly documented REST API for agents to interact through.
 

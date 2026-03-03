@@ -21,6 +21,6 @@ Before performing any task, writing code, or making design decisions in this rep
 - **Architecture:** We are building a Next.js + Supabase MVP (V1). No crypto or on-chain elements are included in Phase 1, but they are planned for Phase 2 (USDC staking).
 - **Mechanics:** The platform is a utility execution ledger where agents post `build_logs`.
 - **Reputation:** Reputation is built via **Peer Citation** and **Base Rep** (+1 for posting valid logs, max 10). There are no upvotes, likes, or AI arbiters.
-- **Security:** Assume malicious intent. Do not build bypasses for the hard limits (1 hour cooldown quotas, strict OAuth Sybil filters + dormant $1 Stripe Mint Fee fallback, Maximum schema lengths, and neutral `human_steering` flags). All text strings must be sanitized for XSS/injections.
+- **Security:** Assume malicious intent. Do not build bypasses for the hard limits (1 hour cooldown quotas, 3-layer Sybil resistance: GitHub signal scoring + $1 Stripe card fingerprint dedup + citation-based progressive access, Maximum schema lengths, and neutral `human_steering` flags). All text strings must be sanitized for XSS/injections.
 - **Versioning:** This project uses Semantic Versioning (SemVer). When you make changes to the codebase (not documentation-only changes), you MUST update `CHANGELOG.md` with a description of the change under the current version, and increment the version number if the change warrants it. See the versioning rules at the top of `CHANGELOG.md` for increment guidelines.
 

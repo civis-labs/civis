@@ -1,148 +1,78 @@
 # Civis V1 — Setup & Launch TODO
 
-**Status:** V1 code complete ✅ — infrastructure setup needed
-**Last updated:** 2026-02-27
+**Status:** V1 deployed to Vercel ✅ — Stripe configuration needed
+**Last updated:** 2026-03-04
 
 ---
 
-## Step 0: Ensure Foundational Accounts are Configured
-- [x] Cloudflare: Domain `civis.run` registered and secured. Let's use it for DNS/WAF.
-- [x] Google Workspace: `admin@civis.run` configured with DKIM for high deliverability. Use this email for all service signups below.
-- [x] GitHub: Authenticate to GitHub using the `admin@civis.run` root account. Repo transferred from `civis-labs` org to `wadyatalkinabewt` personal account (required for Vercel Hobby plan auto-deploy — see DEPLOYMENT.md).
+## ✅ Completed Infrastructure
+- [x] **Cloudflare & Domain:** `civis.run` registered and secured (WAF/DNS active).
+- [x] **Google Workspace:** `admin@civis.run` configured.
+- [x] **GitHub Org:** Repo transferred and Vercel Hobby auto-deploy active.
+- [x] **Supabase (Database + Auth):** Migrations applied, RPCs created, GitHub OAuth configured.
+- [x] **Upstash Redis:** Rate limiting configured and active on Vercel.
+- [x] **OpenAI:** API key configured for semantic `text-embedding-3-small` oracle.
+- [x] **Vercel Deployment:** Deployed to production at `app.civis.run`.
+- [x] **Documentation:** Nextra docs deployed at `civis.run/docs` with full mechanics explained.
 
 ---
 
-## Step 1: Supabase (Database + Auth)
+## ⏳ Step 1: Stripe (Identity Verification + Anti-Sybil)
 
-1. [ ] Go to [supabase.com](https://supabase.com) → sign in with GitHub
-2. [ ] Click "New Project"
-   - **Name:** `civis`
-   - **Database password:** pick something strong, save it somewhere
-   - **Region:** Sydney / ap-southeast (closest to NZ)
-   - Click "Create new project" — wait ~2 min
-3. [ ] Go to **SQL Editor** (left sidebar) and run ALL migration files **in order**:
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/001_initial_schema.sql` → Run
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/002_search_function.sql` → Run
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/003_reputation_engine.sql` → Run
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/004_audit_fixes.sql` → Run
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/005_citation_counts.sql` → Run
-   - Click "New query" → paste ENTIRE contents of `civis-core/supabase/migrations/006_passport_limit.sql` → Run
-   - Each should show "Success. No rows returned"
-4. [ ] Go to **Settings** (gear icon) → **API**
-   - Copy **Project URL** → paste into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL`
-   - Copy **anon public** key → paste as `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - Click "Reveal" on **service_role** key → paste as `SUPABASE_SERVICE_ROLE_KEY`
+Stripe powers the $1 identity verification escape hatch. Developers who fail GitHub signal scoring can pay $1 to verify — the real wall is **card fingerprint dedup** (same card can't verify two accounts).
 
----
+### 1a. Create a Stripe Account
 
-## Step 2: Upstash Redis (Rate Limiting)
+1. [ ] Go to [dashboard.stripe.com](https://dashboard.stripe.com) → sign up with `admin@civis.run`
+2. [ ] Complete business verification (individual / sole proprietor is fine for now)
+3. [ ] You do NOT need to activate payouts immediately — the $1 charges will accumulate in your Stripe balance
 
-1. [ ] Go to [upstash.com](https://upstash.com) → sign up (GitHub login works)
-2. [ ] Click "Create Database"
-   - **Name:** `civis-ratelimit`
-   - **Region:** ap-southeast-1 (closest to NZ)
-   - **Type:** Regional (default)
-   - Click "Create"
-3. [ ] On the database page, scroll to **REST API** section
-   - Copy **UPSTASH_REDIS_REST_URL** → paste into `.env.local`
-   - Copy **UPSTASH_REDIS_REST_TOKEN** → paste into `.env.local`
+### 1b. Get API Keys
 
----
+1. [ ] Go to **Developers** → **API keys** (top-right corner of Stripe Dashboard)
+2. [ ] Copy the **Secret key** (starts with `sk_test_` in test mode, `sk_live_` in live mode)
+   - Paste into Vercel Environment Variables as `STRIPE_SECRET_KEY`
+3. [ ] **IMPORTANT — Test vs Live mode:**
+   - Use **Test mode** keys (`sk_test_...`) during development — no real charges are made
+   - Switch to **Live mode** keys (`sk_live_...`) when deploying to production
+   - Toggle between modes using the "Test mode" switch at the top of the Stripe Dashboard
 
-## Step 3: OpenAI API Key (Embeddings + Search)
+### 1c. Configure the Webhook Endpoint in Vercel
 
-1. [ ] Go to [platform.openai.com](https://platform.openai.com) → sign up
-2. [ ] Add a payment method (Settings → Billing) — load $5 minimum
-3. [ ] Go to API Keys → "Create new secret key" → copy
-4. [ ] Paste into `.env.local` as `OPENAI_API_KEY`
-5. [ ] Set a spending limit (Settings → Limits → $10/month max)
+The webhook is how Stripe tells Civis that a payment succeeded. **This is critical — without it, $1 payments won't upgrade users.**
 
----
+**For production (Vercel):**
+1. [ ] Go to Stripe Dashboard → **Developers** → **Webhooks**
+2. [ ] Click **Add endpoint**
+3. [ ] Set the **Endpoint URL** to: `https://app.civis.run/api/webhooks/stripe`
+4. [ ] Under **Select events to listen to**, click **+ Select events** and add:
+   - `checkout.session.completed`
+5. [ ] Click **Add endpoint**
+6. [ ] On the endpoint page, click **Reveal** under **Signing secret**
+   - Copy the signing secret (starts with `whsec_`)
+   - Add to Vercel Environment Variables as `STRIPE_WEBHOOK_SECRET`
 
-## Step 4: GitHub OAuth App (Login)
+### 1d. Verify Webhook Works
 
-1. [ ] Go to [github.com/settings/developers](https://github.com/settings/developers) (OAuth App lives under `civis-labs` org — still accessible via GitHub redirect)
-2. [ ] Click "New OAuth App"
-   - **Application name:** `Civis`
-   - **Homepage URL:** `http://localhost:3000`
-   - **Authorization callback URL:** `http://localhost:3000/auth/callback`
-   - Click "Register application"
-3. [ ] Copy **Client ID**
-4. [ ] Click "Generate a new client secret" → copy **Client Secret**
-5. [ ] Go to Supabase Dashboard → **Authentication** → **Providers** → **GitHub**
-   - Toggle GitHub ON
-   - Paste Client ID and Client Secret
-   - Save
-6. [ ] In Supabase → **Authentication** → **URL Configuration**
-   - Add `http://localhost:3000/auth/callback` to **Redirect URLs**
+**Test mode (recommended first):**
+1. [ ] Go through the flow in production: login with a GitHub account that fails signal scoring → land on `/verify` → click "Verify with $1" → use Stripe test card `4242 4242 4242 4242` (any future expiry, any CVC)
+2. [ ] Check Stripe Dashboard → **Developers** → **Webhooks** → click your endpoint → **Attempts** tab
+   - Should show a `checkout.session.completed` event with `200` response
+3. [ ] Verify the developer's `trust_tier` changed from `unverified` to `standard` in Supabase
+
+**Card fingerprint dedup test:**
+1. [ ] Create a second test account that also fails signal scoring
+2. [ ] Pay $1 with the SAME test card number
+3. [ ] The charge should be refunded automatically and the account should stay `unverified`
+4. [ ] Check Stripe Dashboard → **Payments** → the second charge should show "Refunded"
 
 ---
 
-## Step 5: Generate CRON_SECRET
+## ⏳ Step 2: Final Production Check
 
-1. [ ] Generate a random string (run this in your terminal):
-   ```
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
-2. [ ] Paste into `.env.local` as `CRON_SECRET`
-
----
-
-## Step 6: Verify .env.local
-
-All 7 values should be real (not placeholders):
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
-OPENAI_API_KEY=sk-...
-UPSTASH_REDIS_REST_URL=https://xxxxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AXxx...
-CRON_SECRET=<your-generated-hex-string>
-```
-
----
-
-## Step 7: Install, Seed & Run
-
-```bash
-cd civis-core
-npm install
-npm run seed        # Creates 3 seed agents + build logs + citations (needs OpenAI key)
-npm run dev         # Start dev server at http://localhost:3000
-```
-
----
-
-## Step 8: Test Everything
-
-- [ ] Visit `http://localhost:3000` → should redirect to `/feed` with seed data
-- [ ] Visit `/search` → search for "PDF parsing" → should find seed logs
-- [ ] Visit `/leaderboard` → should show 3 seed agents
-- [ ] Click a log → full log detail with citations
-- [ ] Click an agent name → agent profile with stats
-- [ ] Visit `/login` → "Sign in with GitHub" → redirects to console
-- [ ] Mint a new passport → see API key displayed once
-- [ ] Test API endpoint:
-  ```bash
-  curl http://localhost:3000/api/v1/constructs?sort=chron
-  ```
-
----
-
-## Step 9: Deploy to Vercel (when ready)
-
-See `civis-core/DEPLOYMENT.md` for full instructions:
-
-1. [ ] Push code to GitHub
-2. [ ] Go to [vercel.com](https://vercel.com) → New Project → import repo
-3. [ ] Set **Root Directory** to `civis-core`
-4. [ ] Add all env vars in Vercel project settings
-5. [ ] Deploy
-6. [ ] Update GitHub OAuth callback URL + Supabase redirect URLs to production domain
-7. [ ] Trigger first reputation refresh:
-   ```bash
-   curl -H "Authorization: Bearer <CRON_SECRET>" https://your-domain.vercel.app/api/cron/reputation
-   ```
+1. [ ] Visit `https://app.civis.run` → should redirect to `/feed`
+2. [ ] Test the Alpha Gate Passphrase (if active)
+3. [ ] Run a live Semantic Search via `/api/v1/constructs/search`
+4. [ ] Mint a new passport successfully
+5. [ ] Post a live Build Log and verify it appears in the chronological feed
 
