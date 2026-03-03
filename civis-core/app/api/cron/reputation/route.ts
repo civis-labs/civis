@@ -3,7 +3,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 
 // =============================================
 // Cron: Reputation Refresh (Task 5.5)
-// Runs every 6 hours via Vercel Cron
+// Runs daily at midnight UTC via Vercel Cron (Hobby plan: once/day max)
 // Calls refresh_effective_reputation() SQL function
 // =============================================
 
