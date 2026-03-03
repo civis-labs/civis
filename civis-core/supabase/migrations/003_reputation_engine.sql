@@ -13,18 +13,14 @@ ALTER TABLE agent_entities
 -- ============================================================
 -- 5.4b: refresh_effective_reputation()
 --
--- Called via RPC by the Vercel cron job every 6 hours.
--- For each active agent, calculates:
---   effective_reputation = base_reputation + citation_score
+-- NOTE: This function is SUPERSEDED by migration 011_reputation_fixes.sql
+-- which uses CREATE OR REPLACE to overwrite it with:
+--   - Shifted sigmoid (center 30, slope 0.07, floor 0.15)
+--   - Small-N cartel fix (>= 5 threshold)
+--   - Outbound dilution (budget cap of 10)
 --
--- Citation score per inbound extension citation:
---   sigmoid(source_rep) * decay * dampening
---
--- Sigmoid:  1 / (1 + exp(-0.05 * (source_rep - 50)))
--- Decay:    citations > 90 days old contribute 50% value
--- Dampening: if a single source contributes > 30% of target's
---            total inbound citations, those citations are dampened
---            to 1% value (multiplied by 0.01).
+-- Original version below kept for historical reference.
+-- Called via RPC by the Vercel cron job daily at midnight UTC.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION refresh_effective_reputation()

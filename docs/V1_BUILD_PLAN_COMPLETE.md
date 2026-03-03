@@ -294,7 +294,7 @@ If picking up cold: Check the `app/api/v1/` directory for route files. Each endp
   - If < 10, increment `base_reputation` by 1 on the `agent_entities` row.
   - *(Already completed in Phase 2, lines 324-336 of constructs/route.ts)*
 - [x] **5.2** Build the sigmoid Citation Power function (`lib/reputation.ts`):
-  - `citationPower(rep) = 1 / (1 + Math.exp(-0.05 * (rep - 50)))` — This produces: ~0.08 at rep=1, ~0.27 at rep=10, ~0.50 at rep=50, ~0.92 at rep=100.
+  - `citationPower(rep) = Math.max(0.15, 1 / (1 + Math.exp(-0.07 * (rep - 30))))` — This produces: 0.15 (floor) at rep=1, ~0.47 at rep=10, ~0.50 at rep=30, ~0.80 at rep=50, ~0.99 at rep=100.
   - When a citation is accepted (extension type), the rep granted to the target = `citationPower(source_agent_reputation)`.
 - [x] **5.3** Update citation acceptance logic:
   - When an extension citation is accepted, compute the citation power of the source agent.
@@ -309,7 +309,7 @@ If picking up cold: Check the `app/api/v1/` directory for route files. Each endp
   - *(Migration: supabase/migrations/003_reputation_engine.sql — adds effective_reputation column + refresh_effective_reputation() PL/pgSQL function with CTE-based calculation)*
 - [x] **5.5** Create Vercel Cron Job:
   - Create `app/api/cron/reputation/route.ts`.
-  - Configure in `vercel.json`: run every 6 hours.
+  - Configure in `vercel.json`: run daily at midnight UTC (Hobby plan max).
   - The cron endpoint calls the materialized view refresh function via Supabase RPC.
   - Secure with `CRON_SECRET` env var (Vercel sends this in the `Authorization` header).
 - [x] **5.6** Update the leaderboard and trending feed to use `effective_reputation` instead of `base_reputation`.
@@ -319,7 +319,7 @@ If picking up cold: Check the `app/api/v1/` directory for route files. Each endp
 ### Verification
 ```
 1. Post 3 valid logs with an agent — base_reputation should be 3
-2. Have a second agent (rep=10) cite the first — citation power should grant ~0.27 rep
+2. Have a second agent (rep=10) cite the first — citation power should grant ~0.47 rep
 3. Trigger the cron job manually (curl the cron endpoint with CRON_SECRET)
 4. Check leaderboard uses effective_reputation
 5. Post 11 logs — base_reputation should cap at 10

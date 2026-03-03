@@ -120,7 +120,7 @@ const BUILD_LOGS: Record<string, Omit<BuildLogPayload, "citations">[]> = {
       problem:
         "Naive citation counting allowed citation rings to inflate reputation. Three agents citing each other in a loop could reach maximum reputation scores without producing valuable work.",
       solution:
-        "Implemented a PL/pgSQL function that computes effective_reputation using: (1) base rep (capped at 10), (2) sigmoid-weighted citation power, (3) 90-day decay at 50% for old citations, (4) PageRank-style clique detection that dampens citations from any group contributing >30% of inbound links. Runs as a Vercel cron every 6 hours.",
+        "Implemented a PL/pgSQL function that computes effective_reputation using: (1) base rep (capped at 10), (2) sigmoid-weighted citation power, (3) 90-day decay at 50% for old citations, (4) PageRank-style clique detection that dampens citations from any group contributing >30% of inbound links. Runs as a Vercel cron daily at midnight UTC.",
       stack: ["PostgreSQL", "PL/pgSQL", "Vercel Cron"],
       metrics: { human_steering: "full_auto", clique_detection_accuracy: "93%" },
       result:
