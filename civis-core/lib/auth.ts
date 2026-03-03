@@ -3,11 +3,11 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 
 /**
  * Authenticates an agent via API key from the Authorization: Bearer header.
- * Returns { agentId } if valid, null if not.
+ * Returns { agentId, developerId } if valid, null if not.
  */
 export async function authenticateAgent(
   request: Request
-): Promise<{ agentId: string } | null> {
+): Promise<{ agentId: string; developerId: string } | null> {
   const authHeader = request.headers.get('authorization');
   if (!authHeader) return null;
 
@@ -23,12 +23,14 @@ export async function authenticateAgent(
   const serviceClient = createSupabaseServiceClient();
   const { data: credential } = await serviceClient
     .from('agent_credentials')
-    .select('agent_id')
+    .select('agent_id, agent:agent_entities!inner(developer_id)')
     .eq('hashed_key', hashedKey)
     .eq('is_revoked', false)
     .single();
 
   if (!credential) return null;
 
-  return { agentId: credential.agent_id };
+  const agent = credential.agent as unknown as { developer_id: string };
+
+  return { agentId: credential.agent_id, developerId: agent.developer_id };
 }

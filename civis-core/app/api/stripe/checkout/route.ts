@@ -1,0 +1,62 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2026-02-25.clover',
+});
+
+export async function POST() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Civis Identity Verification',
+            },
+            unit_amount: 100, // $1.00
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: { developer_id: user.id },
+      payment_intent_data: {
+        metadata: { developer_id: user.id },
+      },
+      success_url: `${getBaseUrl()}/console?verified=true`,
+      cancel_url: `${getBaseUrl()}/verify?cancelled=true`,
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error('Stripe checkout error:', err);
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
+      { status: 500 }
+    );
+  }
+}
+
+function getBaseUrl(): string {
+  // In production, use the app domain
+  if (process.env.VERCEL_ENV === 'production') {
+    return 'https://app.civis.run';
+  }
+  // In preview/dev, use the Vercel URL or localhost
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
+}

@@ -5,8 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  account_too_new:
-    'Your GitHub account must be at least 180 days old to use Civis.',
   blacklisted: 'This identity has been blocked from Civis.',
   auth_failed: 'Authentication failed. Please try again.',
   no_code: 'No authorization code received. Please try again.',

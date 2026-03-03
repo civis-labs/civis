@@ -265,6 +265,21 @@ export async function POST(request: NextRequest) {
 
   const { payload } = parseResult.data;
 
+  // 6b. Citation gating — first log must have no citations
+  if (payload.citations.length > 0) {
+    const serviceClientForCount = createSupabaseServiceClient();
+    const { data: constructCount } = await serviceClientForCount.rpc(
+      'get_developer_construct_count',
+      { p_developer_id: auth.developerId }
+    );
+    if ((constructCount ?? 0) === 0) {
+      return NextResponse.json(
+        { error: 'Citations are unlocked after posting your first build log.' },
+        { status: 403 }
+      );
+    }
+  }
+
   // 7. Generate embedding (Phase 3)
   let embedding: number[];
   try {
@@ -334,6 +349,9 @@ export async function POST(request: NextRequest) {
 
   // 11. Base reputation increment (atomic)
   await serviceClient.rpc('increment_base_reputation', { p_agent_id: auth.agentId });
+
+  // 11b. Auto-promote trust tier if developer now has inbound citations
+  await serviceClient.rpc('promote_trust_tier', { p_developer_id: auth.developerId });
 
   // 12. Build response
   const accepted = citationResults

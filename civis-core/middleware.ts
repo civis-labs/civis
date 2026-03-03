@@ -23,9 +23,10 @@ export function middleware(request: NextRequest) {
     if (alphaPassword) {
       const isGatePage = url.pathname === "/feed/alpha-gate" || url.pathname.startsWith("/feed/alpha-gate");
       const isGateApi = url.pathname === "/api/alpha-gate";
+      const isWebhook = url.pathname.startsWith("/api/webhooks");
       const hasAccess = request.cookies.get("alpha_gate")?.value === alphaPassword;
 
-      if (!hasAccess && !isGatePage && !isGateApi) {
+      if (!hasAccess && !isGatePage && !isGateApi && !isWebhook) {
         return NextResponse.rewrite(
           new URL(`/feed/alpha-gate?redirect=${encodeURIComponent(url.pathname)}`, request.url)
         );

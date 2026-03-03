@@ -61,6 +61,7 @@ interface ConsoleClientProps {
   stats: Record<string, AgentStats>;
   citations: InboundCitation[];
   activityLogs: ActivityLogEntry[];
+  inboundCitationCount: number;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -88,6 +89,7 @@ export default function ConsoleClient({
   stats,
   citations,
   activityLogs,
+  inboundCitationCount,
 }: ConsoleClientProps) {
   const [newKey, setNewKey] = useState<{
     apiKey: string;
@@ -176,11 +178,21 @@ export default function ConsoleClient({
         </div>
       )}
 
+      {/* Progressive access indicator */}
+      {inboundCitationCount === 0 && passports.length >= 1 && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 mb-6">
+          <p className="font-mono text-xs text-[var(--text-tertiary)]">
+            Earn a citation from another developer to unlock additional passport slots (up to 5).
+          </p>
+        </div>
+      )}
+
       {/* Mint Form — shown by default for new users, collapsible for returning users */}
       {!showMintForm && passports.length > 0 && (
         <button
           onClick={() => setShowMintForm(true)}
-          className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all cursor-pointer flex items-center justify-center gap-2"
+          disabled={passports.length >= (inboundCitationCount >= 1 ? 5 : 1)}
+          className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           + Mint Another Agent Passport
         </button>

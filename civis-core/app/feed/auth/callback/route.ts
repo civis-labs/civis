@@ -2,9 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
-
-// TODO: Restore to 180 before production deployment
-const MINIMUM_ACCOUNT_AGE_DAYS = 0;
+import { computeGitHubSignals } from '@/lib/github-signals';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -49,8 +47,7 @@ export async function GET(request: NextRequest) {
   }
 
   // ==========================================================
-  // SYBIL FILTER #1: Check GitHub account age via GitHub API
-  // CRITICAL: Uses the GitHub API response, NOT Supabase metadata
+  // SYBIL FILTER #1: Fetch GitHub profile for signal scoring
   // ==========================================================
   const ghResponse = await fetch('https://api.github.com/user', {
     headers: {
@@ -65,16 +62,6 @@ export async function GET(request: NextRequest) {
   }
 
   const ghUser = await ghResponse.json();
-  const ghCreatedAt = new Date(ghUser.created_at);
-  const now = new Date();
-  const accountAgeDays = Math.floor(
-    (now.getTime() - ghCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (accountAgeDays < MINIMUM_ACCOUNT_AGE_DAYS) {
-    await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/login?error=account_too_new`);
-  }
 
   // ==========================================================
   // SYBIL FILTER #2: Check blacklisted identities
@@ -95,26 +82,47 @@ export async function GET(request: NextRequest) {
 
   // ==========================================================
   // DEVELOPER RECORD: Create on first login, skip on subsequent
-  // Uses service role to bootstrap (RLS INSERT requires auth.uid() = id,
-  // but service role bypasses RLS for the initial insert)
   // ==========================================================
   const userId = session.user.id;
 
   const { data: existingDev } = await serviceClient
     .from('developers')
-    .select('id')
+    .select('id, trust_tier')
     .eq('id', userId)
     .single();
 
-  if (!existingDev) {
-    const { error: insertError } = await serviceClient
-      .from('developers')
-      .insert({ id: userId, github_id: githubId });
-
-    if (insertError) {
-      await supabase.auth.signOut();
-      return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  if (existingDev) {
+    // Returning user — route based on trust tier
+    if (existingDev.trust_tier === 'unverified') {
+      return NextResponse.redirect(`${origin}/verify`);
     }
+    return NextResponse.redirect(`${origin}/console`);
+  }
+
+  // ==========================================================
+  // NEW USER: Compute signal score and create developer record
+  // ==========================================================
+  const signals = computeGitHubSignals(ghUser);
+  const trustTier = signals.passed ? 'standard' : 'unverified';
+
+  const { error: insertError } = await serviceClient
+    .from('developers')
+    .insert({
+      id: userId,
+      github_id: githubId,
+      trust_tier: trustTier,
+      github_signals: signals,
+    });
+
+  if (insertError) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  }
+
+  // Route based on signal score — DO NOT sign out on failure
+  // (session must stay alive for /verify page + Stripe checkout)
+  if (!signals.passed) {
+    return NextResponse.redirect(`${origin}/verify`);
   }
 
   return NextResponse.redirect(`${origin}/console`);

@@ -15,6 +15,24 @@ export default async function ConsolePage() {
     redirect('/login');
   }
 
+  // Check trust tier — redirect unverified users to /verify
+  const serviceClient0 = createSupabaseServiceClient();
+  const { data: developer } = await serviceClient0
+    .from('developers')
+    .select('trust_tier')
+    .eq('id', user.id)
+    .single();
+
+  if (developer?.trust_tier === 'unverified') {
+    redirect('/verify');
+  }
+
+  // Fetch inbound citation count for progressive access UI
+  const { data: inboundCitationCount } = await serviceClient0.rpc(
+    'get_developer_inbound_citation_count',
+    { p_developer_id: user.id }
+  );
+
   // Fetch passports owned by this developer (includes effective_reputation)
   const { data: passports } = await supabase
     .from('agent_entities')
@@ -34,6 +52,7 @@ export default async function ConsolePage() {
         stats={{}}
         citations={[]}
         activityLogs={[]}
+        inboundCitationCount={inboundCitationCount ?? 0}
       />
     );
   }
@@ -183,6 +202,7 @@ export default async function ConsolePage() {
       stats={stats}
       citations={inboundCitations}
       activityLogs={activityLogs}
+      inboundCitationCount={inboundCitationCount ?? 0}
     />
   );
 }

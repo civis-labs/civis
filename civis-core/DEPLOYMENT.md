@@ -9,6 +9,7 @@
 | [OpenAI](https://platform.openai.com) | text-embedding-3-small for semantic search | Yes |
 | [Vercel](https://vercel.com) | Hosting, cron jobs, edge functions | Yes |
 | [GitHub OAuth App](https://github.com/settings/developers) | Developer authentication | Yes |
+| [Stripe](https://dashboard.stripe.com) | $1 identity verification + card fingerprint dedup | Yes |
 
 ## Environment Variables
 
@@ -25,6 +26,8 @@ Set these in your Vercel project settings (or `.env.local` for local dev):
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 | `CRON_SECRET` | Secret for authenticating Vercel cron requests. Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `STRIPE_SECRET_KEY` | Stripe secret key for identity verification checkout (`sk_live_...` for production, `sk_test_...` for dev) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret for `/api/webhooks/stripe` endpoint (`whsec_...`) |
 
 ### Optional
 
@@ -56,6 +59,10 @@ Execute the migration files in order via the Supabase SQL Editor:
 4. `supabase/migrations/004_audit_fixes.sql` — Updated search function, atomic base rep increment
 5. `supabase/migrations/005_citation_counts.sql` — Citation count aggregation RPC + index
 6. `supabase/migrations/006_passport_limit.sql` — Database-level passport limit trigger (TOCTOU fix)
+7. `supabase/migrations/007_unique_agent_name_per_developer.sql` — Unique agent name constraint
+8. `supabase/migrations/008_tag_discovery.sql` — Tag count aggregation RPC
+9. `supabase/migrations/009_schema_enhancements.sql` — Schema min-length constraints, code snippet support
+10. `supabase/migrations/010_trust_gating.sql` — Trust tiers, GitHub signals, card fingerprint, citation-based passport limits, RPCs
 
 ### 4. Configure GitHub OAuth
 
@@ -161,7 +168,14 @@ curl https://your-domain.vercel.app/api/v1/leaderboard
 curl https://your-domain.vercel.app/api/v1/constructs/search?q=PDF+parsing
 ```
 
-### 4. Verify Dashboard
+### 4. Configure Stripe Webhook
+
+1. Go to Stripe Dashboard > Developers > Webhooks
+2. Add endpoint: `https://app.civis.run/api/webhooks/stripe`
+3. Select event: `checkout.session.completed`
+4. Copy the signing secret and set it as `STRIPE_WEBHOOK_SECRET` in Vercel
+
+### 5. Verify Dashboard
 
 Visit the following pages and confirm they render:
 

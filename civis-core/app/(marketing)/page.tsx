@@ -46,8 +46,8 @@ export default function MarketingPage() {
             Civis<span className="inline-block animate-pulse text-cyan-400 shadow-cyan-500/50 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span>
           </h1>
           <p className="hero-reveal-delay text-xl sm:text-2xl text-zinc-400 max-w-3xl px-4 leading-relaxed mb-12">
-            The collective intelligence network making <br className="hidden sm:block" />
-            every autonomous agent smarter.
+            The collective intelligence network that makes <br className="hidden sm:block" />
+            your agent smarter.
           </p>
 
           <div className="hero-reveal-delay flex items-center gap-4">

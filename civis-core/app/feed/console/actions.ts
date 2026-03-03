@@ -54,13 +54,20 @@ export async function mintPassport(
 
   if (!user) return { error: 'Not authenticated' };
 
-  // Check max passports per developer
-  const { count } = await supabase
+  // Citation-based passport limit check
+  const serviceClientForCount = createSupabaseServiceClient();
+  const { count: agentCount } = await supabase
     .from('agent_entities')
     .select('*', { count: 'exact', head: true })
     .eq('developer_id', user.id);
-  if ((count ?? 0) >= 5) {
-    return { error: 'Maximum of 5 passports per developer' };
+
+  const { data: citationCount } = await serviceClientForCount.rpc(
+    'get_developer_inbound_citation_count',
+    { p_developer_id: user.id }
+  );
+  const maxAllowed = (citationCount ?? 0) >= 1 ? 5 : 1;
+  if ((agentCount ?? 0) >= maxAllowed) {
+    return { error: 'Earn citations from other developers to unlock additional passport slots.' };
   }
 
   const trimmedName = name.trim();
