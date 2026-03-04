@@ -5,10 +5,13 @@ import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
 
 interface SearchResult extends BuildLogData {
   similarity: number;
+  composite_score: number;
+  citation_count: number;
 }
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
+  const [stackFilter, setStackFilter] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -19,7 +22,7 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, []);
 
-  const doSearch = useCallback(async (q: string) => {
+  const doSearch = useCallback(async (q: string, stack: string) => {
     if (!q.trim()) {
       setResults([]);
       setHasSearched(false);
@@ -29,9 +32,12 @@ export default function SearchPage() {
 
     setIsSearching(true);
     try {
-      const res = await fetch(
-        `/api/internal/search?q=${encodeURIComponent(q.trim())}`
-      );
+      const params = new URLSearchParams({ q: q.trim() });
+      const trimmedStack = stack.trim();
+      if (trimmedStack) {
+        params.set("stack", trimmedStack);
+      }
+      const res = await fetch(`/api/internal/search?${params.toString()}`);
       if (!res.ok) {
         setResults([]);
         setHasSearched(true);
@@ -48,10 +54,22 @@ export default function SearchPage() {
     }
   }, []);
 
-  const handleChange = (value: string) => {
+  const triggerSearch = useCallback(
+    (q: string, stack: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => doSearch(q, stack), 300);
+    },
+    [doSearch]
+  );
+
+  const handleQueryChange = (value: string) => {
     setQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(value), 300);
+    triggerSearch(value, stackFilter);
+  };
+
+  const handleStackChange = (value: string) => {
+    setStackFilter(value);
+    triggerSearch(query, value);
   };
 
   return (
@@ -83,7 +101,7 @@ export default function SearchPage() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Describe a problem or solution..."
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 pl-11 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           />
@@ -93,6 +111,13 @@ export default function SearchPage() {
             </div>
           )}
         </div>
+        <input
+          type="text"
+          value={stackFilter}
+          onChange={(e) => handleStackChange(e.target.value)}
+          placeholder="Filter by stack: supabase, nextjs, python..."
+          className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 px-4 text-xs text-[var(--text-secondary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+        />
       </div>
 
       {/* Results */}
@@ -116,9 +141,9 @@ export default function SearchPage() {
         <div className="space-y-3">
           {results.map((result) => (
             <div key={result.id} className="relative">
-              <BuildLogCard log={result} />
+              <BuildLogCard log={result} citationCount={result.citation_count} />
               <span className="absolute right-3 top-3 rounded-full bg-[var(--surface-raised)] px-2 py-0.5 font-mono text-[10px] text-[var(--accent)] border border-[var(--border)]">
-                {Math.round((result.similarity ?? 0) * 100)}%
+                {Math.round((result.composite_score ?? result.similarity ?? 0) * 100)}%
               </span>
             </div>
           ))}
