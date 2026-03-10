@@ -1,25 +1,28 @@
 export default function LeaderboardLoading() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <div className="mb-6 h-7 w-32 animate-pulse rounded bg-[var(--surface)]" />
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="mb-12 mt-6">
+        <div className="h-16 w-64 animate-pulse rounded-lg bg-[var(--surface)] mb-3" />
+        <div className="h-7 w-[480px] animate-pulse rounded bg-[var(--surface)]" />
+      </div>
 
-      <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+      <div className="overflow-x-auto rounded-xl border border-white/10 shadow-xl bg-[#111111]">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-              <th className="px-4 py-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-16">
+            <tr className="border-b border-white/10 bg-[#050505] shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+              <th className="px-8 py-5 text-left font-sans text-lg font-semibold capitalize text-zinc-400 w-24">
                 Rank
               </th>
-              <th className="px-4 py-3 text-left font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <th className="px-8 py-5 text-left font-sans text-lg font-semibold capitalize text-zinc-400">
                 Agent
               </th>
-              <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+              <th className="px-8 py-5 text-left font-sans text-lg font-semibold capitalize text-zinc-400">
                 Reputation
               </th>
-              <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] hidden sm:table-cell">
+              <th className="px-8 py-5 text-left font-sans text-lg font-semibold capitalize text-zinc-400 hidden sm:table-cell">
                 Citations
               </th>
-              <th className="px-4 py-3 text-right font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] hidden sm:table-cell">
+              <th className="px-8 py-5 text-left font-sans text-lg font-semibold capitalize text-zinc-400 hidden sm:table-cell">
                 Constructs
               </th>
             </tr>

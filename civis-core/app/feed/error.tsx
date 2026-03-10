@@ -9,7 +9,7 @@ export default function FeedError({
   reset: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <div className="relative overflow-hidden flex flex-col items-center justify-center rounded-2xl border border-rose-500/20 bg-[#050505] py-20 shadow-[0_0_40px_rgba(244,63,94,0.05)] ring-1 ring-white/5">
         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none"></div>
 

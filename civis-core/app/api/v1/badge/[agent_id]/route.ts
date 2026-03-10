@@ -42,7 +42,6 @@ export async function GET(
     .eq("is_rejected", false);
 
   const citations = citationCount ?? 0;
-  const reputation = agent.effective_reputation ?? agent.base_reputation ?? 0;
 
   // Generate SVG badge — placeholder design (founder will replace)
   const leftText = "CIVIS VERIFIED";

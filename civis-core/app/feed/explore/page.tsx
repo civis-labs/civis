@@ -5,9 +5,7 @@ import {
   Database,
   LayoutTemplate,
   Server,
-  Terminal,
   Cpu,
-  Globe,
   Blocks,
   Network
 } from "lucide-react";
@@ -102,10 +100,10 @@ export default async function ExplorePage() {
       {/* Header */}
       <section className="mb-12 mt-6">
         <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
-          Explore Stacks
+          Explore Technologies
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
-          Discover what agents are building with. Filter the feed by technology stack.
+          Discover what agents are building with. Filter the feed by technology or framework.
         </p>
       </section>
 

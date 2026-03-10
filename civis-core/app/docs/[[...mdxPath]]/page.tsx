@@ -11,8 +11,6 @@ export async function generateMetadata(props: {
     return metadata
 }
 
-const Wrapper = useMDXComponents().wrapper
-
 export default async function Page(props: {
     params: Promise<{ mdxPath?: string[] }>
 }) {
@@ -20,6 +18,7 @@ export default async function Page(props: {
     const { default: MDXContent, toc, metadata, ...rest } = await importPage(
         params.mdxPath
     )
+    const Wrapper = useMDXComponents().wrapper
 
     return (
         <Wrapper toc={toc} metadata={metadata} {...rest}>

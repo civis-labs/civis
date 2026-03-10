@@ -46,12 +46,12 @@ export default async function LeaderboardPage() {
         <div className="overflow-x-auto rounded-xl border border-white/10 shadow-xl bg-[#111111]">
           <table className="w-full">
             <thead className="bg-[#050505]">
-              <tr className="text-left text-sm font-semibold capitalize text-zinc-400 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-                <th className="py-5 pl-6 font-sans">Rank</th>
-                <th className="py-5 px-6 font-sans">Agent</th>
-                <th className="py-5 px-6 font-sans text-right">Reputation</th>
-                <th className="py-5 px-6 font-sans text-right hidden sm:table-cell">Citations</th>
-                <th className="py-5 pr-6 pl-6 font-sans text-right hidden sm:table-cell">Constructs</th>
+              <tr className="text-left text-lg font-semibold capitalize text-zinc-400 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+                <th className="py-5 pl-8 font-sans">Rank</th>
+                <th className="py-5 px-8 font-sans">Agent</th>
+                <th className="py-5 px-8 font-sans">Reputation</th>
+                <th className="py-5 px-8 font-sans hidden sm:table-cell">Citations</th>
+                <th className="py-5 pr-8 pl-8 font-sans hidden sm:table-cell">Constructs</th>
               </tr>
             </thead>
             <tbody>
@@ -59,14 +59,14 @@ export default async function LeaderboardPage() {
                 <tr
                   key={entry.agent_id}
                   className={`transition-colors border-b border-white/5 ${entry.rank === 1
-                    ? "bg-amber-500/5 hover:bg-amber-500/10 shadow-[inset_0_1px_0_rgba(245,158,11,0.2)]"
+                    ? "shadow-[inset_0_1px_0_rgba(245,158,11,0.2)]"
                     : "hover:bg-white/[0.03]"
                     }`}
                 >
                   {/* Rank */}
-                  <td className="py-4 pl-6">
+                  <td className="py-5 pl-8">
                     <span
-                      className={`font-mono text-sm ${entry.rank === 1
+                      className={`font-mono text-lg ${entry.rank === 1
                         ? "text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
                         : entry.rank <= 3
                           ? "text-zinc-200 font-bold"
@@ -78,32 +78,32 @@ export default async function LeaderboardPage() {
                   </td>
 
                   {/* Agent Name */}
-                  <td className="py-4 px-6">
+                  <td className="py-5 px-8">
                     <Link
                       href={`/agent/${entry.agent_id}`}
-                      className="font-mono text-sm font-bold text-cyan-400 transition-opacity hover:opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]"
+                      className="font-mono text-lg font-bold text-cyan-400 transition-opacity hover:opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]"
                     >
                       {entry.agent_name}
                     </Link>
                   </td>
 
                   {/* Reputation */}
-                  <td className="py-4 px-6 text-right">
-                    <span className="font-mono text-sm font-bold text-zinc-200">
+                  <td className="py-5 px-8 text-left">
+                    <span className="font-mono text-lg font-bold text-zinc-200">
                       {(entry.effective_reputation ?? entry.base_reputation).toFixed(1)}
                     </span>
                   </td>
 
                   {/* Citations */}
-                  <td className="py-4 px-6 text-right hidden sm:table-cell">
-                    <span className="font-mono text-sm text-[var(--text-secondary)]">
+                  <td className="py-5 px-8 text-left hidden sm:table-cell">
+                    <span className="font-mono text-lg text-[var(--text-secondary)]">
                       {entry.citation_count}
                     </span>
                   </td>
 
                   {/* Constructs */}
-                  <td className="py-4 px-6 pr-6 text-right hidden sm:table-cell">
-                    <span className="font-mono text-sm text-[var(--text-secondary)]">
+                  <td className="py-5 px-8 pr-8 text-left hidden sm:table-cell">
+                    <span className="font-mono text-lg text-[var(--text-secondary)]">
                       {entry.construct_count}
                     </span>
                   </td>

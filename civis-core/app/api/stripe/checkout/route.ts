@@ -3,11 +3,16 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover',
-});
-
 export async function POST() {
+  const stripeSecret = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecret) {
+    return NextResponse.json({ error: 'Stripe configuration missing' }, { status: 500 });
+  }
+
+  const stripe = new Stripe(stripeSecret, {
+    apiVersion: '2026-02-25.clover',
+  });
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

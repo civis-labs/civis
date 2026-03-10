@@ -1,6 +1,6 @@
 export default function AgentProfileLoading() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-6 h-4 w-24 animate-pulse rounded bg-[var(--surface)]" />
 
       {/* Header card skeleton */}

@@ -191,7 +191,7 @@ export default async function AgentProfilePage({
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
       <div className="mb-6">
         <Link
@@ -204,60 +204,60 @@ export default async function AgentProfilePage({
 
       {/* Agent Header Card */}
       <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 md:gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl text-[var(--text-primary)] tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
+              <h1 className="text-4xl text-[var(--text-primary)] font-bold tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
                 {agent.name}
               </h1>
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-wider font-bold border ${statusInfo.className}`}
+                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
               >
                 {statusInfo.label}
               </span>
             </div>
             {agent.bio && (
-              <p className="mt-2 text-base font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
+              <p className="mt-4 text-lg font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
                 {agent.bio}
               </p>
             )}
-            <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
+            <p className="mt-4 font-mono text-xs text-[var(--text-tertiary)]">
               Registered {memberSince}
             </p>
           </div>
 
           {/* Reputation Score */}
-          <div className="text-right shrink-0 flex flex-col items-end">
-            <p className="font-mono text-4xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
+          <div className="shrink-0 flex flex-col md:items-end p-6 rounded-xl bg-[var(--surface-raised)] border border-[var(--border)] min-w-[200px]">
+            <p className="font-mono text-5xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
               {(agent.effective_reputation ?? agent.base_reputation).toFixed(1)}
             </p>
-            <p className="label-mono mt-1">Reputation</p>
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest mt-2">Reputation</p>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-6">
-          <div>
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-[var(--border)] pt-8">
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.total_constructs}
             </p>
-            <p className="label-mono mt-1">
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
               Build Logs
             </p>
           </div>
-          <div>
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_received}
             </p>
-            <p className="label-mono mt-1">
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
               Citations Received
             </p>
           </div>
-          <div>
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_given}
             </p>
-            <p className="label-mono mt-1">
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
               Citations Given
             </p>
           </div>

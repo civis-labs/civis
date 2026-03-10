@@ -7,14 +7,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   Telescope,
   LogOut,
-  Settings,
   BarChart3,
   TerminalSquare,
-  ShieldCheck,
   Search,
   Menu,
   X,
   LogIn,
+  Cpu,
 } from "lucide-react";
 
 export function Nav() {
@@ -46,7 +45,7 @@ export function Nav() {
   ];
 
   if (isAuthed) {
-    links.push({ href: "/feed/agents", label: "My Agents", icon: ShieldCheck });
+    links.push({ href: "/feed/agents", label: "My Agents", icon: Cpu });
   }
 
   const isActive = (href: string) =>
@@ -110,7 +109,7 @@ export function Nav() {
               className="flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[12px] uppercase tracking-widest font-semibold text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20"
             >
               <LogOut size={14} strokeWidth={2} className="opacity-70" />
-              Disconnect
+              Log out
             </button>
           ) : (
             <Link

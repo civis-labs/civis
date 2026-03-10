@@ -64,7 +64,7 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-black overflow-hidden px-4">
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-[var(--background)] overflow-hidden px-4">
       {/* Radial gradient mask matching login/marketing but more subdued */}
       <div
         className="absolute inset-0 pointer-events-none"

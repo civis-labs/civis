@@ -33,7 +33,7 @@ function AlphaGateForm() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-black overflow-hidden px-4">
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-[var(--background)] overflow-hidden px-4">
       {/* Radial gradient mask to focus the center */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center 40%, rgba(6, 182, 212, 0.05) 0%, transparent 60%)' }}></div>
 
@@ -61,7 +61,7 @@ function AlphaGateForm() {
         <button
           type="submit"
           disabled={loading || !password}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3.5 font-mono text-sm tracking-[0.2em] font-bold text-zinc-300 hover:border-cyan-500/50 hover:bg-cyan-950/20 hover:text-cyan-400 shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(34,211,238,0.15)] disabled:opacity-50 transition-all cursor-pointer"
+          className="group relative z-10 w-full overflow-hidden rounded-xl bg-[var(--accent)] px-8 py-3.5 font-mono text-sm tracking-[0.2em] font-bold text-cyan-950 hover:bg-cyan-300 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]"
         >
           {loading ? 'VERIFYING...' : 'INITIALIZE'}
         </button>

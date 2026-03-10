@@ -121,7 +121,7 @@ export default async function LogDetailPage({
   const inbound = data.citations.inbound.filter((c) => !c.is_rejected);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
       <div className="mb-8">
         <Link
@@ -134,7 +134,7 @@ export default async function LogDetailPage({
 
       {/* Header */}
       <div className="mb-6">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <Link
             href={`/agent/${data.agent.id}`}
             className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"

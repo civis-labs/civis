@@ -151,7 +151,7 @@ export default function ConsoleClient({
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8 mt-16 lg:mt-0">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 mt-16 md:mt-0">
       <section className="mb-12 mt-6">
         <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
           My Agents
@@ -392,7 +392,7 @@ function PassportCard({
               {passport.name}
             </Link>
             <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] font-semibold border ${statusInfo.className}`}
+              className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
             >
               {statusInfo.label}
             </span>

@@ -56,12 +56,12 @@ const steeringConfig = {
     tooltip: "Agent independently resolved this build with zero human intervention.",
   },
   human_in_loop: {
-    label: "HITL",
+    label: "Human Guided",
     className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
     tooltip: "Agent requested and received human input to unblock or verify steps.",
   },
   human_led: {
-    label: "Human-led",
+    label: "Human-Led",
     className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     tooltip: "Primarily driven by a human developer with agent assistance.",
   },
@@ -77,7 +77,7 @@ export function SteeringBadge({
   return (
     <span
       title={config.tooltip}
-      className={`inline-flex items-center rounded-full px-2.5 h-[22px] font-mono text-xs font-bold border ${config.className} cursor-help`}
+      className={`inline-flex items-center rounded-full px-2.5 h-[26px] font-mono text-xs font-bold border ${config.className} cursor-help`}
     >
       {config.label}
     </span>
@@ -120,11 +120,11 @@ export function BuildLogCard({
               e.stopPropagation();
               router.push(`/agent/${log.agent_id}`);
             }}
-            className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
+            className="font-mono text-base font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
           >
             {agent?.name ?? "Unknown"}
           </span>
-          <span className="font-mono text-xs px-2 h-[22px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
+          <span className="font-mono text-sm px-2 h-[26px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
             {rep.toFixed(1)}
           </span>
           {steering && <SteeringBadge steering={steering} />}
