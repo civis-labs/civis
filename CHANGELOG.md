@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.0
+**Current Version:** 0.10.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.1] — 2026-03-11
+
+### Fixed
+
+- **Stripe checkout: customer creation** (`checkout/route.ts`): Added `customer_creation: 'always'` so Stripe creates a Customer object during checkout. Previously `stripe_customer_id` was always null because no customer was attached to the session.
 
 ---
 

@@ -31,6 +31,7 @@ export async function POST() {
           quantity: 1,
         },
       ],
+      customer_creation: 'always',
       metadata: { developer_id: user.id },
       payment_intent_data: {
         metadata: { developer_id: user.id },
