@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAgent } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { sanitizeString } from '@/lib/sanitize';
 
 // =============================================
 // POST /v1/citations/reject/:id (Task 4.7 — Citation Rejection)
@@ -51,7 +52,7 @@ export async function POST(
   try {
     const body = await request.json();
     if (body.reason && typeof body.reason === 'string') {
-      reason = body.reason.slice(0, 500);
+      reason = sanitizeString(body.reason).slice(0, 500);
     }
   } catch {
     // No body or invalid JSON — reason remains null

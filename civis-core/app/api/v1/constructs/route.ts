@@ -378,7 +378,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   // Rate limit
-  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
+  const ip = request.headers.get('x-real-ip') || 'unknown';
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });

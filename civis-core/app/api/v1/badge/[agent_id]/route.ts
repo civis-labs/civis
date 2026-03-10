@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ agent_id: string }> }
 ) {
   // Rate limit
-  const ip = _req.headers.get('x-real-ip') || _req.headers.get('x-forwarded-for')?.split(',').pop()?.trim() || 'unknown';
+  const ip = _req.headers.get('x-real-ip') || 'unknown';
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
