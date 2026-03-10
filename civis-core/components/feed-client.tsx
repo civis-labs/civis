@@ -1,0 +1,200 @@
+"use client";
+
+import { useState, useTransition, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { FeedTabs } from "@/components/feed-tabs";
+import Link from "next/link";
+
+interface FeedClientProps {
+  initialLogs: BuildLogData[];
+  initialCitationCounts: Record<string, number>;
+  initialSort: string;
+  initialTag: string | null;
+}
+
+export function FeedClient({
+  initialLogs,
+  initialCitationCounts,
+  initialSort,
+  initialTag,
+}: FeedClientProps) {
+  const router = useRouter();
+  const [sort, setSort] = useState(initialSort);
+  const [tag, setTag] = useState(initialTag);
+  const [logs, setLogs] = useState(initialLogs);
+  const [citationCounts, setCitationCounts] = useState(initialCitationCounts);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialLogs.length === 20);
+  const [isSwitching, startSwitchTransition] = useTransition();
+  const [isLoadingMore, startLoadMoreTransition] = useTransition();
+
+  const fetchFeed = useCallback(
+    async (newSort: string, newTag: string | null, newPage: number) => {
+      const tagParam = newTag ? `&tag=${encodeURIComponent(newTag)}` : "";
+      const res = await fetch(
+        `/api/internal/feed?sort=${newSort}&page=${newPage}&limit=20${tagParam}`
+      );
+      if (!res.ok) return null;
+      return res.json();
+    },
+    []
+  );
+
+  const fetchCitations = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return {};
+    const res = await fetch("/api/internal/citation-counts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) return {};
+    const json = await res.json();
+    return json.counts as Record<string, number>;
+  }, []);
+
+  function handleSortChange(newSort: string) {
+    if (newSort === sort) return;
+
+    // Update URL without triggering server re-render
+    const params = new URLSearchParams();
+    params.set("sort", newSort);
+    if (tag) params.set("tag", tag);
+    window.history.replaceState(null, "", `/?${params.toString()}`);
+
+    setSort(newSort);
+    startSwitchTransition(async () => {
+      const json = await fetchFeed(newSort, tag, 1);
+      if (!json) return;
+      const newLogs = json.data as BuildLogData[];
+      const counts = await fetchCitations(newLogs.map((l) => l.id));
+      setLogs(newLogs);
+      setCitationCounts(counts);
+      setPage(1);
+      setHasMore(newLogs.length === 20);
+    });
+  }
+
+  function handleClearTag() {
+    const params = new URLSearchParams();
+    if (sort !== "trending") params.set("sort", sort);
+    window.history.replaceState(null, "", params.toString() ? `/?${params.toString()}` : "/");
+
+    setTag(null);
+    startSwitchTransition(async () => {
+      const json = await fetchFeed(sort, null, 1);
+      if (!json) return;
+      const newLogs = json.data as BuildLogData[];
+      const counts = await fetchCitations(newLogs.map((l) => l.id));
+      setLogs(newLogs);
+      setCitationCounts(counts);
+      setPage(1);
+      setHasMore(newLogs.length === 20);
+    });
+  }
+
+  function loadMore() {
+    const nextPage = page + 1;
+    startLoadMoreTransition(async () => {
+      const json = await fetchFeed(sort, tag, nextPage);
+      if (!json) return;
+      const newLogs = json.data as BuildLogData[];
+      if (newLogs.length < 20) setHasMore(false);
+      if (newLogs.length === 0) return;
+
+      const counts = await fetchCitations(newLogs.map((l) => l.id));
+      setCitationCounts((prev) => ({ ...prev, ...counts }));
+      setLogs((prev) => [...prev, ...newLogs]);
+      setPage(nextPage);
+    });
+  }
+
+  return (
+    <>
+      {/* Active tag filter banner */}
+      {tag && (
+        <div className="mb-6 flex items-center gap-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-2.5">
+          <span className="font-mono text-xs text-[var(--text-secondary)]">
+            Showing logs for:
+          </span>
+          <span className="rounded-full bg-[var(--accent)]/10 px-3 py-0.5 font-mono text-sm font-semibold text-[var(--accent)]">
+            {tag}
+          </span>
+          <button
+            onClick={handleClearTag}
+            className="font-mono text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          >
+            &times; clear filter
+          </button>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="mb-4 mt-6">
+        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
+          Feed
+        </h1>
+      </div>
+
+      {/* Feed + Sidebar wrapper expects this to be inside the flex-1 column */}
+      <div className="hero-reveal-delay flex justify-end mb-4">
+        <FeedTabs activeSort={sort} onSortChange={handleSortChange} />
+      </div>
+
+      {/* Loading state for filter switch */}
+      {isSwitching ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
+          <div className="h-5 w-5 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin mb-3" />
+          <p className="font-mono text-sm text-[var(--text-tertiary)]">
+            Loading...
+          </p>
+        </div>
+      ) : logs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
+          <p className="font-mono text-sm text-[var(--text-tertiary)]">
+            {tag ? `No build logs found for "${tag}"` : "No build logs yet"}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Featured first card */}
+          <div className="mb-4">
+            <BuildLogCard
+              key={logs[0].id}
+              log={logs[0]}
+              citationCount={citationCounts[logs[0].id] ?? 0}
+              featured
+              style={{ animationDelay: "0ms" }}
+            />
+          </div>
+
+          {/* Rest */}
+          {logs.length > 1 && (
+            <div className="space-y-3">
+              {logs.slice(1).map((log, i) => (
+                <BuildLogCard
+                  key={log.id}
+                  log={log}
+                  citationCount={citationCounts[log.id] ?? 0}
+                  style={{ animationDelay: `${(i + 1) * 50}ms` }}
+                />
+              ))}
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="mt-8 flex justify-center pb-8">
+              <button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-6 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--text-tertiary)] transition-all hover:border-[var(--accent)]/30 hover:text-[var(--accent)] disabled:opacity-50 cursor-pointer"
+              >
+                {isLoadingMore ? "Loading\u2026" : "Load more"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}

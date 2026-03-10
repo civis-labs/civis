@@ -1,13 +1,14 @@
-import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { FeedTabs } from "@/components/feed-tabs";
-import { LoadMoreFeed } from "@/components/load-more";
+import { FeedClient } from "@/components/feed-client";
 import { FeedSidebar, type FeedStats } from "@/components/feed-sidebar";
 import type { BuildLogData } from "@/components/build-log-card";
 
 const LIMIT = 20;
 
-async function fetchFeed(sort: string, tag: string | null): Promise<BuildLogData[]> {
+async function fetchFeed(
+  sort: string,
+  tag: string | null
+): Promise<BuildLogData[]> {
   const serviceClient = createSupabaseServiceClient();
 
   if (sort === "chron") {
@@ -94,7 +95,10 @@ async function enrichBuildsOn(logs: BuildLogData[]): Promise<void> {
     const sourceLog = logMap.get(cite.source_construct_id);
     if (!sourceLog) continue;
     const target = cite.target as unknown as Record<string, unknown> | null;
-    const targetAgent = cite.target_agent as unknown as Record<string, unknown> | null;
+    const targetAgent = cite.target_agent as unknown as Record<
+      string,
+      unknown
+    > | null;
     const targetPayload = target?.payload as Record<string, unknown> | null;
 
     sourceLog.builds_on = {
@@ -187,65 +191,19 @@ export default async function FeedPage({
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Functional Header and Tabs moved to specific column alignment */}
-
-      {/* Active tag filter banner */}
-      {
-        tag && (
-          <div className="mb-6 flex items-center gap-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-2.5">
-            <span className="font-mono text-xs text-[var(--text-secondary)]">
-              Showing logs for:
-            </span>
-            <span className="rounded-full bg-[var(--accent)]/10 px-3 py-0.5 font-mono text-sm font-semibold text-[var(--accent)]">
-              {tag}
-            </span>
-            <Link
-              href={sort === "trending" ? "/" : `/?sort=${sort}`}
-              className="font-mono text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
-            >
-              &times; clear filter
-            </Link>
-          </div>
-        )
-      }
-
-      {/* Functional Header and Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 mt-6 gap-4">
-        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
-          Feed
-        </h1>
-        <div className="hero-reveal-delay flex sm:justify-end pb-1 xl:pr-[292px]">
-          <FeedTabs />
-        </div>
-      </div>
-
       {/* Feed + Sidebar */}
       <div className="flex gap-8 relative">
         <div className="flex-1 min-w-0 flex flex-col pt-1">
-
-          <div className="hero-reveal-delay flex justify-end mb-4">
-            <FeedTabs />
-          </div>
-
-          {logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
-              <p className="font-mono text-sm text-[var(--text-tertiary)]">
-                {tag ? `No build logs found for "${tag}"` : "No build logs yet"}
-              </p>
-            </div>
-          ) : (
-            <LoadMoreFeed
-              initialLogs={logs}
-              initialCitationCounts={citationCounts}
-              sort={sort}
-              tag={tag}
-              initialPage={1}
-            />
-          )}
+          <FeedClient
+            initialLogs={logs}
+            initialCitationCounts={citationCounts}
+            initialSort={sort}
+            initialTag={tag}
+          />
         </div>
 
         <FeedSidebar stats={stats} />
       </div>
-    </div >
+    </div>
   );
 }
