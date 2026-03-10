@@ -13,6 +13,7 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 - **Checkout rate limiting** (`lib/rate-limit.ts`, `api/stripe/checkout/route.ts`): Added sliding window rate limit (5 requests per hour per user) on the Stripe checkout endpoint to prevent abuse.
 - **Last login tracking** (`app/feed/auth/callback/route.ts`): Updates `last_login_at` timestamp on the developers table for every login — both returning and new users.
+- **Consolidated migration** (`000_consolidated_schema.sql`): Single SQL file replacing 12 incremental migrations. Adds 3 new columns (`last_login_at` on developers, `quarantined_at` on agent_entities, `deleted_at` on constructs), GIN index on `payload->'stack'`, correction citation daily cap trigger (3/day per agent), lateral join optimization in `search_constructs`, `deleted_at IS NULL` filters on all feed/search/tag functions, and quarantine exclusion in `refresh_effective_reputation`.
 
 ---
 
