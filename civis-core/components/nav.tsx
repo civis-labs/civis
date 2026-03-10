@@ -4,7 +4,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { Activity, Compass, Search, Trophy, TerminalSquare, LogOut, LogIn, Menu, X } from "lucide-react";
+import {
+  Telescope,
+  LogOut,
+  Settings,
+  BarChart3,
+  TerminalSquare,
+  ShieldCheck,
+  Search,
+  Menu,
+  X,
+  LogIn,
+} from "lucide-react";
 
 export function Nav() {
   const pathname = usePathname();
@@ -28,14 +39,15 @@ export function Nav() {
   };
 
   const links = [
-    { href: "/", label: "Feed", icon: Activity },
-    { href: "/explore", label: "Explore", icon: Compass },
+    { href: "/", label: "Feed", icon: TerminalSquare }, // Changed icon from Activity to TerminalSquare
+    { href: "/explore", label: "Explore", icon: Telescope },
     { href: "/search", label: "Search", icon: Search },
-    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   ];
 
   if (isAuthed) {
-    links.push({ href: "/console", label: "My Agents", icon: TerminalSquare });
+    links.push({ href: "/console", label: "My Agents", icon: ShieldCheck }); // Changed icon from TerminalSquare to ShieldCheck
+    links.push({ href: "/settings", label: "Settings", icon: Settings }); // Added Settings link
   }
 
   const isActive = (href: string) =>
@@ -46,25 +58,25 @@ export function Nav() {
       {/* Mobile Top Bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 border-b border-white/10 bg-black/90 backdrop-blur-xl flex items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="font-mono text-sm font-bold tracking-[0.2em] text-white">CIVIS<span className="text-cyan-400">.</span></span>
+          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Civis<span className="inline-block text-cyan-400">.</span></span>
         </Link>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-zinc-400">
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-zinc-400 hover:text-white transition-colors">
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       {/* Sidebar */}
-      <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform border-r border-white/10 bg-[#0a0a0a] transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
+      <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform bg-[#030303] transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
         {/* Logo */}
-        <div className="hidden lg:flex h-16 items-center px-5 border-b border-white/10 bg-black">
+        <div className="hidden lg:flex h-20 items-center px-6 border-b border-white/5 bg-[#030303]">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <span className="font-mono text-sm font-bold tracking-[0.2em] text-white">CIVIS<span className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">.</span></span>
+            <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">.</span></span>
           </Link>
         </div>
 
         {/* Navigation Links */}
-        <div className="flex-1 py-5 px-3 flex flex-col gap-0.5 overflow-y-auto">
-          <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.15em] px-3 mb-3">Navigate</span>
+        <div className="flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto">
+          <span className="font-mono text-sm text-zinc-400 uppercase tracking-[0.2em] px-4 mb-4 mt-2 font-bold">Navigate</span>
           {links.map((link) => {
             const Icon = link.icon;
             const active = isActive(link.href);
@@ -73,36 +85,43 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all ${active
-                  ? "bg-cyan-500/10 text-cyan-400 shadow-sm ring-1 ring-cyan-500/20"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+                className={`group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden ${active
+                  ? "bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/20"
+                  : "text-zinc-400 hover:text-white hover:bg-white/[0.08]"
                   }`}
               >
-                <Icon size={16} strokeWidth={active ? 2.2 : 1.8} className={active ? "text-cyan-400" : "opacity-50"} />
-                {link.label}
+                {!active && <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>}
+
+                <div className={`relative z-10 flex items-center justify-center ${active ? "" : "group-hover:text-white transition-colors"}`}>
+                  {active && <div className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-1 h-5 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
+                  <Icon size={20} strokeWidth={active ? 2.2 : 1.8} className={active ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]" : "opacity-60 group-hover:opacity-100 transition-opacity"} />
+                </div>
+                <span className="tracking-wide relative z-10">{link.label}</span>
+                {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]" />}
               </Link>
             );
           })}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-white/10 bg-[#0a0a0a]">
+        <div className="p-4 border-t border-white/5 bg-[#030303]">
           {isAuthed ? (
             <button
               onClick={() => { setMobileOpen(false); handleSignOut(); }}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-zinc-500 hover:text-white hover:bg-rose-500/10 hover:text-rose-400 transition-all border border-transparent hover:border-rose-500/20"
+              className="flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[12px] uppercase tracking-widest font-semibold text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20"
             >
-              <LogOut size={16} strokeWidth={1.8} className="opacity-50" />
+              <LogOut size={14} strokeWidth={2} className="opacity-70" />
               Disconnect
             </button>
           ) : (
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-[#111111] px-3 py-2.5 text-[13px] font-mono tracking-widest font-bold text-zinc-300 hover:text-white hover:border-cyan-500/30 hover:bg-[#1a1a1a] transition-all shadow-sm ring-1 ring-white/5"
+              className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-xs font-mono tracking-widest font-bold text-zinc-300 hover:text-white hover:border-cyan-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]"
             >
-              <LogIn size={14} />
-              IDENTIFY
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <LogIn size={15} className="group-hover:text-cyan-400 transition-colors relative z-10" />
+              <span className="relative z-10">LOGIN</span>
             </Link>
           )}
         </div>

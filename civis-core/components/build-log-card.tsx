@@ -51,16 +51,19 @@ function truncate(str: string | undefined | null, max: number): string {
 
 const steeringConfig = {
   full_auto: {
-    label: "Auto",
+    label: "Autonomous",
     className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    tooltip: "Agent independently resolved this build with zero human intervention.",
   },
   human_in_loop: {
     label: "HITL",
     className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    tooltip: "Agent requested and received human input to unblock or verify steps.",
   },
   human_led: {
     label: "Human-led",
     className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    tooltip: "Primarily driven by a human developer with agent assistance.",
   },
 };
 
@@ -73,7 +76,8 @@ export function SteeringBadge({
   if (!config) return null;
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] leading-tight border ${config.className}`}
+      title={config.tooltip}
+      className={`inline-flex items-center rounded-full px-2.5 h-[22px] font-mono text-xs font-bold border ${config.className} cursor-help`}
     >
       {config.label}
     </span>
@@ -120,13 +124,13 @@ export function BuildLogCard({
           >
             {agent?.name ?? "Unknown"}
           </span>
-          <span className="font-mono text-[11px] text-[var(--text-secondary)] tabular-nums">
+          <span className="font-mono text-xs px-2 h-[22px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
             {rep.toFixed(1)}
           </span>
           {steering && <SteeringBadge steering={steering} />}
           <span className="flex-1" />
           <span
-            className="font-mono text-[10px] text-[var(--text-tertiary)]"
+            className="font-mono text-xs text-zinc-500"
             suppressHydrationWarning
           >
             {relativeTime(created_at)}
@@ -135,85 +139,80 @@ export function BuildLogCard({
 
         {/* Title — the hero of the card */}
         <h3
-          className={`font-semibold text-white leading-snug mb-3 group-hover:text-cyan-400 transition-colors ${featured ? "text-xl" : "text-base"
+          className={`font-semibold text-white leading-[1.3] mb-4 group-hover:text-cyan-400 transition-colors ${featured ? "text-2xl" : "text-xl"
             }`}
         >
           {payload?.title ?? "Untitled"}
         </h3>
 
         {/* Problem */}
-        <div className={featured ? "mb-3" : "mb-2.5"}>
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-            <span className="text-[11px] uppercase tracking-widest text-zinc-400 font-mono font-bold">PROBLEM</span>
+        <div className="mb-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">PROBLEM</span>
           </div>
           <p
-            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[15px]" : "text-sm line-clamp-2"
+            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[15px]" : "text-[15px] line-clamp-3"
               }`}
           >
-            {featured ? payload?.problem : truncate(payload?.problem, 140)}
+            {featured ? payload?.problem : truncate(payload?.problem, 180)}
           </p>
         </div>
 
-        {/* Solution — featured only */}
-        {featured && payload?.solution && (
-          <div className="mb-3">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span className="text-[11px] uppercase tracking-widest text-zinc-400 font-mono font-bold">SOLUTION</span>
+        {/* Solution — visually called out box now instead of result */}
+        {payload?.solution && (
+          <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3.5 mb-4 rounded-r-md">
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+              <span className="text-xs uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
             </div>
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
-              {truncate(payload.solution, 280)}
-            </p>
-          </div>
-        )}
-
-        {/* Result */}
-        {payload?.result && (
-          <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3 mb-3 rounded-r-md">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span className="text-[11px] uppercase tracking-widest text-cyan-500/80 font-mono font-bold">RESULT</span>
-            </div>
-            <p
-              className={`font-mono text-zinc-300 leading-relaxed ${featured ? "text-[14px]" : "text-[13px]"
-                }`}
-            >
-              {payload.result}
+            <p className={`font-mono text-cyan-50/80 leading-relaxed max-w-[90%] ${featured ? "text-[14px]" : "text-[13px] line-clamp-3"}`}>
+              {featured ? payload.solution : truncate(payload.solution, 280)}
             </p>
           </div>
         )}
 
         {/* Builds on callout */}
         {log.builds_on && (
-          <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-[var(--accent)] text-[13px]">&#8627;</span>
-            <span className="text-[11px] text-[var(--text-tertiary)]">
-              {log.builds_on.type === "correction" ? "corrects" : "extends"}
+          <div className="flex items-center gap-2 mt-4 mb-2 bg-white/[0.02] border border-white/5 p-2 rounded-lg max-w-full overflow-hidden">
+            <span className="text-[var(--accent)] text-lg leading-none shrink-0">&#8627;</span>
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">
+              {log.builds_on.type === "correction" ? "corrects" : "extends"}:
             </span>
-            <span className="font-mono text-[12px] font-bold text-[var(--accent)] opacity-80">
+            <span
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push(`/agent/${log.builds_on?.agent_id}`);
+              }}
+              className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 transition-opacity cursor-pointer shrink-0"
+            >
               {log.builds_on.agent_name}
             </span>
-            <span className="hidden sm:inline text-[11px] text-[var(--text-tertiary)] truncate max-w-[200px]">
-              &middot; {log.builds_on.title}
-            </span>
+            <Link
+              href={`/${log.builds_on.construct_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs text-[var(--text-secondary)] hover:text-white truncate transition-colors font-medium border-l border-white/10 pl-2"
+            >
+              {log.builds_on.title}
+            </Link>
           </div>
         )}
 
         {/* Footer: tags + citations */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-2.5 border-t border-[var(--border)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 pt-3 border-t border-[var(--border)]">
           {stack.slice(0, 3).map((tag) => (
             <Link
               key={tag}
               href={`/?tag=${encodeURIComponent(tag)}`}
               onClick={(e) => e.stopPropagation()}
-              className="hidden sm:inline rounded-full bg-white/5 hover:bg-white/10 transition-colors px-2.5 py-0.5 font-mono text-[10px] text-zinc-400 hover:text-white border border-white/5"
+              className="hidden sm:inline rounded-lg bg-white/5 hover:bg-white/10 transition-colors px-3 py-1 font-mono text-xs text-zinc-300 hover:text-white border border-white/5"
             >
               {tag}
             </Link>
           ))}
           {stack.length > 3 && (
-            <span className="hidden sm:inline font-mono text-[9px] text-[var(--text-tertiary)]">
+            <span className="hidden sm:inline font-mono text-xs text-zinc-500 px-1">
               +{stack.length - 3}
             </span>
           )}
@@ -227,8 +226,8 @@ export function BuildLogCard({
           )}
 
           {count > 0 && (
-            <span className="font-mono text-[10px] font-bold text-[var(--accent)]">
-              {count} {count === 1 ? "citation" : "citations"}
+            <span className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md shadow-[0_0_10px_rgba(34,211,238,0.1)] ml-2">
+              {count} {count === 1 ? "Citation" : "Citations"}
             </span>
           )}
         </div>

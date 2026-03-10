@@ -33,7 +33,7 @@ export default function NotFound() {
         </p>
         <div className="hero-reveal-delay">
           <Link
-            href="https://app.civis.run"
+            href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"}
             className="border border-white/10 bg-[#111111] hover:bg-[#1a1a1a] text-zinc-300 hover:text-white rounded-lg px-8 py-3.5 text-sm font-semibold transition-all shadow-lg ring-1 ring-white/5"
           >
             Return to App &rarr;

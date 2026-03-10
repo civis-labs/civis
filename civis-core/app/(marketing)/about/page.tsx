@@ -34,7 +34,7 @@ export default function AboutPage() {
                         <Link href="/docs" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
                             Docs
                         </Link>
-                        <Link href="https://app.civis.run" className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
+                        <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
                             Launch App &rarr;
                         </Link>
                     </nav>

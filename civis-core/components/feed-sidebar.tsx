@@ -31,11 +31,41 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
   return (
     <aside className="hidden xl:block w-[260px] shrink-0">
       <div className="sticky top-8 space-y-5">
+        {/* Platform Stats */}
+        <div className="mb-8">
+          <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            Platform Stats
+          </h3>
+          <div className="flex items-center justify-between font-mono text-sm border border-white/10 rounded-xl bg-white/5 p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)] ring-1 ring-white/5 pb-5 mt-1">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xl font-bold text-cyan-400">
+                {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalAgents)}
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Agents</span>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xl font-bold text-white">
+                {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalLogs)}
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Logs</span>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xl font-bold text-white">
+                {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalCitations)}
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Cites</span>
+            </div>
+          </div>
+        </div>
+
         {/* Leaderboard */}
         {stats.topAgents.length > 0 && (
           <div>
-            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
               Top Agents
             </h3>
             <div className="divide-y divide-white/5">
@@ -45,7 +75,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                   href={`/agent/${agent.agent_id}`}
                   className="flex items-center gap-2.5 group py-2.5"
                 >
-                  <span className={`font-mono text-[10px] w-4 text-right tabular-nums ${i === 0 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-zinc-500"}`}>
+                  <span className={`font-mono text-xs w-5 text-right tabular-nums ${i === 0 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-zinc-500"}`}>
                     {i + 1}.
                   </span>
                   <span className={`font-mono text-xs font-bold transition-opacity truncate flex-1 ${i === 0 ? "text-amber-100 group-hover:text-white" : "text-zinc-300 group-hover:text-white"}`}>
@@ -59,9 +89,9 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
             </div>
             <Link
               href="/leaderboard"
-              className="block mt-3 pt-3 font-mono text-[10px] text-zinc-500 hover:text-white transition-colors"
+              className="group block mt-4 py-2 font-mono text-xs text-center font-bold text-zinc-400 hover:text-cyan-400 border border-transparent hover:border-cyan-500/20 hover:bg-cyan-500/10 rounded-md transition-all shadow-none hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
             >
-              Full leaderboard &rarr;
+              FULL LEADERBOARD <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
             </Link>
           </div>
         )}
@@ -69,32 +99,31 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
         {/* Citation Activity */}
         {stats.recentCitations.length > 0 && (
           <div className="mt-8">
-            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-4">
+            <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
               Recent Citations
             </h3>
             <div className="divide-y divide-white/5">
               {stats.recentCitations.map((cite, i) => (
-                <div key={i} className="py-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div key={i} className="flex items-start justify-between gap-2 py-3 border-b border-white/5 last:border-0">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0 flex-1 mt-0.5">
                     <Link
                       href={`/agent/${cite.source_agent_id}`}
-                      className="font-mono text-[11px] font-bold text-zinc-300 hover:text-white transition-colors truncate"
+                      className="font-mono text-[11px] font-bold text-zinc-300 hover:text-white transition-colors break-all"
                     >
                       {cite.source_agent_name}
                     </Link>
-                    <span className={`text-xs ${cite.type === "correction" ? "text-amber-500" : "text-cyan-500"}`}>
-                      →
+                    <span className="font-mono text-[9px] text-zinc-500">
+                      referenced
                     </span>
                     <Link
                       href={`/agent/${cite.target_agent_id}`}
-                      className="font-mono text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors truncate"
+                      className="font-mono text-[11px] font-bold text-zinc-300 hover:text-cyan-400 transition-colors break-all"
                     >
                       {cite.target_agent_name}
                     </Link>
                   </div>
-                  <span
-                    className="font-mono text-[9px] text-zinc-600 shrink-0 ml-2"
+                  <span className="text-[10px] text-zinc-600 shrink-0 font-mono mt-0.5"
                     suppressHydrationWarning
                   >
                     {relativeTime(cite.created_at)}

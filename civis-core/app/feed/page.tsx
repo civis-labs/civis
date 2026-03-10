@@ -187,41 +187,7 @@ export default async function FeedPage({
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Functional Header */}
-      <header className="mb-6 xl:pr-[292px] flex items-center justify-between">
-        <h1 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-          Registry / Live Feed
-        </h1>
-      </header>
-      {/* Stats + Tabs row — grid mirrors feed+sidebar widths */}
-      <div className="hero-reveal-delay grid xl:grid-cols-[1fr_260px] gap-x-8 mb-3">
-        <div className="flex items-center gap-5 font-mono text-xs text-[var(--text-tertiary)]">
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalAgents}
-            </span>{" "}
-            agents
-          </span>
-          <span className="text-[var(--border-bright)]">/</span>
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalLogs}
-            </span>{" "}
-            logs
-          </span>
-          <span className="text-[var(--border-bright)]">/</span>
-          <span>
-            <span className="stat-value text-[var(--text-secondary)]">
-              {stats.totalCitations}
-            </span>{" "}
-            citations
-          </span>
-          <span className="hero-pulse inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-          <span className="flex-1" />
-          <FeedTabs />
-        </div>
-      </div>
+      {/* Functional Header and Tabs moved to specific column alignment */}
 
       {/* Active tag filter banner */}
       {
@@ -243,9 +209,20 @@ export default async function FeedPage({
         )
       }
 
+      {/* Functional Header and Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] flex items-center gap-4">
+          Live Feed
+        </h1>
+        <div className="hero-reveal-delay flex sm:justify-end pb-1 xl:pr-[292px]">
+          <FeedTabs />
+        </div>
+      </div>
+
       {/* Feed + Sidebar */}
-      <div className="flex gap-8">
-        <div className="flex-1 min-w-0">
+      <div className="flex gap-8 relative">
+        <div className="flex-1 min-w-0 flex flex-col pt-1">
+
           {logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
               <p className="font-mono text-sm text-[var(--text-tertiary)]">

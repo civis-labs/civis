@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Search as SearchIcon } from "lucide-react";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
 
 interface SearchResult extends BuildLogData {
@@ -73,67 +74,54 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <h1
-        className="mb-6 text-4xl sm:text-5xl tracking-tight text-[var(--text-primary)]"
-        style={{ fontFamily: "var(--font-display), serif" }}
-      >
+    <div className="mx-auto max-w-3xl px-4 pt-16 pb-8 sm:pt-24 sm:px-6">
+      <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] mb-8">
         Search
       </h1>
 
-      {/* Search Input */}
-      <div className="mb-8">
-        <div className="relative">
-          <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-tertiary)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Describe a problem or solution..."
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 pl-11 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
-          />
-          {isSearching && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
+      <div className="mb-12">
+        <div className="relative group rounded-2xl p-[1px] bg-gradient-to-b from-white/10 to-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all overflow-hidden focus-within:shadow-[0_8px_40px_rgba(34,211,238,0.15)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity blur-xl"></div>
+          <div className="relative flex flex-col md:flex-row items-center gap-2 bg-[#0a0a0a]/90 backdrop-blur-xl rounded-2xl p-2 z-10">
+            <div className="flex-1 flex items-center relative w-full">
+              <SearchIcon className="absolute left-4 text-cyan-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" size={20} />
+              <input
+                type="text"
+                placeholder="Search by problem, solution, or concept..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && triggerSearch(query, stackFilter)}
+                className="w-full bg-transparent border-none py-4 pl-12 pr-4 font-mono text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none"
+              />
             </div>
-          )}
+
+            <div className="w-full md:w-px h-px md:h-12 bg-white/10" />
+
+            <div className="w-full md:w-auto flex items-center gap-2 px-2 pb-2 md:pb-0">
+              <input
+                type="text"
+                placeholder="Stack (e.g. Next.js)..."
+                value={stackFilter}
+                onChange={(e) => setStackFilter(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && triggerSearch(query, stackFilter)}
+                className="w-full md:w-[220px] bg-[#111] border border-white/5 rounded-lg py-3 px-4 font-mono text-xs text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-cyan-500/30 transition-colors shadow-inner shadow-black/50"
+              />
+              <button
+                onClick={() => triggerSearch(query, stackFilter)}
+                disabled={isSearching}
+                className="shrink-0 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] font-bold font-mono text-xs px-6 py-3 rounded-lg transition-all"
+              >
+                {isSearching ? "..." : "SEARCH"}
+              </button>
+            </div>
+          </div>
         </div>
-        <input
-          type="text"
-          value={stackFilter}
-          onChange={(e) => handleStackChange(e.target.value)}
-          placeholder="Filter by stack: supabase, nextjs, python..."
-          className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 px-4 text-xs text-[var(--text-secondary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
-        />
       </div>
 
-      {/* Results */}
-      {!hasSearched && !isSearching && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
-          <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            Search build logs by describing a problem or solution.
-          </p>
-        </div>
-      )}
-
-      {hasSearched && results.length === 0 && !isSearching && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
-          <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            No matching build logs found.
-          </p>
+      {/* Removed redundant empty state box */}
+      {!isSearching && results.length === 0 && (query || stackFilter) && (
+        <div className="text-center py-20 font-mono text-sm text-zinc-500">
+          No build logs found matching your query.
         </div>
       )}
 

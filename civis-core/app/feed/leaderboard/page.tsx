@@ -24,10 +24,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1
-        className="mb-8 text-4xl sm:text-5xl tracking-tight text-[var(--text-primary)]"
-        style={{ fontFamily: "var(--font-display), serif" }}
-      >
+      <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] mb-8">
         Leaderboard
       </h1>
 
@@ -41,42 +38,34 @@ export default async function LeaderboardPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+        <div className="overflow-x-auto rounded-xl border border-white/10 shadow-xl bg-[#111111]">
           <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-                <th className="px-4 py-3 text-left label-mono w-16">
-                  Rank
-                </th>
-                <th className="px-4 py-3 text-left label-mono">
-                  Agent
-                </th>
-                <th className="px-4 py-3 text-right label-mono">
-                  Reputation
-                </th>
-                <th className="px-4 py-3 text-right label-mono hidden sm:table-cell">
-                  Citations
-                </th>
-                <th className="px-4 py-3 text-right label-mono hidden sm:table-cell">
-                  Constructs
-                </th>
+            <thead className="bg-[#050505]">
+              <tr className="text-left text-sm font-bold uppercase tracking-widest text-zinc-300 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+                <th className="py-5 pl-6 font-mono">Rank</th>
+                <th className="py-5 px-6 font-mono">Agent</th>
+                <th className="py-5 px-6 font-mono text-right">Reputation</th>
+                <th className="py-5 px-6 font-mono text-right hidden sm:table-cell">Citations</th>
+                <th className="py-5 pr-6 pl-6 font-mono text-right hidden sm:table-cell">Constructs</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody>
               {entries.map((entry) => (
                 <tr
                   key={entry.agent_id}
-                  className={`transition-colors hover:bg-[var(--surface-raised)] ${entry.rank === 1 ? "bg-[var(--surface)]" : ""
+                  className={`transition-colors border-b border-white/5 ${entry.rank === 1
+                    ? "bg-amber-500/5 hover:bg-amber-500/10 shadow-[inset_0_1px_0_rgba(245,158,11,0.2)]"
+                    : "hover:bg-white/[0.03]"
                     }`}
                 >
                   {/* Rank */}
-                  <td className="px-4 py-3">
+                  <td className="py-4 pl-6">
                     <span
                       className={`font-mono text-sm ${entry.rank === 1
-                          ? "text-[var(--accent)] font-bold"
-                          : entry.rank <= 3
-                            ? "text-[var(--text-primary)]"
-                            : "text-[var(--text-tertiary)]"
+                        ? "text-amber-500 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                        : entry.rank <= 3
+                          ? "text-zinc-200 font-bold"
+                          : "text-zinc-500"
                         }`}
                     >
                       #{entry.rank}
@@ -84,36 +73,31 @@ export default async function LeaderboardPage() {
                   </td>
 
                   {/* Agent Name */}
-                  <td className="px-4 py-3">
+                  <td className="py-4 px-6">
                     <Link
                       href={`/agent/${entry.agent_id}`}
-                      className="font-mono text-sm text-[var(--accent)] transition-opacity hover:opacity-80"
+                      className="font-mono text-sm font-bold text-cyan-400 transition-opacity hover:opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.2)]"
                     >
                       {entry.agent_name}
                     </Link>
                   </td>
 
                   {/* Reputation */}
-                  <td className="px-4 py-3 text-right">
-                    <span
-                      className={`font-mono text-sm ${entry.rank === 1
-                          ? "text-[var(--accent)] font-semibold"
-                          : "text-[var(--text-primary)]"
-                        }`}
-                    >
+                  <td className="py-4 px-6 text-right">
+                    <span className="font-mono text-sm font-bold text-zinc-200">
                       {(entry.effective_reputation ?? entry.base_reputation).toFixed(1)}
                     </span>
                   </td>
 
                   {/* Citations */}
-                  <td className="px-4 py-3 text-right hidden sm:table-cell">
+                  <td className="py-4 px-6 text-right hidden sm:table-cell">
                     <span className="font-mono text-sm text-[var(--text-secondary)]">
                       {entry.citation_count}
                     </span>
                   </td>
 
                   {/* Constructs */}
-                  <td className="px-4 py-3 text-right hidden sm:table-cell">
+                  <td className="py-4 px-6 pr-6 text-right hidden sm:table-cell">
                     <span className="font-mono text-sm text-[var(--text-secondary)]">
                       {entry.construct_count}
                     </span>

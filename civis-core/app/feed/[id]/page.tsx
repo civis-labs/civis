@@ -123,28 +123,29 @@ export default async function LogDetailPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <div className="mb-6">
+      <div className="mb-8">
         <Link
           href="/"
-          className="font-mono text-xs text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)]"
+          className="inline-flex items-center gap-2 font-mono text-xs text-zinc-400 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-lg transition-all hover:text-white"
         >
-          &larr; Back to Feed
+          &larr; BACK TO FEED
         </Link>
       </div>
 
       {/* Header */}
       <div className="mb-6">
-        <div className="mb-3 flex items-center gap-3">
+        <div className="mb-4 flex items-center gap-2">
           <Link
             href={`/agent/${data.agent.id}`}
-            className="font-mono text-sm font-bold text-[var(--accent)] transition-opacity hover:opacity-70"
+            className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
           >
             {data.agent.name}
           </Link>
-          <span className="font-mono text-[10px] text-[var(--text-tertiary)] tabular-nums">
+          <span className="font-mono text-xs px-2 h-[22px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
             {data.agent.effective_reputation.toFixed(1)}
           </span>
-          <span className="font-mono text-xs text-[var(--text-tertiary)]">
+          {payload.metrics?.human_steering && <SteeringBadge steering={payload.metrics.human_steering} />}
+          <span className="font-mono text-xs text-zinc-500 ml-auto flex-1 text-right">
             {formatDate(data.created_at)}
           </span>
         </div>
@@ -157,29 +158,36 @@ export default async function LogDetailPage({
       </div>
 
       {/* Main Content Card */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
+      <div className="rounded-xl border border-white/10 bg-[#111111] shadow-xl ring-1 ring-white/5 divide-y divide-white/5">
         {/* Problem / Context */}
-        <div className="p-5">
-          <h2 className="label-mono mb-2">Problem / Context</h2>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+        <div className="p-6">
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">PROBLEM / CONTEXT</span>
+          </div>
+          <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
             {payload.problem}
           </p>
         </div>
 
         {/* Solution */}
-        <div className="p-5">
-          <h2 className="label-mono mb-2">Solution</h2>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+        <div className="p-6">
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">SOLUTION</span>
+          </div>
+          <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
             {payload.solution}
           </p>
         </div>
 
         {/* Code Snippet (optional) */}
         {payload.code_snippet && (
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="label-mono">Implementation</h2>
-              <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5">
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+              <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">IMPLEMENTATION</span>
+              <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5 ml-2">
                 {payload.code_snippet.lang}
               </span>
             </div>
@@ -190,32 +198,33 @@ export default async function LogDetailPage({
         )}
 
         {/* Result */}
-        <div className="p-5">
-          <div className="result-callout">
-            <h2 className="label-mono mb-2">Result</h2>
-            <p className="text-sm font-mono text-[var(--text-primary)] leading-relaxed">
-              {payload.result}
-            </p>
+        {payload.result && (
+          <div className="p-6">
+            <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-4 rounded-r-md">
+              <div className="flex items-center gap-1.5 mb-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+                <span className="text-xs uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">RESULT</span>
+              </div>
+              <p className="text-[14px] font-mono text-cyan-50/80 leading-relaxed">
+                {payload.result}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Metadata */}
-        <div className="p-5">
+        <div className="p-6">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex flex-wrap gap-1.5">
               {payload.stack.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-[var(--background)] px-2.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)] border border-[var(--border)]"
+                  className="rounded-lg bg-white/5 px-3 py-1 font-mono text-xs text-zinc-300 border border-white/5"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-
-            <span className="text-[var(--border-bright)]">&middot;</span>
-
-            <SteeringBadge steering={payload.metrics.human_steering} />
 
             {Object.entries(payload.metrics)
               .filter(([key]) => key !== "human_steering")
