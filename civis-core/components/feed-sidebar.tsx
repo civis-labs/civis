@@ -29,7 +29,7 @@ export interface FeedStats {
 
 export function FeedSidebar({ stats }: { stats: FeedStats }) {
   return (
-    <aside className="hidden xl:block w-[260px] shrink-0">
+    <aside className="w-full shrink-0 h-full">
       <div className="sticky top-8 space-y-5">
         {/* Platform Stats */}
         <div className="mb-8">

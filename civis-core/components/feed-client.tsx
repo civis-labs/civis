@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
 import { FeedTabs } from "@/components/feed-tabs";
-import Link from "next/link";
 
 interface FeedClientProps {
   initialLogs: BuildLogData[];
@@ -18,8 +16,8 @@ export function FeedClient({
   initialCitationCounts,
   initialSort,
   initialTag,
-}: FeedClientProps) {
-  const router = useRouter();
+  sidebar,
+}: FeedClientProps & { sidebar?: React.ReactNode }) {
   const [sort, setSort] = useState(initialSort);
   const [tag, setTag] = useState(initialTag);
   const [logs, setLogs] = useState(initialLogs);
@@ -110,44 +108,50 @@ export function FeedClient({
   }
 
   return (
-    <>
-      {/* Active tag filter banner */}
-      {tag && (
-        <div className="mb-6 flex items-center gap-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-2.5">
-          <span className="font-mono text-xs text-[var(--text-secondary)]">
-            Showing logs for:
-          </span>
-          <span className="rounded-full bg-[var(--accent)]/10 px-3 py-0.5 font-mono text-sm font-semibold text-[var(--accent)]">
-            {tag}
-          </span>
-          <button
-            onClick={handleClearTag}
-            className="font-mono text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-          >
-            &times; clear filter
-          </button>
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-x-8 gap-y-0 relative">
+      {/* Row 1: Header & Tabs (Left Col) */}
+      <div className="xl:col-start-1 xl:col-end-2">
+        {tag && (
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-2.5">
+            <span className="font-mono text-xs text-[var(--text-secondary)]">
+              Showing logs for:
+            </span>
+            <span className="rounded-full bg-[var(--accent)]/10 px-3 py-0.5 font-mono text-sm font-semibold text-[var(--accent)]">
+              {tag}
+            </span>
+            <button
+              onClick={handleClearTag}
+              className="font-mono text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+            >
+              &times; clear filter
+            </button>
+          </div>
+        )}
+
+        <div className="mb-4 mt-6">
+          <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
+            Feed
+          </h1>
         </div>
-      )}
 
-      {/* Header */}
-      <div className="mb-4 mt-6">
-        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
-          Feed
-        </h1>
+        <div className="hero-reveal-delay flex justify-end mb-4">
+          <FeedTabs activeSort={sort} onSortChange={handleSortChange} />
+        </div>
       </div>
 
-      {/* Feed + Sidebar wrapper expects this to be inside the flex-1 column */}
-      <div className="hero-reveal-delay flex justify-end mb-4">
-        <FeedTabs activeSort={sort} onSortChange={handleSortChange} />
-      </div>
+      {/* Row 2: Cards (Left Col) */}
+      <div className="xl:col-start-1 xl:col-end-2 xl:row-start-2 flex-1 min-w-0 flex flex-col pb-12">
 
       {/* Loading state for filter switch */}
       {isSwitching ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
-          <div className="h-5 w-5 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin mb-3" />
-          <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            Loading...
-          </p>
+        <div className="flex flex-col items-center justify-center w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
+          <div className="relative flex flex-col items-center">
+            {/* Translate slightly left to optically center over "Loading" instead of "Loading..." */}
+            <div className="h-5 w-5 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin mb-3 -translate-x-1.5" />
+            <p className="font-mono text-sm text-[var(--text-tertiary)]">
+              Loading...
+            </p>
+          </div>
         </div>
       ) : logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
@@ -195,6 +199,14 @@ export function FeedClient({
           )}
         </>
       )}
-    </>
+      </div>
+
+      {/* Row 2: Sidebar (Right Col) */}
+      {sidebar && (
+        <div className="hidden xl:block xl:col-start-2 xl:col-end-3 xl:row-start-2 h-full">
+          {sidebar}
+        </div>
+      )}
+    </div>
   );
 }

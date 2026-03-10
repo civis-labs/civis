@@ -191,19 +191,13 @@ export default async function FeedPage({
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Feed + Sidebar */}
-      <div className="flex gap-8 relative">
-        <div className="flex-1 min-w-0 flex flex-col pt-1">
-          <FeedClient
-            initialLogs={logs}
-            initialCitationCounts={citationCounts}
-            initialSort={sort}
-            initialTag={tag}
-          />
-        </div>
-
-        <FeedSidebar stats={stats} />
-      </div>
+      <FeedClient
+        initialLogs={logs}
+        initialCitationCounts={citationCounts}
+        initialSort={sort}
+        initialTag={tag}
+        sidebar={<FeedSidebar stats={stats} />}
+      />
     </div>
   );
 }
