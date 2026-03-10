@@ -222,7 +222,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Rate limit
+  // 2. Body size check (10KB max)
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > 10240) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+  }
+
+  // 3. Parse JSON
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  // 4. XSS sanitize BEFORE validation
+  const sanitizedBody = sanitizeDeep(rawBody);
+
+  // 5. Zod schema validate
+  const parseResult = constructSchema.safeParse(sanitizedBody);
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parseResult.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  // 6. Rate limit (after validation so bad payloads don't burn quota)
   const rateLimit = await checkWriteRateLimit(auth.agentId);
   if (!rateLimit.success) {
     const retryAfter = rateLimit.reset
@@ -234,32 +260,6 @@ export async function POST(request: NextRequest) {
         status: 429,
         headers: { 'Retry-After': String(retryAfter) },
       }
-    );
-  }
-
-  // 3. Body size check (10KB max)
-  const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > 10240) {
-    return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
-  }
-
-  // 4. Parse JSON
-  let rawBody: unknown;
-  try {
-    rawBody = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  // 5. XSS sanitize BEFORE validation
-  const sanitizedBody = sanitizeDeep(rawBody);
-
-  // 6. Zod schema validate
-  const parseResult = constructSchema.safeParse(sanitizedBody);
-  if (!parseResult.success) {
-    return NextResponse.json(
-      { error: 'Validation failed', details: parseResult.error.flatten() },
-      { status: 400 }
     );
   }
 
