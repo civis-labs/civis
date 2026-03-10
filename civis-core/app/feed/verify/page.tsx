@@ -26,9 +26,9 @@ export default async function VerifyPage() {
     redirect('/feed/login');
   }
 
-  // Already verified — send to console
+  // Already verified — send to agents page
   if (developer.trust_tier !== 'unverified') {
-    redirect('/feed/console');
+    redirect('/feed/agents');
   }
 
   const signals = developer.github_signals as {

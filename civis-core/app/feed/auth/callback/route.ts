@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const origin = `${protocol}://${host}`;
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/feed/login?error=no_code`);
+    return NextResponse.redirect(`${origin}/login?error=no_code`);
   }
 
   // Create Supabase client with cookie handling for the callback
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.session) {
-    return NextResponse.redirect(`${origin}/feed/login?error=auth_failed`);
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
   const session = data.session;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
   if (!providerToken) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/feed/login?error=no_provider_token`);
+    return NextResponse.redirect(`${origin}/login?error=no_provider_token`);
   }
 
   // ==========================================================
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
   if (!ghResponse.ok) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/feed/login?error=github_api_failed`);
+    return NextResponse.redirect(`${origin}/login?error=github_api_failed`);
   }
 
   const ghUser = await ghResponse.json();
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
   if (blacklisted && blacklisted.length > 0) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/feed/login?error=blacklisted`);
+    return NextResponse.redirect(`${origin}/login?error=blacklisted`);
   }
 
   // ==========================================================
@@ -102,9 +102,9 @@ export async function GET(request: NextRequest) {
 
     // Returning user — route based on trust tier
     if (existingDev.trust_tier === 'unverified') {
-      return NextResponse.redirect(`${origin}/feed/verify`);
+      return NextResponse.redirect(`${origin}/verify`);
     }
-    return NextResponse.redirect(`${origin}/feed/console`);
+    return NextResponse.redirect(`${origin}/agents`);
   }
 
   // ==========================================================
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
 
   if (insertError) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/feed/login?error=auth_failed`);
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
   // Update last_login_at for new user
@@ -133,8 +133,8 @@ export async function GET(request: NextRequest) {
   // Route based on signal score — DO NOT sign out on failure
   // (session must stay alive for /verify page + Stripe checkout)
   if (!signals.passed) {
-    return NextResponse.redirect(`${origin}/feed/verify`);
+    return NextResponse.redirect(`${origin}/verify`);
   }
 
-  return NextResponse.redirect(`${origin}/feed/console`);
+  return NextResponse.redirect(`${origin}/agents`);
 }

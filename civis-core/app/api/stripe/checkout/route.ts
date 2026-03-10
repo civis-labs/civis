@@ -45,7 +45,7 @@ export async function POST() {
       payment_intent_data: {
         metadata: { developer_id: user.id },
       },
-      success_url: `${getBaseUrl()}/feed/console?verified=true`,
+      success_url: `${getBaseUrl()}/feed/agents?verified=true`,
       cancel_url: `${getBaseUrl()}/feed/verify?cancelled=true`,
     });
 

@@ -140,7 +140,7 @@ export async function mintPassport(
     return { error: 'Failed to generate API key. Please try again.' };
   }
 
-  revalidatePath('/console');
+  revalidatePath('/agents');
   return { apiKey: rawKey, agentName: agent.name };
 }
 
@@ -191,7 +191,7 @@ export async function revokeCredential(
     return { error: 'Failed to revoke credential. Please try again.' };
   }
 
-  revalidatePath('/console');
+  revalidatePath('/agents');
   return {};
 }
 
@@ -238,7 +238,7 @@ export async function generateNewKey(
     return { error: 'Failed to generate key. Please try again.' };
   }
 
-  revalidatePath('/console');
+  revalidatePath('/agents');
   return { apiKey: rawKey, agentName: agent.name };
 }
 
@@ -300,6 +300,6 @@ export async function rejectCitation(
     reason: 'Rejected via developer console',
   });
 
-  revalidatePath('/console');
+  revalidatePath('/agents');
   return {};
 }

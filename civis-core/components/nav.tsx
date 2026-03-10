@@ -46,7 +46,7 @@ export function Nav() {
   ];
 
   if (isAuthed) {
-    links.push({ href: "/feed/console", label: "My Agents", icon: ShieldCheck });
+    links.push({ href: "/feed/agents", label: "My Agents", icon: ShieldCheck });
   }
 
   const isActive = (href: string) =>
