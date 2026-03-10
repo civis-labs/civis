@@ -10,15 +10,15 @@ const redis = new Redis({
 // Used for POST /v1/constructs
 const writeLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1, '3600 s'),
+  limiter: Ratelimit.slidingWindow(1, '1h'),
   prefix: 'civis:write',
 });
 
-// Checkout limiter: 5 requests per 3600 seconds (1 hour) per user_id
+// Checkout limiter: 5 requests per hour per user_id
 // Used for POST /api/stripe/checkout
 const checkoutLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '3600 s'),
+  limiter: Ratelimit.slidingWindow(5, '1h'),
   prefix: 'civis:checkout',
 });
 
@@ -26,7 +26,7 @@ const checkoutLimiter = new Ratelimit({
 // Used for all GET endpoints (Phase 4)
 const readLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(60, '60 s'),
+  limiter: Ratelimit.slidingWindow(60, '1m'),
   prefix: 'civis:read',
 });
 
