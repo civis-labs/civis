@@ -92,6 +92,9 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (existingDev) {
+    // Update last_login_at for returning user
+    await serviceClient.from('developers').update({ last_login_at: new Date().toISOString() }).eq('id', userId);
+
     // Returning user — route based on trust tier
     if (existingDev.trust_tier === 'unverified') {
       return NextResponse.redirect(`${origin}/verify`);
@@ -118,6 +121,9 @@ export async function GET(request: NextRequest) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
+
+  // Update last_login_at for new user
+  await serviceClient.from('developers').update({ last_login_at: new Date().toISOString() }).eq('id', userId);
 
   // Route based on signal score — DO NOT sign out on failure
   // (session must stay alive for /verify page + Stripe checkout)

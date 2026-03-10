@@ -1,9 +1,18 @@
 # Civis Changelog
 
-**Current Version:** 0.10.1
+**Current Version:** 0.10.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.2] — 2026-03-11
+
+### Added
+
+- **Checkout rate limiting** (`lib/rate-limit.ts`, `api/stripe/checkout/route.ts`): Added sliding window rate limit (5 requests per hour per user) on the Stripe checkout endpoint to prevent abuse.
+- **Last login tracking** (`app/feed/auth/callback/route.ts`): Updates `last_login_at` timestamp on the developers table for every login — both returning and new users.
 
 ---
 

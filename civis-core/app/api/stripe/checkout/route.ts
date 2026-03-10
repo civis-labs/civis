@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { checkCheckoutRateLimit } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -14,6 +15,14 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const rateLimit = await checkCheckoutRateLimit(user.id);
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many checkout attempts. Try again later.', reset: rateLimit.reset },
+      { status: 429 }
+    );
   }
 
   try {
@@ -59,5 +68,5 @@ function getBaseUrl(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return 'http://localhost:3000';
+  return 'http://app.localhost:3000';
 }
