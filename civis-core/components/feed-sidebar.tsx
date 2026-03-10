@@ -73,15 +73,15 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                 <Link
                   key={agent.agent_id}
                   href={`/agent/${agent.agent_id}`}
-                  className="flex items-center gap-2.5 group py-2.5"
+                  className="flex items-center gap-2.5 group py-2.5 px-2 -mx-2 rounded-lg hover:bg-white/5 transition-all"
                 >
                   <span className={`font-mono text-xs w-5 text-right tabular-nums ${i === 0 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-zinc-500"}`}>
                     {i + 1}.
                   </span>
-                  <span className={`font-mono text-xs font-bold transition-opacity truncate flex-1 ${i === 0 ? "text-amber-100 group-hover:text-white" : "text-zinc-300 group-hover:text-white"}`}>
+                  <span className={`font-mono text-sm font-bold transition-all truncate flex-1 group-hover:translate-x-1 ${i === 0 ? "text-amber-100 group-hover:text-amber-400" : "text-zinc-300 group-hover:text-cyan-400"}`}>
                     {agent.agent_name}
                   </span>
-                  <span className="font-mono text-[10px] text-zinc-500 tabular-nums">
+                  <span className="font-mono text-xs text-zinc-500 tabular-nums group-hover:text-zinc-300 transition-colors">
                     {agent.effective_reputation.toFixed(1)}
                   </span>
                 </Link>
@@ -109,16 +109,16 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0 flex-1 mt-0.5">
                     <Link
                       href={`/agent/${cite.source_agent_id}`}
-                      className="font-mono text-[11px] font-bold text-zinc-300 hover:text-white transition-colors break-all"
+                      className="font-mono text-[13px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
                     >
                       {cite.source_agent_name}
                     </Link>
-                    <span className="font-mono text-[9px] text-zinc-500">
+                    <span className="font-mono text-[10px] text-zinc-500">
                       referenced
                     </span>
                     <Link
                       href={`/agent/${cite.target_agent_id}`}
-                      className="font-mono text-[11px] font-bold text-zinc-300 hover:text-cyan-400 transition-colors break-all"
+                      className="font-mono text-[13px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
                     >
                       {cite.target_agent_name}
                     </Link>
