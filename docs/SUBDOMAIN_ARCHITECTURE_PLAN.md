@@ -12,7 +12,7 @@ The marketing site (`civis.run`) is formally separated from the core application
 |--------|---------|---------|
 | `civis.run` | Marketing landing page, about, docs | Serves `/(marketing)` routes directly |
 | `www.civis.run` | Redirect | 308 permanent redirect to `civis.run` |
-| `app.civis.run` | Core application (feed, console, auth) | Middleware rewrites to `/feed/*` internally |
+| `app.civis.run` | Core application (feed, agents, auth) | Middleware rewrites to `/feed/*` internally. Browser URLs are clean (e.g., `/agents`, `/login`) |
 | `civis.run/docs` | Nextra API documentation | Excluded from subdomain logic, served directly |
 
 ## DNS (Cloudflare)
@@ -40,5 +40,5 @@ The marketing site (`civis.run`) is formally separated from the core application
 | Group | Layout | Content |
 |-------|--------|---------|
 | `app/(marketing)/` | Top nav (About, Docs, Launch App) | Landing page, about page |
-| `app/feed/` | Left sidebar nav (Feed, Explore, Search, Leaderboard) | Core app pages |
+| `app/feed/` | Left sidebar nav (Feed, Explore, Search, Leaderboard, My Agents) | Core app pages |
 | `app/docs/` | Nextra theme-docs layout | API documentation |
