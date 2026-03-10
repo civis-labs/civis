@@ -67,15 +67,15 @@ interface ConsoleClientProps {
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: {
     label: 'Active',
-    className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
+    className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   },
   restricted: {
     label: 'Restricted',
-    className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20',
+    className: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
   },
   slashed: {
     label: 'Slashed',
-    className: 'bg-red-500/10 text-red-700 border-red-500/20',
+    className: 'bg-red-500/10 text-red-400 border-red-500/20',
   },
 };
 
@@ -152,15 +152,14 @@ export default function ConsoleClient({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8 mt-16 lg:mt-0">
-      <h1
-        className="text-3xl sm:text-4xl text-[var(--text-primary)] mb-2 tracking-tight"
-        style={{ fontFamily: 'var(--font-display), serif' }}
-      >
-        My Agents
-      </h1>
-      <p className="text-sm text-[var(--text-secondary)] mb-8">
-        Manage your registered agents, API keys, and citations.
-      </p>
+      <section className="mb-12 mt-6">
+        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
+          My Agents
+        </h1>
+        <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
+          Manage your registered agents, API keys, and citations.
+        </p>
+      </section>
 
       {/* API Key Display — shown once after mint or generate */}
       {newKey && (
@@ -173,29 +172,28 @@ export default function ConsoleClient({
 
       {/* Action Error */}
       {actionError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 mb-6 font-mono text-sm text-red-700">
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 mb-6 font-mono text-sm text-rose-400">
           {actionError}
-        </div>
-      )}
-
-      {/* Progressive access indicator */}
-      {inboundCitationCount === 0 && passports.length >= 1 && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 mb-6">
-          <p className="font-mono text-xs text-[var(--text-tertiary)]">
-            Earn a citation from another developer to unlock additional passport slots (up to 5).
-          </p>
         </div>
       )}
 
       {/* Mint Form — shown by default for new users, collapsible for returning users */}
       {!showMintForm && passports.length > 0 && (
-        <button
-          onClick={() => setShowMintForm(true)}
-          disabled={passports.length >= (inboundCitationCount >= 1 ? 5 : 1)}
-          className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          + Mint Another Agent Passport
-        </button>
+        <div className="group relative mb-8 w-full block">
+          <button
+            onClick={() => setShowMintForm(true)}
+            disabled={passports.length >= (inboundCitationCount >= 1 ? 5 : 1)}
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-base font-bold text-[var(--text-secondary)] hover:text-white hover:border-[var(--accent)]/50 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-[var(--text-secondary)] disabled:hover:border-[var(--border)]"
+          >
+            + Mint Another Agent Passport
+          </button>
+          {passports.length >= 1 && inboundCitationCount === 0 && (
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 scale-0 rounded-lg bg-black border border-white/10 px-4 py-2 text-xs font-bold text-white shadow-xl opacity-0 transition-transform group-hover:scale-100 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10 drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+              Receive a citation from another agent to unlock more slots
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white/10" />
+            </div>
+          )}
+        </div>
       )}
       {showMintForm && (
         <section className="mb-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
@@ -223,7 +221,7 @@ export default function ConsoleClient({
                 required
                 maxLength={100}
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)]"
-                placeholder="e.g. RONIN_v2"
+                placeholder="e.g. ATLAS_v1"
               />
             </div>
             <div>
@@ -241,7 +239,7 @@ export default function ConsoleClient({
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-xl bg-[var(--accent)] px-6 py-3 font-sans text-sm font-semibold text-[#ffffff] hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+              className="group flex w-full sm:w-auto items-center justify-center rounded-xl bg-[var(--accent)] px-8 py-3.5 font-sans text-sm font-bold text-cyan-950 hover:bg-cyan-300 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]"
             >
               {isPending ? 'Minting...' : 'Mint Agent Passport'}
             </button>
@@ -252,7 +250,7 @@ export default function ConsoleClient({
       {/* Passport List */}
       {passports.length > 0 && (
         <section>
-          <h2 className="label-mono mb-4">Your Agent Passports</h2>
+          <h2 className="text-2xl font-bold font-sans text-white mb-6">Your Agent Passports</h2>
           <div className="flex flex-col gap-4">
             {passports.map((passport) => {
               const creds = credentials.filter(
@@ -313,17 +311,17 @@ function ApiKeyDisplay({
   };
 
   return (
-    <div className="mb-8 rounded-xl border-2 border-amber-300 bg-amber-50 p-6">
-      <h3 className="font-mono text-lg font-bold text-amber-800 mb-3">
+    <div className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+      <h3 className="font-mono text-lg font-bold text-amber-400 mb-3 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]">
         API Key for {agentName}
       </h3>
-      <div className="rounded-lg border border-red-200 bg-red-50 p-3 mb-4">
-        <p className="font-mono text-sm font-bold text-red-700">
+      <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-4 mb-5">
+        <p className="font-mono text-sm font-bold text-rose-400 mb-1">
           This key will not be shown again.
         </p>
-        <p className="font-mono text-sm text-red-600">
+        <p className="font-mono text-sm text-zinc-400">
           Store it in your agent&apos;s{' '}
-          <code className="rounded bg-red-100 px-1">.env</code> file.
+          <code className="rounded bg-black/50 border border-white/10 px-1.5 py-0.5 text-rose-300 text-xs">.env</code> file.
         </p>
       </div>
       <div className="rounded border border-[var(--border)] bg-[var(--background)] p-4 mb-4 font-mono text-sm text-[var(--accent)] break-all select-all">
@@ -404,7 +402,7 @@ function PassportCard({
               {passport.bio}
             </p>
           )}
-          <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
+          <p className="mt-4 font-mono text-sm font-semibold text-[var(--text-tertiary)] drop-shadow-sm">
             Registered{' '}
             {new Date(passport.created_at).toLocaleDateString('en-US', {
               year: 'numeric',
@@ -415,39 +413,39 @@ function PassportCard({
         </div>
 
         {/* Reputation Score */}
-        <div className="text-right shrink-0 flex flex-col items-end">
+        <div className="text-center shrink-0 flex flex-col items-center">
           <div className="flex items-baseline gap-1">
-            <p className="font-mono text-4xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
+            <p className="font-mono text-5xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
               {rep.toFixed(1)}
             </p>
           </div>
-          <p className="label-mono mt-1">Reputation</p>
+          <p className="label-mono mt-1 w-full text-center">Reputation</p>
         </div>
       </div>
 
       {/* Stats Row */}
-      <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-6">
+      <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-8 pb-3">
         <div>
-          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-3xl font-bold text-[var(--text-primary)]">
             {stats.construct_count}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+          <p className="font-mono text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
             Build Logs
           </p>
         </div>
         <div>
-          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-3xl font-bold text-[var(--text-primary)]">
             {stats.citations_received}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+          <p className="font-mono text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
             Citations Received
           </p>
         </div>
         <div>
-          <p className="font-sans text-2xl font-semibold text-[var(--text-primary)]">
+          <p className="font-sans text-3xl font-bold text-[var(--text-primary)]">
             {stats.citations_given}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+          <p className="font-mono text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
             Citations Given
           </p>
         </div>
@@ -463,27 +461,26 @@ function PassportCard({
           onToggle={() => setShowCreds(!showCreds)}
         >
           {credentials.length === 0 ? (
-            <p className="font-mono text-sm text-[var(--text-tertiary)]">
+            <p className="font-mono text-base text-[var(--text-tertiary)]">
               No credentials
             </p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-3">
               {credentials.map((cred) => (
                 <div
                   key={cred.id}
-                  className="flex items-center justify-between rounded bg-[var(--background)] px-3 py-2 font-mono text-sm"
+                  className="flex items-center justify-between rounded-lg bg-[var(--background)] px-4 py-3 font-mono text-base border border-white/5 shadow-sm"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <span
-                      className={
-                        cred.is_revoked
-                          ? 'text-red-600'
-                          : 'text-emerald-600'
-                      }
+                      className={`font-bold px-3 py-1.5 rounded-lg border text-[13px] tracking-wide ${cred.is_revoked
+                        ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                        }`}
                     >
                       {cred.is_revoked ? 'REVOKED' : 'ACTIVE'}
                     </span>
-                    <span className="text-[var(--text-tertiary)]">
+                    <span className="text-[var(--text-tertiary)] font-sans">
                       {new Date(cred.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -491,7 +488,7 @@ function PassportCard({
                     <button
                       onClick={() => onRevoke(cred.id)}
                       disabled={isPending}
-                      className="text-red-600 hover:text-red-500 text-xs disabled:opacity-50 transition-colors cursor-pointer"
+                      className="text-rose-400 hover:text-white bg-rose-500/10 border border-rose-500/20 px-4 py-1.5 rounded-lg font-bold text-[13px] tracking-wide disabled:opacity-50 transition-all cursor-pointer shadow-sm hover:bg-rose-500/20"
                     >
                       Revoke
                     </button>
@@ -503,9 +500,9 @@ function PassportCard({
           <button
             onClick={onGenerateKey}
             disabled={isPending}
-            className="mt-2 rounded border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-1.5 font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-bright)] disabled:opacity-50 transition-colors cursor-pointer"
+            className="mt-4 rounded-lg border border-[var(--border)] bg-[#111] px-4 py-2.5 font-sans text-[13px] font-bold tracking-wide text-zinc-300 hover:border-cyan-500/50 hover:bg-cyan-950/20 hover:text-cyan-400 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            Generate New Key
+            + Generate New Key
           </button>
         </CollapsibleSection>
 
@@ -517,7 +514,7 @@ function PassportCard({
           onToggle={() => setShowCitations(!showCitations)}
         >
           {citations.length === 0 ? (
-            <p className="font-mono text-sm text-[var(--text-tertiary)]">
+            <p className="font-mono text-base text-[var(--text-tertiary)]">
               No inbound citations yet
             </p>
           ) : (
@@ -542,7 +539,7 @@ function PassportCard({
           onToggle={() => setShowActivity(!showActivity)}
         >
           {activityLogs.length === 0 ? (
-            <p className="font-mono text-sm text-[var(--text-tertiary)]">
+            <p className="font-mono text-base text-[var(--text-tertiary)]">
               No build logs yet
             </p>
           ) : (
@@ -551,21 +548,21 @@ function PassportCard({
                 <Link
                   key={log.id}
                   href={`/feed/${log.id}`}
-                  className="flex items-center justify-between rounded bg-[var(--background)] px-3 py-2 transition-colors hover:bg-[var(--surface-raised)]"
+                  className="flex items-center justify-between rounded-lg bg-[var(--background)] px-4 py-3 mb-2 border border-transparent transition-all hover:bg-white/5 hover:border-white/10"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-mono text-sm text-[var(--text-primary)] truncate">
+                    <p className="font-mono text-base font-bold text-[var(--text-primary)] truncate">
                       {log.title}
                     </p>
                     <p
-                      className="font-mono text-xs text-[var(--text-tertiary)]"
+                      className="font-mono text-sm text-[var(--text-tertiary)] mt-1"
                       suppressHydrationWarning
                     >
                       {relativeTime(log.created_at)}
                     </p>
                   </div>
                   {log.citation_count > 0 && (
-                    <span className="shrink-0 ml-3 font-mono text-xs text-[var(--text-tertiary)]">
+                    <span className="shrink-0 ml-4 font-sans font-bold text-xs text-[var(--text-primary)] bg-white/10 px-3 py-1.5 rounded-full border border-white/10 shadow-sm">
                       {log.citation_count}{' '}
                       {log.citation_count === 1 ? 'citation' : 'citations'}
                     </span>
@@ -601,18 +598,18 @@ function CollapsibleSection({
     <div>
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-2 py-1.5 font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+        className="flex w-full items-center gap-3 py-3 font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] hover:text-white transition-colors cursor-pointer"
       >
         <span
-          className={`text-[var(--text-tertiary)] text-xs transition-transform ${isOpen ? 'rotate-90' : ''
+          className={`text-[var(--accent)] text-lg transition-transform ${isOpen ? 'rotate-90' : ''
             }`}
         >
           &#9656;
         </span>
         {label}
-        <span className="text-[var(--text-tertiary)] text-xs">({count})</span>
+        <span className="text-zinc-300 font-mono text-xs mt-[1px] ml-1 bg-white/10 border border-white/5 shadow-sm px-2 py-0.5 rounded-full">{count}</span>
       </button>
-      {isOpen && <div className="mt-1 ml-4">{children}</div>}
+      {isOpen && <div className="mt-2 pl-7 border-l-2 border-white/5 ml-1.5 space-y-3">{children}</div>}
     </div>
   );
 }
@@ -634,46 +631,46 @@ function CitationRow({
   const isRejected = citation.is_rejected;
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded bg-[var(--background)] px-3 py-2">
+    <div className="flex items-start justify-between gap-4 rounded-lg bg-[var(--background)] px-4 py-3 border border-white/5 shadow-sm">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-sm text-[var(--accent)]">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="font-mono text-base font-bold text-[var(--accent)] drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
             {citation.source_agent_name}
           </span>
-          <span className="font-mono text-xs text-[var(--text-tertiary)]">
+          <span className="font-mono text-sm text-[var(--text-tertiary)]">
             cited
           </span>
-          <span className="font-mono text-sm text-[var(--text-primary)] truncate max-w-[200px]">
+          <span className="font-mono text-base font-medium text-[var(--text-primary)] truncate max-w-[300px]">
             &ldquo;{citation.source_construct_title}&rdquo;
           </span>
         </div>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2.5">
           {/* Type badge */}
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] border ${isCorrection
-              ? 'bg-amber-50 text-amber-700 border-amber-200'
-              : 'bg-blue-50 text-blue-700 border-blue-200'
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider border ${isCorrection
+              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+              : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
               }`}
           >
             {citation.type}
           </span>
           {/* Status badge */}
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] border ${isRejected
-              ? 'bg-red-50 text-red-700 border-red-200'
-              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider border ${isRejected
+              ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+              : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
               }`}
           >
             {isRejected ? 'rejected' : 'accepted'}
           </span>
           {/* Hidden note for corrections */}
           {isCorrection && !isRejected && (
-            <span className="font-mono text-[10px] text-[var(--text-tertiary)]">
+            <span className="font-mono text-xs text-[var(--text-tertiary)]">
               hidden by default
             </span>
           )}
           <span
-            className="font-mono text-[10px] text-[var(--text-tertiary)]"
+            className="font-mono text-[11px] text-[var(--text-tertiary)] ml-1"
             suppressHydrationWarning
           >
             {relativeTime(citation.created_at)}
@@ -686,7 +683,7 @@ function CitationRow({
         <button
           onClick={() => onReject(citation.id)}
           disabled={isPending}
-          className="shrink-0 mt-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 font-mono text-[11px] text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+          className="shrink-0 mt-1 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-2 font-mono text-xs font-bold tracking-wide text-rose-400 hover:bg-rose-500/20 hover:text-white disabled:opacity-50 transition-all cursor-pointer shadow-sm hover:shadow-[0_0_10px_rgba(244,63,94,0.2)]"
         >
           Reject
         </button>

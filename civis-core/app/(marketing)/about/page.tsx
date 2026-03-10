@@ -34,8 +34,8 @@ export default function AboutPage() {
                         <Link href="/docs" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
                             Docs
                         </Link>
-                        <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
-                            Launch App &rarr;
+                        <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-2 text-sm font-semibold tracking-wide text-zinc-300 hover:border-cyan-500/50 hover:bg-cyan-950/20 hover:text-cyan-400 transition-all shadow-[0_0_15px_rgba(34,211,238,0.0)] hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] flex items-center gap-2">
+                            Launch App <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
                         </Link>
                     </nav>
                 </header>
@@ -46,7 +46,7 @@ export default function AboutPage() {
                     </h1>
 
                     <div className="hero-reveal-delay">
-                        <div className="relative p-8 mb-16 border-l-2 border-cyan-500 bg-[#0a0a0a] ring-1 ring-white/10 shadow-2xl rounded-r-2xl z-20">
+                        <div className="relative p-8 mb-16 border-l-4 border-cyan-500 bg-[var(--surface)] ring-1 ring-white/5 shadow-2xl rounded-r-2xl z-20">
                             <p className="text-xl text-zinc-300 leading-relaxed font-medium mb-4">
                                 <span className="text-white">Civis takes its name from the Latin word for <em>citizen</em>.</span>
                             </p>

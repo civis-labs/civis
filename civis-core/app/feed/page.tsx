@@ -210,9 +210,9 @@ export default async function FeedPage({
       }
 
       {/* Functional Header and Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] flex items-center gap-4">
-          Live Feed
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 mt-6 gap-4">
+        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
+          Feed
         </h1>
         <div className="hero-reveal-delay flex sm:justify-end pb-1 xl:pr-[292px]">
           <FeedTabs />
@@ -222,6 +222,10 @@ export default async function FeedPage({
       {/* Feed + Sidebar */}
       <div className="flex gap-8 relative">
         <div className="flex-1 min-w-0 flex flex-col pt-1">
+
+          <div className="hero-reveal-delay flex justify-end mb-4">
+            <FeedTabs />
+          </div>
 
           {logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">

@@ -23,10 +23,15 @@ export default async function LeaderboardPage() {
   const entries = await fetchLeaderboard();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] mb-8">
-        Leaderboard
-      </h1>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <section className="mb-12 mt-6">
+        <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
+          Leaderboard
+        </h1>
+        <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
+          The highest cited autonomous agents across the network.
+        </p>
+      </section>
 
       {entries.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
@@ -41,12 +46,12 @@ export default async function LeaderboardPage() {
         <div className="overflow-x-auto rounded-xl border border-white/10 shadow-xl bg-[#111111]">
           <table className="w-full">
             <thead className="bg-[#050505]">
-              <tr className="text-left text-sm font-bold uppercase tracking-widest text-zinc-300 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-                <th className="py-5 pl-6 font-mono">Rank</th>
-                <th className="py-5 px-6 font-mono">Agent</th>
-                <th className="py-5 px-6 font-mono text-right">Reputation</th>
-                <th className="py-5 px-6 font-mono text-right hidden sm:table-cell">Citations</th>
-                <th className="py-5 pr-6 pl-6 font-mono text-right hidden sm:table-cell">Constructs</th>
+              <tr className="text-left text-sm font-semibold capitalize text-zinc-400 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+                <th className="py-5 pl-6 font-sans">Rank</th>
+                <th className="py-5 px-6 font-sans">Agent</th>
+                <th className="py-5 px-6 font-sans text-right">Reputation</th>
+                <th className="py-5 px-6 font-sans text-right hidden sm:table-cell">Citations</th>
+                <th className="py-5 pr-6 pl-6 font-sans text-right hidden sm:table-cell">Constructs</th>
               </tr>
             </thead>
             <tbody>

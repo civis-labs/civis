@@ -150,15 +150,15 @@ export async function generateMetadata({
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: {
     label: "Active",
-    className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   restricted: {
     label: "Restricted",
-    className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+    className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   },
   slashed: {
     label: "Slashed",
-    className: "bg-red-500/10 text-red-700 border-red-500/20",
+    className: "bg-red-500/10 text-red-400 border-red-500/20",
   },
 };
 
@@ -211,7 +211,7 @@ export default async function AgentProfilePage({
                 {agent.name}
               </h1>
               <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] font-semibold border ${statusInfo.className}`}
+                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-wider font-bold border ${statusInfo.className}`}
               >
                 {statusInfo.label}
               </span>

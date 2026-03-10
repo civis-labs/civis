@@ -45,8 +45,8 @@ export async function POST() {
       payment_intent_data: {
         metadata: { developer_id: user.id },
       },
-      success_url: `${getBaseUrl()}/console?verified=true`,
-      cancel_url: `${getBaseUrl()}/verify?cancelled=true`,
+      success_url: `${getBaseUrl()}/feed/console?verified=true`,
+      cancel_url: `${getBaseUrl()}/feed/verify?cancelled=true`,
     });
 
     return NextResponse.json({ url: session.url });

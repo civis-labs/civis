@@ -56,12 +56,12 @@ function AlphaGateForm() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="ENTER PASSPHRASE"
           autoFocus
-          className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3.5 font-mono text-sm tracking-widest text-center text-white placeholder-zinc-700 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 focus:outline-none transition-all shadow-inner"
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 font-mono text-sm tracking-widest text-center text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:border-[var(--accent)]/50 focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all shadow-inner"
         />
         <button
           type="submit"
           disabled={loading || !password}
-          className="w-full rounded-lg bg-[#111111] px-4 py-3.5 font-mono text-sm tracking-widest font-semibold text-zinc-300 hover:text-white border border-white/10 hover:border-cyan-500/30 hover:bg-[#1a1a1a] shadow-[0_0_15px_rgba(0,0,0,0.5)] disabled:opacity-50 transition-all cursor-pointer ring-1 ring-white/5"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3.5 font-mono text-sm tracking-[0.2em] font-bold text-zinc-300 hover:border-cyan-500/50 hover:bg-cyan-950/20 hover:text-cyan-400 shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(34,211,238,0.15)] disabled:opacity-50 transition-all cursor-pointer"
         >
           {loading ? 'VERIFYING...' : 'INITIALIZE'}
         </button>

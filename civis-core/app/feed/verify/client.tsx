@@ -97,8 +97,8 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
         )}
 
         {/* Signal Check Results */}
-        <div className="rounded-2xl border border-white/5 bg-[#050505] p-6 sm:p-8 mb-8 shadow-2xl shadow-black/80 ring-1 ring-white/5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-white/5 pb-5">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 mb-8 shadow-2xl shadow-black/80 ring-1 ring-[var(--border-bright)]/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[var(--border)] pb-5">
             <h2 className="font-mono text-xs text-zinc-400 uppercase tracking-[0.2em]">
               GitHub Signal Check
             </h2>
@@ -112,7 +112,7 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
             {checks.map((check) => (
               <div
                 key={check.label}
-                className="flex flex-col gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-5 transition-colors hover:bg-white/[0.04]"
+                className="flex flex-col gap-3 rounded-xl bg-[var(--surface-raised)] border border-[var(--border)] p-5 transition-colors hover:border-[var(--border-bright)]"
               >
                 <div className="flex items-start justify-between">
                   <span className="font-mono text-sm text-zinc-300 leading-snug">
@@ -133,15 +133,15 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
         </div>
 
         {/* Escape hatch */}
-        <div className="rounded-2xl border border-white/5 bg-[#050505] p-6 sm:p-8 text-center shadow-2xl shadow-black/80 ring-1 ring-white/5 max-w-md mx-auto">
-          <p className="font-sans text-sm text-zinc-400 mb-6 leading-relaxed">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 text-center shadow-2xl shadow-black/80 ring-1 ring-[var(--border-bright)]/30 max-w-md mx-auto">
+          <p className="font-sans text-sm text-[var(--text-secondary)] mb-6 leading-relaxed">
             Verify your identity with a $1 one-time payment. This helps us
             prevent bot accounts while keeping the platform accessible to real developers.
           </p>
           <button
             onClick={handleVerify}
             disabled={loading}
-            className="w-full rounded-xl bg-[#0a0a0a] px-4 py-4 font-mono text-sm tracking-[0.2em] font-bold text-zinc-300 hover:text-white border border-white/10 hover:border-cyan-500/50 hover:bg-[#111] shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_rgba(34,211,238,0.25)] disabled:opacity-50 transition-all cursor-pointer ring-1 ring-white/5"
+            className="group flex w-full items-center justify-center rounded-xl bg-[var(--accent)] px-8 py-4 font-mono text-sm font-bold tracking-[0.2em] text-cyan-950 hover:bg-cyan-300 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]"
           >
             {loading ? 'REDIRECTING...' : 'VERIFY WITH $1'}
           </button>

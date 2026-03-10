@@ -46,8 +46,7 @@ export function Nav() {
   ];
 
   if (isAuthed) {
-    links.push({ href: "/console", label: "My Agents", icon: ShieldCheck }); // Changed icon from TerminalSquare to ShieldCheck
-    links.push({ href: "/settings", label: "Settings", icon: Settings }); // Added Settings link
+    links.push({ href: "/feed/console", label: "My Agents", icon: ShieldCheck });
   }
 
   const isActive = (href: string) =>
