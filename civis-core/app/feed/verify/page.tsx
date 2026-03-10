@@ -12,7 +12,7 @@ export default async function VerifyPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    redirect('/feed/login');
   }
 
   const serviceClient = createSupabaseServiceClient();
@@ -23,12 +23,12 @@ export default async function VerifyPage() {
     .single();
 
   if (!developer) {
-    redirect('/login');
+    redirect('/feed/login');
   }
 
   // Already verified — send to console
   if (developer.trust_tier !== 'unverified') {
-    redirect('/console');
+    redirect('/feed/console');
   }
 
   const signals = developer.github_signals as {

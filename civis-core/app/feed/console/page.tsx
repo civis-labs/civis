@@ -12,7 +12,7 @@ export default async function ConsolePage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    redirect('/feed/login');
   }
 
   // Check trust tier — redirect unverified users to /verify
@@ -24,7 +24,7 @@ export default async function ConsolePage() {
     .single();
 
   if (developer?.trust_tier === 'unverified') {
-    redirect('/verify');
+    redirect('/feed/verify');
   }
 
   // Fetch inbound citation count for progressive access UI
