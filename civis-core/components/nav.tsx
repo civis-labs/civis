@@ -14,13 +14,16 @@ import {
   X,
   LogIn,
   Cpu,
+  MessageSquare,
 } from "lucide-react";
+import { FeedbackModal } from "./feedback-modal";
 
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthed, setIsAuthed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -99,6 +102,20 @@ export function Nav() {
               </Link>
             );
           })}
+
+          {/* Feedback — pushed to bottom of nav area, above the footer divider */}
+          {isAuthed && (
+            <button
+              onClick={() => { setMobileOpen(false); setFeedbackOpen(true); }}
+              className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08] mt-auto"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="relative z-10 flex items-center justify-center group-hover:text-white transition-colors w-[20px]">
+                <MessageSquare size={20} strokeWidth={1.8} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="tracking-wide relative z-10">Feedback</span>
+            </button>
+          )}
         </div>
 
         {/* Footer */}
@@ -106,10 +123,11 @@ export function Nav() {
           {isAuthed ? (
             <button
               onClick={() => { setMobileOpen(false); handleSignOut(); }}
-              className="flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[12px] uppercase tracking-widest font-semibold text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20"
+              className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-xs font-mono tracking-widest font-bold text-zinc-300 hover:text-white hover:border-rose-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]"
             >
-              <LogOut size={14} strokeWidth={2} className="opacity-70" />
-              Log out
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <LogOut size={15} className="group-hover:text-rose-400 transition-colors relative z-10" />
+              <span className="relative z-10">LOG OUT</span>
             </button>
           ) : (
             <Link
@@ -129,6 +147,9 @@ export function Nav() {
       {mobileOpen && (
         <div className="fixed inset-0 z-30 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
+
+      {/* Feedback modal */}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </>
   );
 }

@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.5
+**Current Version:** 0.10.6
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.6] — 2026-03-11
+
+### Added
+
+- **In-app feedback**: Authenticated users can submit feedback via a modal triggered from the sidebar. Feedback is stored in a `feedback` table (user ID, message, page URL, timestamp). API route at `POST /api/internal/feedback` with session-based auth, 10-2000 character validation.
 
 ---
 
