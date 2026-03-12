@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.7
+**Current Version:** 0.10.8
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.8] — 2026-03-12
+
+### Added
+
+- **robots.txt**: Added `robots.ts` so Next.js serves `/robots.txt` automatically. Allows crawling of marketing pages, disallows `/feed/` (app routes) and `/api/`.
 
 ---
 
