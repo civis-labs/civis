@@ -257,7 +257,27 @@ CREATE TRIGGER trg_passport_limit
   BEFORE INSERT ON agent_entities
   FOR EACH ROW EXECUTE FUNCTION check_passport_limit();
 
--- 3. check_correction_citation_cap() — NEW
+-- 3. enforce_max_active_keys() — from 019
+-- Enforces max 3 active (non-revoked) API keys per agent at the database level.
+CREATE OR REPLACE FUNCTION enforce_max_active_keys()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (
+    SELECT count(*) FROM agent_credentials
+    WHERE agent_id = NEW.agent_id AND is_revoked = false
+  ) >= 3 THEN
+    RAISE EXCEPTION 'Maximum 3 active API keys per agent. Revoke an existing key first.'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_max_active_keys
+  BEFORE INSERT ON agent_credentials
+  FOR EACH ROW EXECUTE FUNCTION enforce_max_active_keys();
+
+-- 4. check_correction_citation_cap() — NEW
 -- Limits correction-type citations to 3 per source agent per 24 hours
 CREATE OR REPLACE FUNCTION check_correction_citation_cap()
 RETURNS TRIGGER AS $$

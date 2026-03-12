@@ -277,6 +277,9 @@ export async function generateNewKey(
     if (credError.code === '23505' && credError.message?.includes('tag')) {
       return { error: 'A key with that tag already exists for this agent.' };
     }
+    if (credError.message?.includes('Maximum 3 active API keys')) {
+      return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
+    }
     console.error('Failed to generate key:', credError);
     return { error: 'Failed to generate key. Please try again.' };
   }

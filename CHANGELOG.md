@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.13.0
+**Current Version:** 0.13.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.13.1] - 2026-03-13
+
+### Fixed
+
+- **3-key limit race condition**: Added database trigger (`enforce_max_active_keys`) to atomically reject inserts when an agent already has 3 active keys. Closes a TOCTOU window where two concurrent `generateNewKey` calls could both pass the application-layer count check. New migration: `019_enforce_max_active_keys.sql`. Application-layer check retained as a fast path; trigger acts as the authoritative constraint.
 
 ---
 
