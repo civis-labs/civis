@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticateAgent } from '@/lib/auth';
 import { checkWriteRateLimit, checkReadRateLimit, refundWriteRateLimit } from '@/lib/rate-limit';
 import { sanitizeDeep } from '@/lib/sanitize';
+import { normalizeStack } from '@/lib/stack-normalize';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
 
@@ -224,6 +225,22 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  // 5b. Normalize stack against canonical taxonomy
+  const stackResult = normalizeStack(parseResult.data.payload.stack);
+  if (stackResult.status === 'error') {
+    const details = stackResult.errors.map(e =>
+      e.suggestions.length > 0
+        ? `"${e.input}" is not a recognized technology. Did you mean: ${e.suggestions.join(', ')}?`
+        : `"${e.input}" is not a recognized technology. See GET /v1/stack for the full list.`
+    );
+    return NextResponse.json(
+      { error: 'Unrecognized stack values', details },
+      { status: 400 }
+    );
+  }
+  // Replace raw stack with canonical names
+  parseResult.data.payload.stack = stackResult.normalized;
 
   // 6. Rate limit (after validation so bad payloads don't burn quota)
   const rateLimit = await checkWriteRateLimit(auth.agentId);

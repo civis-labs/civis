@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { findByName, CATEGORY_DISPLAY } from "@/lib/stack-taxonomy";
 import {
   Code2,
   Database,
@@ -7,8 +8,25 @@ import {
   Server,
   Cpu,
   Blocks,
-  Network
+  Network,
+  Globe,
+  BookOpen,
+  Package,
+  Wrench
 } from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, typeof Cpu> = {
+  'AI & Models': Cpu,
+  'Frontend & UI': LayoutTemplate,
+  'Frameworks': Network,
+  'Backend & APIs': Server,
+  'Databases': Database,
+  'Languages': Code2,
+  'Infrastructure': Globe,
+  'Platforms': Package,
+  'Libraries': BookOpen,
+  'Tools': Wrench,
+};
 
 interface TagCount {
   tag: string;
@@ -30,70 +48,32 @@ async function fetchTagCounts(): Promise<TagCount[]> {
 export default async function ExplorePage() {
   const tags = await fetchTagCounts();
 
-  // Categorize tags
-  const categories = {
-    "AI & Models": {
-      icon: Cpu,
-      keywords: ["gpt", "claude", "llama", "mistral", "openai", "anthropic", "langchain", "llm", "ai", "gemini", "tensor", "pytorch"],
-      color: "text-purple-400",
-      bg: "bg-purple-500/10 border-purple-500/20"
-    },
-    "Frontend & UI": {
-      icon: LayoutTemplate,
-      keywords: ["react", "next.js", "vue", "svelte", "tailwind", "css", "html", "framer", "radix", "shadcn", "ui"],
-      color: "text-sky-400",
-      bg: "bg-sky-500/10 border-sky-500/20"
-    },
-    "Backend & APIs": {
-      icon: Server,
-      keywords: ["node.js", "express", "fastapi", "django", "flask", "spring", "trpc", "graphql", "rest", "api"],
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10 border-emerald-500/20"
-    },
-    "Database & Data": {
-      icon: Database,
-      keywords: ["postgres", "mysql", "mongodb", "redis", "supabase", "prisma", "drizzle", "sql", "pinecone", "milvus", "qdrant"],
-      color: "text-amber-400",
-      bg: "bg-amber-500/10 border-amber-500/20"
-    },
-    "Languages": {
-      icon: Code2,
-      keywords: ["typescript", "javascript", "python", "rust", "go", "java", "c++", "ruby", "php"],
-      color: "text-blue-400",
-      bg: "bg-blue-500/10 border-blue-500/20"
-    },
-    "Infrastructure & Tools": {
-      icon: Network,
-      keywords: ["docker", "kubernetes", "aws", "gcp", "azure", "vercel", "cloudflare", "linux", "git", "ci/cd", "github"],
-      color: "text-rose-400",
-      bg: "bg-rose-500/10 border-rose-500/20"
-    },
-    "Other": {
-      icon: Blocks,
-      keywords: [],
-      color: "text-zinc-400",
-      bg: "bg-zinc-500/10 border-zinc-500/20"
-    }
-  };
+  // Categorize tags using the canonical taxonomy
+  const groupedTags: Record<string, TagCount[]> = {};
 
-  const groupedTags = tags.reduce((acc, tag) => {
-    const t = tag.tag.toLowerCase();
+  for (const tag of tags) {
+    const entry = findByName(tag.tag);
+    if (!entry) {
+      // Pre-taxonomy data that doesn't match; group under "Other"
+      if (!groupedTags["Other"]) groupedTags["Other"] = [];
+      groupedTags["Other"].push(tag);
+      continue;
+    }
+    // Find which display category this entry belongs to
     let assigned = false;
-    for (const [catName, catData] of Object.entries(categories)) {
-      if (catName === "Other") continue;
-      if (catData.keywords.some(k => t.includes(k) || t === k)) {
-        if (!acc[catName]) acc[catName] = [];
-        acc[catName].push(tag);
+    for (const [label, config] of Object.entries(CATEGORY_DISPLAY)) {
+      if (config.categories.includes(entry.category)) {
+        if (!groupedTags[label]) groupedTags[label] = [];
+        groupedTags[label].push(tag);
         assigned = true;
         break;
       }
     }
     if (!assigned) {
-      if (!acc["Other"]) acc["Other"] = [];
-      acc["Other"].push(tag);
+      if (!groupedTags["Other"]) groupedTags["Other"] = [];
+      groupedTags["Other"].push(tag);
     }
-    return acc;
-  }, {} as Record<string, TagCount[]>);
+  }
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -115,11 +95,12 @@ export default async function ExplorePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {Object.entries(categories).map(([catName, config]) => {
+          {[...Object.keys(CATEGORY_DISPLAY), 'Other'].map((catName) => {
             const groupTags = groupedTags[catName];
             if (!groupTags || groupTags.length === 0) return null;
 
-            const Icon = config.icon;
+            const config = CATEGORY_DISPLAY[catName] || { color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20' };
+            const Icon = CATEGORY_ICONS[catName] || Blocks;
 
             return (
               <div key={catName} className="flex flex-col gap-4">
