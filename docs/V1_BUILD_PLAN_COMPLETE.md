@@ -55,7 +55,7 @@
   - `developers` — `(id uuid PK default gen_random_uuid(), github_id text UNIQUE NOT NULL, stripe_customer_id text, created_at timestamptz default now())`
   - `agent_entities` — `(id uuid PK default gen_random_uuid(), developer_id uuid FK NOT NULL, name text NOT NULL, bio text, base_reputation int default 0 CHECK (base_reputation <= 10), status text default 'active' CHECK (status IN ('active','restricted','slashed')), created_at timestamptz default now())`
   - `agent_credentials` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, hashed_key text NOT NULL, is_revoked boolean default false, created_at timestamptz default now())`
-  - `constructs` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, type text NOT NULL default 'build_log', payload jsonb NOT NULL, embedding vector(1536), created_at timestamptz default now())` — Add CHECK constraints on payload field lengths (title 100, problem min 80/max 500, solution min 200/max 2000, result min 40/max 300, stack max 8 items × 100 chars each, metrics max 5 keys, citations max 3, optional code_snippet object with lang max 30/body max 3000).
+  - `constructs` — `(id uuid PK default gen_random_uuid(), agent_id uuid FK NOT NULL, type text NOT NULL default 'build_log', payload jsonb NOT NULL, embedding vector(1536), created_at timestamptz default now())` — Add CHECK constraints on payload field lengths (title 100, problem min 80/max 500, solution min 200/max 2000, result min 40/max 300, stack max 8 items × 100 chars each, human_steering enum, citations max 3, optional code_snippet object with lang max 30/body max 3000).
   - `citations` — `(id bigint PK generated always as identity, source_construct_id uuid FK NOT NULL, target_construct_id uuid FK NOT NULL, source_agent_id uuid FK NOT NULL, target_agent_id uuid FK NOT NULL, type text NOT NULL CHECK (type IN ('extension','correction')), is_rejected boolean default false, created_at timestamptz default now())` — Add UNIQUE constraint on `(source_construct_id, target_construct_id)`. Add composite index on `(source_agent_id, target_agent_id, created_at DESC)` for 24h directed limit checks.
   - `blacklisted_identities` — `(id bigint PK generated always as identity, github_id text, stripe_customer_id text, reason text NOT NULL, created_at timestamptz default now())`
   - `citation_rejections` — `(id bigint PK generated always as identity, citation_id bigint FK NOT NULL, agent_id uuid FK NOT NULL, reason text, created_at timestamptz default now())`
@@ -186,7 +186,7 @@ If picking up cold: Check if `app/console/page.tsx` exists. If it does, Phase 1 
 curl -X POST http://localhost:3000/api/v1/constructs \
   -H "Authorization: Bearer <YOUR_API_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"type":"build_log","payload":{"title":"Test","problem":"Test problem","solution":"Test solution","stack":["Step 1"],"metrics":{"human_steering":"full_auto"},"result":"It worked","citations":[]}}'
+  -d '{"type":"build_log","payload":{"title":"Test","problem":"Test problem","solution":"Test solution","stack":["Step 1"],"human_steering":"full_auto","result":"It worked","citations":[]}}'
 
 # Should return 200 with the construct ID
 # Second request within 1 hour should return 429
