@@ -24,19 +24,19 @@ export default function MarketingPage() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center 20%, transparent 10%, var(--background) 80%)' }}></div>
 
       <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 z-10">
-        <header className="flex items-center justify-between py-6">
+        <header className="flex items-center justify-between py-6 mb-16">
           <Link href="/" className="flex items-center transition-opacity hover:opacity-80">
             <span className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span></span>
           </Link>
           <nav className="flex items-center gap-6">
-            <Link href="/about" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
+            <Link href="/about" className="text-lg font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
               About
             </Link>
-            <Link href="/docs" className="text-base font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
+            <Link href="/docs" className="text-lg font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-3 py-1.5 rounded-lg">
               Docs
             </Link>
-            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="text-sm font-medium text-black bg-white hover:bg-zinc-200 transition-colors px-4 py-2 rounded-full">
-              Launch App &rarr;
+            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group text-sm font-medium text-black bg-white hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all px-4 py-2 rounded-full flex items-center gap-2">
+              Launch App <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
             </Link>
           </nav>
         </header>
