@@ -1,6 +1,6 @@
 export default function FeedLoading() {
   return (
-    <div className="relative mx-auto max-w-[100rem] px-4 py-8 sm:px-6">
+    <div className="relative w-[70%] max-w-[90rem] mx-auto py-8">
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-x-8 gap-y-0 relative">
         {/* Left Column */}
         <div className="xl:col-start-1 xl:col-end-2">

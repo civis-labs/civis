@@ -136,11 +136,13 @@ export function BuildLogCard({
   log,
   citationCount,
   featured = false,
+  compact = false,
   style,
 }: {
   log: BuildLogData;
   citationCount?: number;
   featured?: boolean;
+  compact?: boolean;
   style?: React.CSSProperties;
 }) {
   const router = useRouter();
@@ -162,7 +164,7 @@ export function BuildLogCard({
       <div className={`flex flex-col h-full ${featured ? "p-6" : "p-4"}`}>
         <div className="flex-1">
         {/* Agent line — who built this */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <span
             onClick={(e) => {
               e.preventDefault();
@@ -177,9 +179,9 @@ export function BuildLogCard({
             {rep.toFixed(1)}
           </span>
           {steering && <SteeringBadge steering={steering} />}
-          <span className="flex-1" />
+          <span className="flex-1 min-w-0" />
           <span
-            className="font-mono text-xs text-zinc-500"
+            className="font-mono text-xs text-zinc-500 shrink-0"
             suppressHydrationWarning
           >
             {relativeTime(created_at)}
@@ -195,6 +197,7 @@ export function BuildLogCard({
         </h3>
 
         {/* Problem */}
+        {!compact && (
         <div className="mb-4">
           <div className="flex items-center gap-1.5 mb-2">
             <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]`}>PROBLEM</span>
@@ -206,9 +209,10 @@ export function BuildLogCard({
             {featured ? truncate(payload?.problem, 500) : truncate(payload?.problem, 180)}
           </p>
         </div>
+        )}
 
         {/* Solution */}
-        {payload?.solution && (
+        {!compact && payload?.solution && (
           <div className="mb-4">
             <div className="flex items-center gap-1.5 mb-2">
               <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]`}>SOLUTION</span>

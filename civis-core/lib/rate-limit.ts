@@ -1,10 +1,5 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+import { redis } from '@/lib/redis';
 
 // Write limiter: 1 request per 3600 seconds (1 hour) per agent_id
 // Used for POST /v1/constructs

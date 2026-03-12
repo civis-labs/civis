@@ -15,8 +15,9 @@ async function fetchFeed(
     let query = serviceClient
       .from("constructs")
       .select(
-        "id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
+        "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
+      .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(0, LIMIT - 1);
 
@@ -177,7 +178,7 @@ export default async function FeedPage({
   const params = await searchParams;
   const sort = ["chron", "trending", "discovery"].includes(params.sort || "")
     ? params.sort!
-    : "trending";
+    : "chron";
   const tag = params.tag || null;
 
   const [logs, stats] = await Promise.all([
@@ -190,7 +191,7 @@ export default async function FeedPage({
   ]);
 
   return (
-    <div className="relative mx-auto max-w-[100rem] px-4 py-8 sm:px-6">
+    <div className="relative w-[70%] max-w-[90rem] mx-auto py-8">
       <FeedClient
         initialLogs={logs}
         initialCitationCounts={citationCounts}

@@ -45,6 +45,8 @@ async function fetchTagCounts(): Promise<TagCount[]> {
   }));
 }
 
+const MAX_TAGS_PER_CATEGORY = 12;
+
 export default async function ExplorePage() {
   const tags = await fetchTagCounts();
 
@@ -54,12 +56,10 @@ export default async function ExplorePage() {
   for (const tag of tags) {
     const entry = findByName(tag.tag);
     if (!entry) {
-      // Pre-taxonomy data that doesn't match; group under "Other"
       if (!groupedTags["Other"]) groupedTags["Other"] = [];
       groupedTags["Other"].push(tag);
       continue;
     }
-    // Find which display category this entry belongs to
     let assigned = false;
     for (const [label, config] of Object.entries(CATEGORY_DISPLAY)) {
       if (config.categories.includes(entry.category)) {
@@ -74,6 +74,18 @@ export default async function ExplorePage() {
       groupedTags["Other"].push(tag);
     }
   }
+
+  // Sort categories by total usage (most-used categories first)
+  const categoryOrder = [...Object.keys(CATEGORY_DISPLAY), 'Other'];
+  const sortedCategories = categoryOrder
+    .filter((cat) => groupedTags[cat] && groupedTags[cat].length > 0)
+    .sort((a, b) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      const sumA = groupedTags[a].reduce((s, t) => s + t.count, 0);
+      const sumB = groupedTags[b].reduce((s, t) => s + t.count, 0);
+      return sumB - sumA;
+    });
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -95,38 +107,44 @@ export default async function ExplorePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {[...Object.keys(CATEGORY_DISPLAY), 'Other'].map((catName) => {
-            const groupTags = groupedTags[catName];
-            if (!groupTags || groupTags.length === 0) return null;
+          {sortedCategories.map((catName) => {
+            const sorted = groupedTags[catName].sort((a, b) => b.count - a.count);
+            const visible = sorted.slice(0, MAX_TAGS_PER_CATEGORY);
+            const overflow = sorted.length - visible.length;
 
             const config = CATEGORY_DISPLAY[catName] || { color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20' };
             const Icon = CATEGORY_ICONS[catName] || Blocks;
 
             return (
-              <div key={catName} className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-2">
+              <div key={catName} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <div className="flex items-center gap-2.5 mb-4">
                   <div className={`p-1.5 rounded-md ${config.bg} border`}>
                     <Icon size={16} className={config.color} strokeWidth={2.5} />
                   </div>
-                  <h2 className="font-mono text-sm font-bold tracking-widest uppercase text-white">
-                    {catName}
+                  <h2 className="font-mono text-sm font-bold tracking-[0.2em] uppercase text-white">
+                    {catName} <span className="text-zinc-500 font-normal">({sorted.length})</span>
                   </h2>
                 </div>
-                <div className="flex flex-wrap gap-2.5">
-                  {groupTags.sort((a, b) => b.count - a.count).map((t) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {visible.map((t) => (
                     <Link
                       key={t.tag}
-                      href={`/feed?tag=${encodeURIComponent(t.tag)}`}
-                      className="group flex items-center gap-2 rounded-lg bg-[#111111] ring-1 ring-white/10 px-3 py-2 font-mono text-xs transition-all hover:ring-cyan-500/50 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
+                      href={`/?tag=${encodeURIComponent(t.tag)}`}
+                      className="group flex items-center gap-1.5 rounded-md bg-white/[0.04] px-2.5 py-1.5 font-mono text-xs transition-all hover:bg-white/[0.1] hover:shadow-[0_0_15px_rgba(34,211,238,0.1)]"
                     >
-                      <span className="text-zinc-300 font-bold group-hover:text-cyan-400 transition-colors">
+                      <span className="text-zinc-400 group-hover:text-cyan-400 transition-colors">
                         {t.tag}
                       </span>
-                      <span className="rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] text-zinc-500 tabular-nums">
+                      <span className="text-[10px] text-zinc-600 tabular-nums">
                         {t.count}
                       </span>
                     </Link>
                   ))}
+                  {overflow > 0 && (
+                    <span className="flex items-center px-2.5 py-1.5 font-mono text-[11px] text-zinc-600">
+                      +{overflow} more
+                    </span>
+                  )}
                 </div>
               </div>
             );

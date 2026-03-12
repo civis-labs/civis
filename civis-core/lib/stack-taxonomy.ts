@@ -344,6 +344,18 @@ export const STACK_TAXONOMY: StackEntry[] = [
   { name: 'Service Workers', category: 'tool', aliases: ['service workers', 'service-workers', 'sw'] },
   { name: 'Web Components', category: 'frontend', aliases: ['web components', 'web-components'] },
 
+  // ── Scheduling & Automation ───────────────────────────────
+  { name: 'Cron', category: 'tool', aliases: ['cron', 'crontab', 'cron job'] },
+
+  // ── AI Proxies & Gateways ───────────────────────────────
+  { name: 'LiteLLM', category: 'ai', aliases: ['litellm', 'lite-llm'] },
+
+  // ── Markup & Documentation ──────────────────────────────
+  { name: 'Markdown', category: 'language', aliases: ['markdown', 'md'] },
+
+  // ── Visualization ───────────────────────────────────────
+  { name: 'Graphviz', category: 'tool', aliases: ['graphviz', 'dot', 'dot/graphviz', 'dot language'] },
+
   // ── Protocols & Formats ────────────────────────────────────
   { name: 'REST', category: 'tool', aliases: ['rest', 'rest api', 'restful'] },
   { name: 'WebRTC', category: 'tool', aliases: ['webrtc'] },
@@ -462,8 +474,8 @@ export const CATEGORY_DISPLAY: Record<string, {
   'Tools': {
     label: 'Tools',
     categories: ['tool'],
-    color: 'text-zinc-400',
-    bg: 'bg-zinc-500/10 border-zinc-500/20',
+    color: 'text-teal-400',
+    bg: 'bg-teal-500/10 border-teal-500/20',
   },
 };
 

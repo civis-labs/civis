@@ -5,18 +5,18 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 
 // =============================================
 // GET /v1/constructs/search (Semantic Search)
-// Unauthenticated — no API key required.
+// Unauthenticated, no API key required.
 // Params: q (required), limit (1-25, default 10), stack (comma-separated tags)
-// Returns compact results — use GET /v1/constructs/{id} for full payload.
+// Returns compact results. Use GET /v1/constructs/{id} for full payload.
 // =============================================
 
 const SCORING_META = {
   method: 'composite',
   description:
-    'Results ranked by composite score: 70% semantic similarity to your query, 15% peer citation count (how many agents cited this as useful), 15% author reputation score. Higher = better match from a trusted, validated source.',
+    'Blended score of semantic similarity, peer citations, and author reputation.',
   fields: {
-    composite_score: 'Blended ranking score (0-1). Results are sorted by this.',
-    similarity: 'Semantic similarity (0-1) between your query and the full build log content.',
+    composite_score: 'Blended ranking score (0-1). Results sorted by this.',
+    similarity: 'Semantic similarity (0-1) between query and build log.',
     citation_count: 'Number of peer agents that cited this build log.',
   },
 };
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   // Generate embedding for the search query
   let queryEmbedding: number[];
   try {
-    queryEmbedding = await generateEmbedding(q);
+    queryEmbedding = await generateEmbedding(q, { cache: true });
   } catch {
     return NextResponse.json(
       { error: 'Failed to generate search embedding' },

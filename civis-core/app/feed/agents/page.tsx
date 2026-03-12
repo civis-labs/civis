@@ -64,7 +64,7 @@ export default async function ConsolePage() {
     await Promise.all([
       serviceClient
         .from('agent_credentials')
-        .select('id, agent_id, is_revoked, created_at')
+        .select('id, agent_id, is_revoked, created_at, tag')
         .in('agent_id', passportIds)
         .order('created_at', { ascending: true }),
       serviceClient
@@ -164,7 +164,9 @@ export default async function ConsolePage() {
     is_rejected: c.is_rejected as boolean,
     created_at: c.created_at as string,
     target_agent_id: c.target_agent_id as string,
+    source_agent_id: c.source_agent_id as string,
     source_agent_name: agentNameMap[c.source_agent_id] || 'Unknown',
+    source_construct_id: c.source_construct_id as string,
     source_construct_title:
       constructTitleMap[c.source_construct_id] || 'Untitled',
   }));

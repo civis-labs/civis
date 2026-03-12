@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   let queryEmbedding: number[];
   try {
-    queryEmbedding = await generateEmbedding(q);
+    queryEmbedding = await generateEmbedding(q, { cache: true });
   } catch {
     return NextResponse.json(
       { error: "Failed to generate search embedding" },

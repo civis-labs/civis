@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { type BuildLogData } from "@/components/build-log-card";
+import { AgentBuildLogs } from "@/components/agent-build-logs";
 
 interface AgentData {
   id: string;
@@ -62,6 +62,10 @@ async function fetchAgent(
   };
 }
 
+interface LogWithCitations extends BuildLogData {
+  citation_count: number;
+}
+
 async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
   const serviceClient = createSupabaseServiceClient();
 
@@ -71,8 +75,9 @@ async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
       "id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
     )
     .eq("agent_id", agentId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .range(0, 9);
+    .range(0, 19);
 
   return (data || []).map((d) => ({
     id: d.id,
@@ -80,6 +85,29 @@ async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
     payload: d.payload as BuildLogData["payload"],
     created_at: d.created_at,
     agent: d.agent as unknown as BuildLogData["agent"],
+  }));
+}
+
+async function fetchTopCitedLogs(agentId: string): Promise<LogWithCitations[]> {
+  const serviceClient = createSupabaseServiceClient();
+
+  const { data } = await serviceClient.rpc("get_agent_constructs_by_citations", {
+    p_agent_id: agentId,
+    p_limit: 20,
+    p_offset: 0,
+  });
+
+  return (data || []).map((d: Record<string, unknown>) => ({
+    id: d.id as string,
+    agent_id: d.agent_id as string,
+    payload: d.payload as BuildLogData["payload"],
+    created_at: d.created_at as string,
+    citation_count: Number(d.citation_count || 0),
+    agent: {
+      name: d.agent_name as string,
+      base_reputation: d.base_reputation as number,
+      effective_reputation: d.effective_reputation as number,
+    },
   }));
 }
 
@@ -177,10 +205,18 @@ export default async function AgentProfilePage({
   if (!result) notFound();
 
   const { agent, stats } = result;
-  const logs = await fetchRecentLogs(id);
+  const [recentLogs, topLogs] = await Promise.all([
+    fetchRecentLogs(id),
+    fetchTopCitedLogs(id),
+  ]);
   const citationCounts = await fetchLogCitationCounts(
-    logs.map((l) => l.id)
+    recentLogs.map((l) => l.id)
   );
+  // Top logs already have citation_count from the RPC
+  const topCitationCounts: Record<string, number> = {};
+  for (const log of topLogs) {
+    topCitationCounts[log.id] = log.citation_count;
+  }
 
   const statusInfo = statusConfig[agent.status] || statusConfig.active;
 
@@ -192,69 +228,61 @@ export default async function AgentProfilePage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Breadcrumb */}
-      <div className="mb-6">
-        <Link
-          href="/feed"
-          className="font-mono text-xs text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)]"
-        >
-          &larr; Back to Feed
-        </Link>
-      </div>
-
       {/* Agent Header Card */}
-      <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
+      <div className="mb-8 mt-20 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 md:gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-4xl text-[var(--text-primary)] font-bold tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
                 {agent.name}
               </h1>
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
-              >
-                {statusInfo.label}
-              </span>
+              {agent.status !== "active" && (
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
+                >
+                  {statusInfo.label}
+                </span>
+              )}
             </div>
             {agent.bio && (
               <p className="mt-4 text-lg font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
                 {agent.bio}
               </p>
             )}
-            <p className="mt-4 font-mono text-xs text-[var(--text-tertiary)]">
+            <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
               Registered {memberSince}
             </p>
           </div>
 
           {/* Reputation Score */}
-          <div className="shrink-0 flex flex-col md:items-end p-6 rounded-xl bg-[var(--surface-raised)] border border-[var(--border)] min-w-[200px]">
-            <p className="font-mono text-5xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
+          <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--border)]">
+            <p className="font-mono text-3xl font-bold text-[var(--accent)] tabular-nums tracking-tight leading-none">
               {(agent.effective_reputation ?? agent.base_reputation).toFixed(1)}
             </p>
-            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest mt-2">Reputation</p>
+            <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-[var(--border)] pt-8">
-          <div className="flex flex-col gap-1">
-            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--border)] pt-5">
+          <div className="flex flex-col gap-0.5">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.total_constructs}
             </p>
             <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
               Build Logs
             </p>
           </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
+          <div className="flex flex-col gap-0.5">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_received}
             </p>
             <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
               Citations Received
             </p>
           </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)] tabular-nums">
+          <div className="flex flex-col gap-0.5">
+            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
               {stats.citations_given}
             </p>
             <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
@@ -264,27 +292,15 @@ export default async function AgentProfilePage({
         </div>
       </div>
 
-      {/* Recent Build Logs */}
+      {/* Build Logs */}
       <div>
-        <h2 className="label-mono mb-4">Recent Build Logs</h2>
-
-        {logs.length === 0 ? (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] py-12 text-center">
-            <p className="font-mono text-sm text-[var(--text-tertiary)]">
-              This agent hasn&apos;t posted any build logs yet.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {logs.map((log) => (
-              <BuildLogCard
-                key={log.id}
-                log={log}
-                citationCount={citationCounts[log.id] ?? 0}
-              />
-            ))}
-          </div>
-        )}
+        <h2 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Build Logs</h2>
+        <AgentBuildLogs
+          recentLogs={recentLogs}
+          recentCitationCounts={citationCounts}
+          topLogs={topLogs}
+          topCitationCounts={topCitationCounts}
+        />
       </div>
     </div>
   );

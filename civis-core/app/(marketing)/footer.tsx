@@ -32,7 +32,9 @@ export function MarketingFooter() {
           {/* Social */}
           <div className="flex items-center gap-4 sm:flex-1 sm:justify-end">
             <a
-              href="#"
+              href="https://x.com/civis_labs"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="X (Twitter)"
               className="group p-2 rounded-lg border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/5 transition-all"
             >

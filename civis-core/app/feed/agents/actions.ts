@@ -14,6 +14,15 @@ const profanityMatcher = new RegExpMatcher({
   ...englishRecommendedTransformers,
 });
 
+function validateTag(tag: string | null): { cleanTag: string | null; error?: string } {
+  if (!tag) return { cleanTag: null };
+  const trimmed = sanitizeString(tag.trim());
+  if (!trimmed) return { cleanTag: null };
+  if (trimmed.length > 15) return { cleanTag: null, error: 'Tag must be 15 characters or less' };
+  if (profanityMatcher.hasMatch(trimmed)) return { cleanTag: null, error: 'Tag contains inappropriate language.' };
+  return { cleanTag: trimmed };
+}
+
 // =============================================
 // Types
 // =============================================
@@ -21,12 +30,14 @@ const profanityMatcher = new RegExpMatcher({
 export type MintResult = {
   apiKey?: string;
   agentName?: string;
+  tag?: string;
   error?: string;
 };
 
 export type GenerateKeyResult = {
   apiKey?: string;
   agentName?: string;
+  tag?: string;
   error?: string;
 };
 
@@ -38,6 +49,10 @@ export type RejectCitationResult = {
   error?: string;
 };
 
+export type UpdateBioResult = {
+  error?: string;
+};
+
 // =============================================
 // MINT PASSPORT
 // Creates agent_entity + generates first API key
@@ -45,7 +60,8 @@ export type RejectCitationResult = {
 
 export async function mintPassport(
   name: string,
-  bio: string | null
+  bio: string | null,
+  tag: string | null = null
 ): Promise<MintResult> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -92,6 +108,10 @@ export async function mintPassport(
     return { error: 'Agent bio contains inappropriate language.' };
   }
 
+  // Validate optional tag early (before creating agent entity)
+  const { cleanTag, error: tagError } = validateTag(tag);
+  if (tagError) return { error: tagError };
+
   // Check for duplicate name under the same developer
   const { data: existing } = await supabase
     .from('agent_entities')
@@ -133,15 +153,18 @@ export async function mintPassport(
   const serviceClient = createSupabaseServiceClient();
   const { error: credError } = await serviceClient
     .from('agent_credentials')
-    .insert({ agent_id: agent.id, hashed_key: hashedKey });
+    .insert({ agent_id: agent.id, hashed_key: hashedKey, tag: cleanTag });
 
   if (credError) {
+    if (credError.code === '23505' && credError.message?.includes('tag')) {
+      return { error: 'A key with that tag already exists for this agent.' };
+    }
     console.error('Failed to generate API key:', credError);
     return { error: 'Failed to generate API key. Please try again.' };
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.name };
+  return { apiKey: rawKey, agentName: agent.name, tag: cleanTag || undefined };
 }
 
 // =============================================
@@ -202,7 +225,8 @@ export async function revokeCredential(
 // =============================================
 
 export async function generateNewKey(
-  agentId: string
+  agentId: string,
+  tag: string | null = null
 ): Promise<GenerateKeyResult> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -221,6 +245,22 @@ export async function generateNewKey(
 
   if (!agent) return { error: 'Passport not found or unauthorized' };
 
+  // Enforce max 3 active keys per agent
+  const serviceClientCount = createSupabaseServiceClient();
+  const { count: activeKeyCount } = await serviceClientCount
+    .from('agent_credentials')
+    .select('*', { count: 'exact', head: true })
+    .eq('agent_id', agentId)
+    .eq('is_revoked', false);
+
+  if ((activeKeyCount ?? 0) >= 3) {
+    return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
+  }
+
+  // Validate optional tag
+  const { cleanTag, error: tagError } = validateTag(tag);
+  if (tagError) return { error: tagError };
+
   // Generate new API key
   const rawKey = crypto.randomBytes(32).toString('hex');
   const hashedKey = crypto
@@ -231,15 +271,71 @@ export async function generateNewKey(
   const serviceClient = createSupabaseServiceClient();
   const { error: credError } = await serviceClient
     .from('agent_credentials')
-    .insert({ agent_id: agent.id, hashed_key: hashedKey });
+    .insert({ agent_id: agent.id, hashed_key: hashedKey, tag: cleanTag });
 
   if (credError) {
+    if (credError.code === '23505' && credError.message?.includes('tag')) {
+      return { error: 'A key with that tag already exists for this agent.' };
+    }
     console.error('Failed to generate key:', credError);
     return { error: 'Failed to generate key. Please try again.' };
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.name };
+  return { apiKey: rawKey, agentName: agent.name, tag: cleanTag || undefined };
+}
+
+// =============================================
+// UPDATE BIO
+// Inline bio editing from the developer console
+// =============================================
+
+export async function updateBio(
+  agentId: string,
+  bio: string | null
+): Promise<UpdateBioResult> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Not authenticated' };
+
+  // Verify the agent belongs to this developer via RLS
+  const { data: agent } = await supabase
+    .from('agent_entities')
+    .select('id')
+    .eq('id', agentId)
+    .eq('developer_id', user.id)
+    .single();
+
+  if (!agent) return { error: 'Agent not found or unauthorized' };
+
+  // Sanitize and validate
+  const cleanBio = bio ? sanitizeString(bio.trim()) : null;
+
+  if (cleanBio && cleanBio.length > 500) {
+    return { error: 'Bio must be 500 characters or less' };
+  }
+
+  if (cleanBio && profanityMatcher.hasMatch(cleanBio)) {
+    return { error: 'Bio contains inappropriate language.' };
+  }
+
+  // Update via authenticated client (RLS allows UPDATE when developer_id = auth.uid())
+  const { error: updateError } = await supabase
+    .from('agent_entities')
+    .update({ bio: cleanBio || null })
+    .eq('id', agentId)
+    .eq('developer_id', user.id);
+
+  if (updateError) {
+    console.error('Failed to update bio:', updateError);
+    return { error: 'Failed to update bio. Please try again.' };
+  }
+
+  revalidatePath('/agents');
+  return {};
 }
 
 // =============================================

@@ -110,7 +110,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                     >
                       {cite.source_agent_name}
                     </Link>
-                    <span className="font-mono text-[10px] text-zinc-500">
+                    <span className="font-mono text-[13px] text-zinc-500">
                       cited
                     </span>
                     <Link
@@ -120,7 +120,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                       {cite.target_agent_name}
                     </Link>
                   </div>
-                  <span className="text-[10px] text-zinc-600 shrink-0 font-mono mt-0.5"
+                  <span className="text-[12px] text-zinc-600 shrink-0 font-mono mt-0.5"
                     suppressHydrationWarning
                   >
                     {relativeTime(cite.created_at)}

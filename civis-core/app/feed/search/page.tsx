@@ -3,11 +3,51 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { CATEGORY_DISPLAY, findByName } from "@/lib/stack-taxonomy";
 
 interface SearchResult extends BuildLogData {
   similarity: number;
   composite_score: number;
   citation_count: number;
+}
+
+interface TagCount {
+  tag: string;
+  count: number;
+}
+
+interface GroupedTag {
+  tag: string;
+  count: number;
+  category: string;
+}
+
+const MAX_PER_CATEGORY = 5;
+
+function groupTagsByCategory(tags: TagCount[]): Record<string, GroupedTag[]> {
+  const groups: Record<string, GroupedTag[]> = {};
+
+  for (const t of tags) {
+    const entry = findByName(t.tag);
+    let catLabel = "Other";
+    if (entry) {
+      for (const [label, config] of Object.entries(CATEGORY_DISPLAY)) {
+        if (config.categories.includes(entry.category)) {
+          catLabel = label;
+          break;
+        }
+      }
+    }
+    if (!groups[catLabel]) groups[catLabel] = [];
+    groups[catLabel].push({ tag: t.tag, count: t.count, category: catLabel });
+  }
+
+  // Sort tags within each category by usage
+  for (const cat of Object.keys(groups)) {
+    groups[cat].sort((a, b) => b.count - a.count);
+  }
+
+  return groups;
 }
 
 export default function SearchPage() {
@@ -18,8 +58,21 @@ export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Tag counts for the dropdown
+  const [allTags, setAllTags] = useState<TagCount[]>([]);
+  const [groupedTags, setGroupedTags] = useState<Record<string, GroupedTag[]>>({});
+  const [dropdownSearch, setDropdownSearch] = useState("");
+
   useEffect(() => {
     inputRef.current?.focus();
+    fetch("/api/internal/tag-counts")
+      .then((res) => res.json())
+      .then((json) => {
+        const tags: TagCount[] = json.data || [];
+        setAllTags(tags);
+        setGroupedTags(groupTagsByCategory(tags));
+      })
+      .catch(() => {});
   }, []);
 
   const doSearch = useCallback(async (q: string, stack: string) => {
@@ -60,16 +113,51 @@ export default function SearchPage() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+        setDropdownSearch("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Focus the dropdown search input when it opens
+  useEffect(() => {
+    if (isDropdownOpen) {
+      setTimeout(() => dropdownSearchRef.current?.focus(), 0);
+    }
+  }, [isDropdownOpen]);
+
+  function selectTag(tag: string) {
+    setStackFilter(tag);
+    triggerSearch(query, tag);
+    setIsDropdownOpen(false);
+    setDropdownSearch("");
+  }
+
+  // Category ordering: by total usage descending, "Other" always last
+  const categoryOrder = Object.keys(groupedTags)
+    .sort((a, b) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      const sumA = groupedTags[a].reduce((s, t) => s + t.count, 0);
+      const sumB = groupedTags[b].reduce((s, t) => s + t.count, 0);
+      return sumB - sumA;
+    });
+
+  // Filtered results when searching in dropdown
+  const searchLower = dropdownSearch.toLowerCase().trim();
+  const filteredTags = searchLower
+    ? allTags
+        .filter((t) => t.tag.toLowerCase().includes(searchLower))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 20)
+    : [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -89,6 +177,7 @@ export default function SearchPage() {
             <div className="flex-1 flex items-center relative w-full">
               <SearchIcon className="absolute left-4 text-[var(--accent)] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" size={20} />
               <input
+                ref={inputRef}
                 type="text"
                 placeholder="Describe a problem, solution, or technique..."
                 value={query}
@@ -114,40 +203,73 @@ export default function SearchPage() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-[240px] right-0 md:left-0 md:w-full bg-[#111111] border border-[var(--border)] rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden py-1">
-                    <button
-                      className={`w-full text-left px-4 py-2 font-mono text-xs hover:bg-white/5 transition-colors ${!stackFilter ? 'text-cyan-400 bg-cyan-500/10' : 'text-zinc-300'}`}
-                      onClick={() => { setStackFilter(""); triggerSearch(query, ""); setIsDropdownOpen(false); }}
-                    >
-                      All Technologies
-                    </button>
-
-                    <div className="px-3 py-1 mt-2 mb-1">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[var(--accent)] mb-1">Frontend</div>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("React"); triggerSearch(query, "React"); setIsDropdownOpen(false); }}>React</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Next.js"); triggerSearch(query, "Next.js"); setIsDropdownOpen(false); }}>Next.js</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Vue"); triggerSearch(query, "Vue"); setIsDropdownOpen(false); }}>Vue</button>
+                  <div className="absolute top-full mt-2 w-[280px] right-0 md:left-0 bg-[#111111] border border-[var(--border)] rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+                    {/* Search within dropdown */}
+                    <div className="p-2 border-b border-[var(--border)]">
+                      <input
+                        ref={dropdownSearchRef}
+                        type="text"
+                        placeholder="Search technologies..."
+                        value={dropdownSearch}
+                        onChange={(e) => setDropdownSearch(e.target.value)}
+                        className="w-full bg-[var(--surface-raised)] border border-[var(--border)] rounded-md py-2 px-3 font-mono text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-[var(--accent)]/30"
+                      />
                     </div>
 
-                    <div className="px-3 py-1 bg-black/20 border-t border-[var(--border)] mt-1">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[var(--accent)] mb-1 mt-2">Backend</div>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Node.js"); triggerSearch(query, "Node.js"); setIsDropdownOpen(false); }}>Node.js</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Python"); triggerSearch(query, "Python"); setIsDropdownOpen(false); }}>Python</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("FastAPI"); triggerSearch(query, "FastAPI"); setIsDropdownOpen(false); }}>FastAPI</button>
-                    </div>
+                    <div className="max-h-[380px] overflow-y-auto overscroll-contain py-1">
+                      {/* "All Technologies" option, always visible */}
+                      {!searchLower && (
+                        <button
+                          className={`w-full text-left px-4 py-2 font-mono text-xs hover:bg-white/5 transition-colors ${!stackFilter ? 'text-cyan-400 bg-cyan-500/10' : 'text-zinc-300'}`}
+                          onClick={() => selectTag("")}
+                        >
+                          All Technologies
+                        </button>
+                      )}
 
-                    <div className="px-3 py-1 bg-black/20 border-t border-[var(--border)] mt-1">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[var(--accent)] mb-1 mt-2">Database</div>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("PostgreSQL"); triggerSearch(query, "PostgreSQL"); setIsDropdownOpen(false); }}>PostgreSQL</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Supabase"); triggerSearch(query, "Supabase"); setIsDropdownOpen(false); }}>Supabase</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("MongoDB"); triggerSearch(query, "MongoDB"); setIsDropdownOpen(false); }}>MongoDB</button>
-                    </div>
+                      {/* Search mode: flat filtered list */}
+                      {searchLower ? (
+                        filteredTags.length > 0 ? (
+                          filteredTags.map((t) => (
+                            <button
+                              key={t.tag}
+                              className={`w-full text-left px-4 py-2 font-mono text-xs hover:bg-white/5 transition-colors flex items-center justify-between ${stackFilter === t.tag ? 'text-cyan-400 bg-cyan-500/10' : 'text-zinc-300'}`}
+                              onClick={() => selectTag(t.tag)}
+                            >
+                              <span>{t.tag}</span>
+                              <span className="text-zinc-600 tabular-nums">{t.count}</span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 font-mono text-xs text-zinc-600">
+                            No technologies match &ldquo;{dropdownSearch}&rdquo;
+                          </div>
+                        )
+                      ) : (
+                        /* Browse mode: grouped by category, top 5 each */
+                        categoryOrder.map((catName) => {
+                          const config = CATEGORY_DISPLAY[catName] || { color: 'text-zinc-500' };
+                          const tags = groupedTags[catName].slice(0, MAX_PER_CATEGORY);
 
-                    <div className="px-3 py-1 bg-black/20 border-t border-[var(--border)] mt-1">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-[var(--accent)] mb-1 mt-2">AI / LLM</div>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("GPT-4"); triggerSearch(query, "GPT-4"); setIsDropdownOpen(false); }}>GPT-4</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("Claude"); triggerSearch(query, "Claude"); setIsDropdownOpen(false); }}>Claude</button>
-                      <button className="w-full text-left px-2 py-1.5 font-mono text-xs text-zinc-300 hover:text-white hover:bg-white/5 rounded-md" onClick={() => { setStackFilter("LangChain"); triggerSearch(query, "LangChain"); setIsDropdownOpen(false); }}>LangChain</button>
+                          return (
+                            <div key={catName} className="px-3 py-1 mt-1">
+                              <div className={`text-[10px] font-mono font-bold uppercase tracking-widest ${config.color} mb-1 mt-1`}>
+                                {catName}
+                              </div>
+                              {tags.map((t) => (
+                                <button
+                                  key={t.tag}
+                                  className={`w-full text-left px-2 py-1.5 font-mono text-xs hover:text-white hover:bg-white/5 rounded-md transition-colors flex items-center justify-between ${stackFilter === t.tag ? 'text-cyan-400 bg-cyan-500/10' : 'text-zinc-300'}`}
+                                  onClick={() => selectTag(t.tag)}
+                                >
+                                  <span>{t.tag}</span>
+                                  <span className="text-zinc-600 tabular-nums text-[10px]">{t.count}</span>
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 )}
@@ -164,7 +286,6 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Removed redundant empty state box */}
       {!isSearching && results.length === 0 && (query || stackFilter) && (
         <div className="text-center py-20 font-mono text-sm text-zinc-500">
           No build logs found matching your query.
@@ -174,12 +295,7 @@ export default function SearchPage() {
       {results.length > 0 && (
         <div className="space-y-3">
           {results.map((result) => (
-            <div key={result.id} className="relative">
-              <BuildLogCard log={result} citationCount={result.citation_count} />
-              <span className="absolute right-3 top-3 rounded-full bg-[var(--surface-raised)] px-2 py-0.5 font-mono text-[10px] text-[var(--accent)] border border-[var(--border)]">
-                {Math.round((result.composite_score ?? result.similarity ?? 0) * 100)}%
-              </span>
-            </div>
+            <BuildLogCard key={result.id} log={result} citationCount={result.citation_count} compact />
           ))}
         </div>
       )}

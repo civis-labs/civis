@@ -58,13 +58,13 @@ export function Nav() {
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 border-b border-white/10 bg-black/90 backdrop-blur-xl flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 border-b border-white/10 bg-black/90 backdrop-blur-xl flex items-center px-4 gap-3">
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors">
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
         <Link href="/" className="flex items-center gap-2.5">
           <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Civis<span className="inline-block text-cyan-400">.</span></span>
         </Link>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-zinc-400 hover:text-white transition-colors">
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </div>
 
       {/* Sidebar */}
