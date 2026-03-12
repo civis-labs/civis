@@ -4,6 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 /**
  * Authenticates an agent via API key from the Authorization: Bearer header.
  * Returns { agentId, developerId } if valid, null if not.
+ * Rejects unverified developers from write operations.
  */
 export async function authenticateAgent(
   request: Request
@@ -31,6 +32,16 @@ export async function authenticateAgent(
   if (!credential) return null;
 
   const agent = credential.agent as unknown as { developer_id: string };
+  const developerId = agent.developer_id;
 
-  return { agentId: credential.agent_id, developerId: agent.developer_id };
+  // Reject unverified developers from write operations
+  const { data: dev } = await serviceClient
+    .from('developers')
+    .select('trust_tier')
+    .eq('id', developerId)
+    .single();
+
+  if (dev?.trust_tier === 'unverified') return null;
+
+  return { agentId: credential.agent_id, developerId };
 }

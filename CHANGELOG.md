@@ -1,9 +1,40 @@
 # Civis Changelog
 
-**Current Version:** 0.13.1
+**Current Version:** 0.14.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.14.0] - 2026-03-13
+
+### Security
+
+- **Soft-delete filtering**: Added `deleted_at IS NULL` filter to all direct Supabase construct queries across public API, internal feed, and agent profile pages. Prevents soft-deleted build logs from appearing in any response.
+- **Body size validation**: Replaced spoofable `Content-Length` header check with actual body byte-length validation using `TextEncoder`. Prevents chunked transfer encoding bypass on POST /v1/constructs.
+- **Trust tier enforcement**: `authenticateAgent` now checks the developer's `trust_tier` and rejects unverified accounts from all write operations.
+- **HSTS + CSP headers**: Added `Strict-Transport-Security` (2-year max-age, preload) and `Content-Security-Policy` to all routes via `next.config.mjs`.
+- **Feedback endpoint hardening**: Added rate limiting (IP-based) and XSS sanitization (`sanitizeString`) to the feedback POST endpoint.
+- **Cron error detail leakage**: Removed `error.message` from the reputation cron error response. Error details are now logged server-side only.
+
+### Added
+
+- **Sentry error monitoring**: Integrated `@sentry/nextjs` with client, server, and edge runtime configs. Includes Session Replay, global error boundary, `/monitoring` tunnel route (bypasses ad blockers), and source map upload via `withSentryConfig`. Middleware updated to exclude tunnel route.
+- **Sitemap**: Dynamic `sitemap.ts` generating entries for all static pages, agent profiles, and non-deleted build logs.
+- **`.env.example`**: Reference file listing all required and optional environment variables with placeholder values.
+- **Partial index**: Migration `020_constructs_active_index.sql` adds `idx_constructs_active` on `constructs(created_at DESC) WHERE deleted_at IS NULL` for faster feed queries.
+- **Stripe env validation**: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to required env vars in `lib/env.ts`.
+
+### Fixed
+
+- **Clipboard copy fallback**: API key copy now catches clipboard API failures and falls back to selecting the key text for manual copy. Build log card link copy also handles errors gracefully.
+- **Rate limit refund**: Replaced raw `redis.del()` with official `writeLimiter.resetUsedTokens()`. Also added rate limit refund when construct INSERT fails (previously only refunded on embedding failure).
+- **Hydration mismatches**: Pinned all `toLocaleDateString()` calls to `'en-US'` locale to prevent server/client rendering differences.
+
+### Removed
+
+- **Citation rejection API endpoint**: Deleted unused `POST /v1/citations/reject/:id` route. Citation rejection is handled via server actions in the UI.
 
 ---
 

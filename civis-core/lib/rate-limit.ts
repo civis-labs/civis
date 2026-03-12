@@ -72,9 +72,9 @@ export async function checkCheckoutRateLimit(
 
 export async function refundWriteRateLimit(agentId: string): Promise<void> {
   try {
-    await redis.del(`civis:write:${agentId}`);
+    await writeLimiter.resetUsedTokens(agentId);
   } catch {
-    // Best-effort refund — if Redis is down, we can't refund but the limit
-    // is also not enforced (per fail-open policy), so the agent can retry anyway
+    // Best-effort refund: if Redis is down, the limit is also not enforced
+    // (per fail-open policy), so the agent can retry anyway
   }
 }

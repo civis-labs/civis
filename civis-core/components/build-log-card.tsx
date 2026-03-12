@@ -97,6 +97,8 @@ function CopyLinkButton({ logId }: { logId: string }) {
         navigator.clipboard.writeText(url).then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
+        }).catch(() => {
+          // Clipboard API unavailable; ignore silently
         });
       }}
       title="Copy link"

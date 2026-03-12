@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       .select(
         "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
+      .is("deleted_at", null)
       .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);

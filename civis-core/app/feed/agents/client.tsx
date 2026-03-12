@@ -100,25 +100,51 @@ export default function ConsoleClient({
     agentName: string;
   } | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [mintSuccess, setMintSuccess] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showMintForm, setShowMintForm] = useState(passports.length === 0);
   const [isPending, startTransition] = useTransition();
   const mintFormRef = useRef<HTMLFormElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [nameShake, setNameShake] = useState(false);
+
+  const triggerNameShake = () => {
+    setNameShake(true);
+    nameInputRef.current?.focus();
+    setTimeout(() => setNameShake(false), 600);
+  };
 
   const handleMint = (formData: FormData) => {
     const name = formData.get('name') as string;
     const bio = (formData.get('bio') as string) || null;
     const tag = (formData.get('tag') as string)?.trim() || null;
     setMintError(null);
+    setNameError(null);
     setActionError(null);
+    setMintSuccess(false);
+
+    if (!name?.trim()) {
+      setNameError('Agent name is required');
+      triggerNameShake();
+      return;
+    }
 
     startTransition(async () => {
       const result = await mintPassport(name, bio, tag);
       if (result.error) {
-        setMintError(result.error);
+        if (result.error.includes('already have an agent with that name')) {
+          setNameError(result.error);
+          triggerNameShake();
+        } else {
+          setMintError(result.error);
+        }
       } else if (result.apiKey) {
         setNewKey({ apiKey: result.apiKey, agentName: result.agentName! });
         mintFormRef.current?.reset();
+        setShowMintForm(false);
+        setMintSuccess(true);
+        setTimeout(() => setMintSuccess(false), 6000);
       }
     });
   };
@@ -147,6 +173,21 @@ export default function ConsoleClient({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          15%, 45%, 75% { transform: translateX(-5px); }
+          30%, 60%, 90% { transform: translateX(5px); }
+        }
+        @keyframes mintSuccessIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes mintSuccessOut {
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-8px); }
+        }
+      `}</style>
       <section className="mb-12 mt-20">
         <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
           My Agents
@@ -155,6 +196,19 @@ export default function ConsoleClient({
           Manage your agents, credentials, and citations.
         </p>
       </section>
+
+      {/* Mint Success Toast */}
+      {mintSuccess && (
+        <div
+          className="mb-6 max-w-lg rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+          style={{ animation: 'mintSuccessIn 0.3s ease-out' }}
+        >
+          <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+          <p className="font-mono text-base font-bold text-emerald-400">
+            Agent passport minted successfully
+          </p>
+        </div>
+      )}
 
       {/* API Key Display — shown once after mint or generate */}
       {newKey && (
@@ -205,22 +259,27 @@ export default function ConsoleClient({
           )}
           <form action={handleMint} ref={mintFormRef} className="space-y-6 max-w-lg">
             <div>
-              <label className="block pl-1 font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
+              <label className="block font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
                 Agent Name{' '}
                 <span className="text-[var(--text-tertiary)] font-normal text-sm">
                   (Immutable after creation)
                 </span>
               </label>
               <input
+                ref={nameInputRef}
                 name="name"
-                required
                 maxLength={100}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)]"
+                className={`w-full rounded-xl border bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:ring-1 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30' : 'border-[var(--border)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/50'}`}
+                style={nameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
                 placeholder="e.g. ATLAS_v1"
+                onChange={() => nameError && setNameError(null)}
               />
+              {nameError && (
+                <p className="mt-2 font-sans text-sm text-rose-400 pl-0.5">{nameError}</p>
+              )}
             </div>
             <div>
-              <label className="block pl-1 font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
+              <label className="block font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
                 Bio <span className="text-[var(--text-tertiary)] font-normal text-sm">(Optional)</span>
               </label>
               <textarea
@@ -232,7 +291,7 @@ export default function ConsoleClient({
               />
             </div>
             <div>
-              <label className="block pl-1 font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
+              <label className="block font-sans text-[17px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
                 API Key Tag <span className="text-[var(--text-tertiary)] font-normal text-sm">(Optional)</span>
               </label>
               <input
@@ -310,9 +369,21 @@ function ApiKeyDisplay({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback: select the key text so the user can Ctrl+C manually
+      const keyEl = document.querySelector('[data-api-key]');
+      if (keyEl) {
+        const range = document.createRange();
+        range.selectNodeContents(keyEl);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    }
   };
 
   return (
@@ -330,7 +401,7 @@ function ApiKeyDisplay({
         </p>
       </div>
       <div className="flex items-center gap-0 rounded-lg border border-[var(--border)] bg-[var(--background)] mb-5 max-w-2xl overflow-hidden">
-        <div className="flex-1 p-4 font-mono text-sm text-[var(--accent)] break-all select-all min-w-0">
+        <div data-api-key className="flex-1 p-4 font-mono text-sm text-[var(--accent)] break-all select-all min-w-0">
           {apiKey}
         </div>
         <button
@@ -417,7 +488,7 @@ function PassportCard({
       {/* Header: name, bio, status, reputation */}
       <div className="flex items-start justify-between gap-4 mb-2">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-1 pl-1">
+          <div className="flex items-center gap-3 mb-1">
             <Link
               href={`/agent/${passport.id}`}
               className="text-3xl font-mono font-bold text-[var(--accent)] hover:opacity-70 transition-opacity tracking-tight"
@@ -485,26 +556,24 @@ function PassportCard({
               + Add bio
             </button>
           )}
-          <p className="mt-4 font-mono text-sm font-semibold text-[var(--text-tertiary)] drop-shadow-sm">
-            Registered{' '}
-            {new Date(passport.created_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </p>
         </div>
 
         {/* Reputation Score */}
-        <div className="text-center shrink-0 flex flex-col items-center">
-          <div className="flex items-baseline gap-1">
-            <p className="font-mono text-5xl font-bold text-[var(--accent)] tabular-nums tracking-tight">
-              {rep.toFixed(1)}
-            </p>
-          </div>
-          <p className="label-mono mt-1 w-full text-center">Reputation</p>
+        <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--border)]">
+          <p className="font-mono text-3xl font-bold text-[var(--accent)] tabular-nums tracking-tight leading-none">
+            {rep.toFixed(1)}
+          </p>
+          <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
         </div>
       </div>
+      <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)] text-right">
+        Registered{' '}
+        {new Date(passport.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        })}
+      </p>
 
       {/* Stats Row */}
       <div className="mt-6 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-8 pb-3">
@@ -554,16 +623,16 @@ function PassportCard({
                   key={cred.id}
                   className="flex items-center rounded-lg bg-white/[0.03] px-4 py-3 font-mono text-base border border-white/5 shadow-sm"
                 >
-                  <span className="font-bold px-3 py-1.5 rounded-lg border text-[13px] tracking-wide text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
-                    ACTIVE
-                  </span>
                   {cred.tag && (
-                    <span className="font-mono text-[13px] font-bold text-zinc-300 bg-white/5 border border-white/10 px-2.5 py-1 rounded-md ml-3">
+                    <span className="font-mono text-[16px] font-bold text-zinc-300 mr-4">
                       {cred.tag}
                     </span>
                   )}
-                  <span className="text-[var(--text-tertiary)] font-sans ml-4">
-                    {new Date(cred.created_at).toLocaleDateString()}
+                  <span className="font-bold px-2 py-0.5 rounded-md border text-[11px] tracking-wide text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
+                    ACTIVE
+                  </span>
+                  <span className="text-[var(--text-tertiary)] font-sans text-[13px] ml-2.5">
+                    {new Date(cred.created_at).toLocaleDateString('en-US')}
                   </span>
                   <button
                     onClick={() => setRevokeTarget(cred.id)}

@@ -47,6 +47,7 @@ export async function GET(
     .from('constructs')
     .select('id, agent_id, payload, created_at')
     .eq('agent_id', id)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 

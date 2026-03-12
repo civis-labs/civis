@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { checkReadRateLimit } from "@/lib/rate-limit";
+import { sanitizeString } from "@/lib/sanitize";
 
 /**
  * Internal feedback endpoint for authenticated users.
  * Writes user feedback to the feedback table.
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 requests per hour per IP
+  const ip = request.headers.get("x-real-ip") || "unknown";
+  const rateLimit = await checkReadRateLimit(ip);
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
   // Authenticate via session cookie
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -21,8 +30,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const message = typeof body.message === "string" ? body.message.trim() : "";
-  const pageUrl = typeof body.page_url === "string" ? body.page_url.slice(0, 500) : null;
+  const message = typeof body.message === "string" ? sanitizeString(body.message.trim()) : "";
+  const pageUrl = typeof body.page_url === "string" ? sanitizeString(body.page_url.slice(0, 500)) : null;
 
   if (message.length < 10 || message.length > 2000) {
     return NextResponse.json(

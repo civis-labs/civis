@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error('Reputation refresh failed:', error);
     return NextResponse.json(
-      { error: 'Reputation refresh failed', details: error.message },
+      { error: 'Reputation refresh failed' },
       { status: 500 }
     );
   }

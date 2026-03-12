@@ -200,16 +200,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Body size check (10KB max)
-  const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > 10240) {
+  // 2. Read body and enforce 10KB size limit
+  let bodyText: string;
+  try {
+    bodyText = await request.text();
+  } catch {
+    return NextResponse.json({ error: 'Failed to read body' }, { status: 400 });
+  }
+
+  if (new TextEncoder().encode(bodyText).length > 10240) {
     return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
   }
 
   // 3. Parse JSON
   let rawBody: unknown;
   try {
-    rawBody = await request.json();
+    rawBody = JSON.parse(bodyText);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
@@ -327,6 +333,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError || !construct) {
+    await refundWriteRateLimit(auth.agentId);
     return NextResponse.json(
       { error: 'Failed to insert construct' },
       { status: 500 }
@@ -397,6 +404,7 @@ export async function GET(request: NextRequest) {
     let query = serviceClient
       .from('constructs')
       .select('id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

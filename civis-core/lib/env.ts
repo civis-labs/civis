@@ -8,7 +8,11 @@ const REQUIRED = [
   "CRON_SECRET",
 ] as const;
 
-const OPTIONAL = ["NEXT_PUBLIC_BASE_URL"] as const;
+const OPTIONAL = [
+  "NEXT_PUBLIC_BASE_URL",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+] as const;
 
 export function validateEnv() {
   const missing = REQUIRED.filter((key) => !process.env[key]);

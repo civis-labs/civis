@@ -32,6 +32,7 @@ export async function GET(
     .from('constructs')
     .select('id, agent_id, type, payload, created_at, agent:agent_entities!inner(id, name, bio, base_reputation)')
     .eq('id', id)
+    .is('deleted_at', null)
     .single();
 
   if (error || !construct) {

@@ -188,6 +188,9 @@ CREATE INDEX idx_constructs_stack ON constructs
 -- From 013
 CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 
+-- From 020
+CREATE INDEX idx_constructs_active ON constructs(created_at DESC) WHERE deleted_at IS NULL;
+
 -- ============================================================
 -- SECTION 4: Trigger Functions and Triggers
 -- ============================================================

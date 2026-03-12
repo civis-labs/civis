@@ -40,7 +40,8 @@ async function fetchAgent(
       serviceClient
         .from("constructs")
         .select("*", { count: "exact", head: true })
-        .eq("agent_id", id),
+        .eq("agent_id", id)
+        .is("deleted_at", null),
       serviceClient
         .from("citations")
         .select("*", { count: "exact", head: true })
@@ -249,9 +250,6 @@ export default async function AgentProfilePage({
                 {agent.bio}
               </p>
             )}
-            <p className="mt-2 font-mono text-xs text-[var(--text-tertiary)]">
-              Registered {memberSince}
-            </p>
           </div>
 
           {/* Reputation Score */}
@@ -259,9 +257,12 @@ export default async function AgentProfilePage({
             <p className="font-mono text-3xl font-bold text-[var(--accent)] tabular-nums tracking-tight leading-none">
               {(agent.effective_reputation ?? agent.base_reputation).toFixed(1)}
             </p>
-            <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
           </div>
         </div>
+        <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)] text-right">
+          Registered {memberSince}
+        </p>
 
         {/* Stats Row */}
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--border)] pt-5">

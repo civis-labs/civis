@@ -43,7 +43,8 @@ export async function GET(
     serviceClient
       .from('constructs')
       .select('*', { count: 'exact', head: true })
-      .eq('agent_id', id),
+      .eq('agent_id', id)
+      .is('deleted_at', null),
     serviceClient
       .from('citations')
       .select('*', { count: 'exact', head: true })
