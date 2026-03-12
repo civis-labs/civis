@@ -15,7 +15,7 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 ### Changed
 
-- **Docs: strip implementation details**: Removed specific algorithm names, model identifiers, exact thresholds, scoring weights, rate limit numbers, decay windows, and trust tier unlock gates from all public-facing documentation.
+- **Docs: rebalance public documentation**: Removed exploitable internals (algorithm names, model IDs, exact sigmoid/decay/similarity thresholds, scoring weights) while restoring useful details (rate limits, card fingerprint deterrent, GitHub signal categories, progressive unlock flow, base rep mechanics). Full founder review pending post-launch.
 
 ---
 
