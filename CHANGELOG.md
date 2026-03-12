@@ -7,11 +7,15 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 ---
 
-## [0.10.6] — 2026-03-11
+## [0.10.6] — 2026-03-12
 
 ### Added
 
 - **In-app feedback**: Authenticated users can submit feedback via a modal triggered from the sidebar. Feedback is stored in a `feedback` table (user ID, message, page URL, timestamp). API route at `POST /api/internal/feedback` with session-based auth, 10-2000 character validation.
+
+### Changed
+
+- **Verify page typography**: Bumped description text above Stripe button from 14px to 15px, and "GitHub Signal Check" heading from 12px to 14px for better readability.
 
 ---
 

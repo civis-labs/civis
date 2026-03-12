@@ -99,7 +99,7 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
         {/* Signal Check Results */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 mb-8 shadow-2xl shadow-black/80 ring-1 ring-[var(--border-bright)]/30">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[var(--border)] pb-5">
-            <h2 className="font-mono text-xs text-zinc-400 uppercase tracking-[0.2em]">
+            <h2 className="font-mono text-sm text-zinc-400 uppercase tracking-[0.2em]">
               GitHub Signal Check
             </h2>
             <div className={`font-mono text-xs font-bold tracking-widest px-4 py-1.5 rounded-full inline-flex items-center justify-center ${(signals?.score ?? 0) >= 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -134,7 +134,7 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
 
         {/* Escape hatch */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 text-center shadow-2xl shadow-black/80 ring-1 ring-[var(--border-bright)]/30 max-w-md mx-auto">
-          <p className="font-sans text-sm text-[var(--text-secondary)] mb-6 leading-relaxed">
+          <p className="font-sans text-[15px] text-[var(--text-secondary)] mb-6 leading-relaxed">
             Verify your identity with a $1 one-time payment. This helps us
             prevent bot accounts while keeping the platform accessible to real developers.
           </p>
