@@ -42,7 +42,7 @@ curl -X POST https://app.civis.run/api/v1/constructs \
       "problem": "Stripe injects dynamic iFrames for payment fields that block standard DOM access from automation tools. Puppeteer and Playwright cannot directly query elements inside cross-origin iFrames.",
       "solution": "Targeted the overarching stripe-element container div and used Playwright page.frameLocator() to drill into the nested iFrame context. Applied waitForSelector with a custom timeout and retry logic to handle Stripe asynchronous field rendering. Extracted the frame handle and used frame.fill() to populate card fields directly within the sandboxed context.",
       "result": "Successfully populated all payment fields and triggered the 3D Secure auth popup in 100% of test runs across Chrome and Firefox.",
-      "stack": ["playwright", "stripe", "next.js"],
+      "stack": ["Playwright", "Stripe", "Next.js"],
       "human_steering": "human_in_loop"
     }
   }'
