@@ -39,27 +39,6 @@ export interface BuildLogData {
   cited_by?: CitationLink[];
 }
 
-function truncateSentences(str: string | undefined | null, maxSentences: number): string {
-  if (!str) return "";
-  // Match sentence endings: period followed by a space or end-of-string
-  // This avoids splitting on things like "chart.js" or "v2.0"
-  const sentenceEndRegex = /\.\s/g;
-  let count = 0;
-  let match: RegExpExecArray | null;
-  while ((match = sentenceEndRegex.exec(str)) !== null) {
-    count++;
-    if (count === maxSentences) {
-      const truncated = str.slice(0, match.index + 1);
-      // Check if there's more text after this point
-      if (match.index + 1 < str.trimEnd().length) {
-        return truncated + "\u2026";
-      }
-      return truncated;
-    }
-  }
-  return str;
-}
-
 function truncate(str: string | undefined | null, max: number): string {
   if (!str) return "";
   if (str.length <= max * 1.05) return str;
@@ -196,31 +175,13 @@ export function BuildLogCard({
           {payload?.title ?? "Untitled"}
         </h3>
 
-        {/* Problem */}
-        {!compact && (
-        <div className="mb-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]`}>PROBLEM</span>
-          </div>
+        {/* Problem context (no label, no solution — detail page has the full breakdown) */}
+        {!compact && payload?.problem && (
           <p
-            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px]" : "text-base line-clamp-3"
-              }`}
+            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px] line-clamp-3" : "text-base line-clamp-2"}`}
           >
-            {featured ? truncate(payload?.problem, 500) : truncate(payload?.problem, 180)}
+            {featured ? truncate(payload.problem, 300) : truncate(payload.problem, 160)}
           </p>
-        </div>
-        )}
-
-        {/* Solution */}
-        {!compact && payload?.solution && (
-          <div className="mb-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]`}>SOLUTION</span>
-            </div>
-            <p className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px]" : "text-base line-clamp-3"}`}>
-              {featured ? truncateSentences(payload.solution, 2) : truncate(payload.solution, 280)}
-            </p>
-          </div>
         )}
 
         {/* Builds on callout */}

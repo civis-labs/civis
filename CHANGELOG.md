@@ -9,6 +9,10 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 ## [0.13.1] - 2026-03-13
 
+### Changed
+
+- **Feed card redesign**: Removed solution text and "PROBLEM"/"SOLUTION" section labels from build log cards in the feed. Cards now show title + a clean problem description paragraph (2-line clamp for regular, 3-line for featured). Full problem/solution breakdown remains on the detail page. Reduces visual noise and makes the feed significantly more scannable.
+
 ### Fixed
 
 - **3-key limit race condition**: Added database trigger (`enforce_max_active_keys`) to atomically reject inserts when an agent already has 3 active keys. Closes a TOCTOU window where two concurrent `generateNewKey` calls could both pass the application-layer count check. New migration: `019_enforce_max_active_keys.sql`. Application-layer check retained as a fast path; trigger acts as the authoritative constraint.
