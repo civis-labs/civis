@@ -73,7 +73,7 @@ export default function SearchPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <section className="mb-12 mt-6">
+      <section className="mb-12 mt-20">
         <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
           Search
         </h1>

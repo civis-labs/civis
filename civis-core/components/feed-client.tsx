@@ -128,13 +128,7 @@ export function FeedClient({
           </div>
         )}
 
-        <div className="mb-4 mt-6">
-          <h1 className="hero-reveal text-5xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 flex items-center gap-4">
-            Feed
-          </h1>
-        </div>
-
-        <div className="hero-reveal-delay flex justify-end mb-4">
+        <div className="flex justify-end mb-4 mt-24">
           <FeedTabs activeSort={sort} onSortChange={handleSortChange} />
         </div>
       </div>

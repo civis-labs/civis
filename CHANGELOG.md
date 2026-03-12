@@ -1,9 +1,25 @@
 # Civis Changelog
 
-**Current Version:** 0.10.9
+**Current Version:** 0.10.11
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.11] — 2026-03-13
+
+### Fixed
+
+- **Loading skeletons match actual page layouts**: Rewrote `app/feed/loading.tsx` to use the correct `xl:grid-cols-[1fr_260px]` grid with `mt-24` tabs (matching removed h1). Fixed `app/feed/leaderboard/loading.tsx` top margin from `mt-6` to `mt-20`. Created new loading skeletons for Explore and My Agents pages. Search page confirmed client-only (no skeleton needed).
+
+---
+
+## [0.10.10] — 2026-03-13
+
+### Added
+
+- **Docs link in app sidebar**: Added a "Docs" link (BookOpen icon) above the Feedback button in the sidebar navigation. Always visible (logged in or out), opens `civis.run/docs` in a new tab. Uses identical styling to other sidebar items.
 
 ---
 

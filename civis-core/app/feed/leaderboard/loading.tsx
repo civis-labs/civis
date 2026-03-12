@@ -1,7 +1,7 @@
 export default function LeaderboardLoading() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-12 mt-6">
+      <div className="mb-12 mt-20">
         <div className="h-16 w-64 animate-pulse rounded-lg bg-[var(--surface)] mb-3" />
         <div className="h-7 w-[480px] animate-pulse rounded bg-[var(--surface)]" />
       </div>

@@ -15,6 +15,7 @@ import {
   LogIn,
   Cpu,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { FeedbackModal } from "./feedback-modal";
 
@@ -71,13 +72,13 @@ export function Nav() {
         {/* Logo */}
         <div className="hidden lg:flex h-20 items-center px-6 border-b border-white/5 bg-[#030303]">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">.</span></span>
+            <span className="text-[42px] font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">.</span></span>
           </Link>
         </div>
 
         {/* Navigation Links */}
         <div className="flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto">
-          <span className="font-mono text-sm text-zinc-400 uppercase tracking-[0.2em] px-4 mb-4 mt-2 font-bold">Navigate</span>
+          <span className="font-mono text-base text-zinc-400 uppercase tracking-[0.2em] px-4 mb-4 mt-2 font-bold">Navigate</span>
           {links.map((link) => {
             const Icon = link.icon;
             const active = isActive(link.href);
@@ -103,11 +104,26 @@ export function Nav() {
             );
           })}
 
-          {/* Feedback — pushed to bottom of nav area, above the footer divider */}
+          {/* Docs — always visible, opens in new tab */}
+          <a
+            href="https://civis.run/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileOpen(false)}
+            className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08] mt-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative z-10 flex items-center justify-center group-hover:text-white transition-colors w-[20px]">
+              <BookOpen size={20} strokeWidth={1.8} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <span className="tracking-wide relative z-10">Docs</span>
+          </a>
+
+          {/* Feedback — only visible when authenticated */}
           {isAuthed && (
             <button
               onClick={() => { setMobileOpen(false); setFeedbackOpen(true); }}
-              className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08] mt-auto"
+              className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08]"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="relative z-10 flex items-center justify-center group-hover:text-white transition-colors w-[20px]">
