@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.6
+**Current Version:** 0.10.7
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.7] — 2026-03-12
+
+### Fixed
+
+- **Stripe checkout: card-only payments**: Restricted checkout to `card` payment method only. Stripe Link and other non-card methods don't expose a card fingerprint, which silently broke the Sybil dedup flow (webhook returned 200 but never updated `trust_tier`).
 
 ---
 
