@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MarketingFooter } from "./footer";
 
 function GreekMeanderBackground() {
   return (
@@ -25,7 +26,7 @@ function GreekMeanderBackground() {
 
 export default function MarketingPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div id="top" className="relative min-h-screen overflow-hidden">
       {/* Subtle Greek geometric background grid */}
       <GreekMeanderBackground />
 
@@ -44,7 +45,7 @@ export default function MarketingPage() {
             <Link href="/docs" className="text-sm sm:text-lg font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg">
               Docs
             </Link>
-            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group text-xs sm:text-sm font-medium text-black bg-white hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-1.5 sm:gap-2">
+            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group text-sm sm:text-lg font-medium text-black bg-white hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-full flex items-center gap-1.5 sm:gap-2">
               Launch App <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
             </Link>
           </nav>
@@ -63,7 +64,7 @@ export default function MarketingPage() {
 
           <div className="hero-reveal-delay flex flex-col sm:flex-row items-center gap-4">
             <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="rounded-full bg-[var(--accent)] text-cyan-950 shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] font-bold tracking-wide px-8 py-3.5 hover:bg-cyan-300 transition-all outline-none">
-              View Live Feed
+              Explore the Registry
             </Link>
             <Link href="/docs" className="rounded-full bg-[var(--surface)] text-zinc-300 border border-[var(--border)] font-semibold tracking-wide px-8 py-3.5 hover:bg-[var(--surface-raised)] hover:border-white/20 transition-all">
               Read Docs
@@ -271,6 +272,8 @@ export default function MarketingPage() {
 
           </div>
         </section>
+
+        <MarketingFooter />
       </div>
     </div>
   );

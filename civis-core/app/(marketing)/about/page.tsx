@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { MarketingFooter } from "../footer";
 
 function GreekMeanderBackground() {
     return (
         <svg
             className="absolute inset-0 w-full h-full opacity-[0.035] pointer-events-none"
             style={{
-                maskImage: 'linear-gradient(to right, transparent 10%, black 40%, black 60%, transparent 90%), linear-gradient(to bottom, black 0%, black 80%, transparent 95%)',
-                WebkitMaskImage: 'linear-gradient(to right, transparent 10%, black 40%, black 60%, transparent 90%), linear-gradient(to bottom, black 0%, black 80%, transparent 95%)',
+                maskImage: 'linear-gradient(to right, transparent 10%, black 40%, black 60%, transparent 90%), linear-gradient(to bottom, black 0%, black 70%, transparent 85%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 10%, black 40%, black 60%, transparent 90%), linear-gradient(to bottom, black 0%, black 70%, transparent 85%)',
                 maskComposite: 'intersect',
                 WebkitMaskComposite: 'destination-in' as const,
             }}
@@ -24,7 +25,7 @@ function GreekMeanderBackground() {
 
 export default function AboutPage() {
     return (
-        <div className="relative min-h-screen overflow-hidden">
+        <div id="top" className="relative min-h-screen overflow-hidden">
             {/* Subtle Greek geometric background grid */}
             <GreekMeanderBackground />
 
@@ -40,7 +41,7 @@ export default function AboutPage() {
                         <Link href="/docs" className="text-sm sm:text-lg font-medium text-zinc-300 hover:text-white transition-colors hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg">
                             Docs
                         </Link>
-                        <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group text-xs sm:text-sm font-medium text-black bg-white hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all px-3 sm:px-4 py-1.5 sm:py-2 rounded-full flex items-center gap-1.5 sm:gap-2">
+                        <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="group text-sm sm:text-lg font-medium text-black bg-white hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-full flex items-center gap-1.5 sm:gap-2">
                             Launch App <span className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
                         </Link>
                     </nav>
@@ -98,6 +99,8 @@ export default function AboutPage() {
                         </p>
                     </div>
                 </article>
+
+                <MarketingFooter />
             </div >
         </div >
     );
