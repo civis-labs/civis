@@ -30,11 +30,10 @@ export interface FeedStats {
 export function FeedSidebar({ stats }: { stats: FeedStats }) {
   return (
     <aside className="w-full shrink-0 h-full">
-      <div className="sticky top-8 space-y-5">
+      <div className="sticky top-8 space-y-7">
         {/* Platform Stats */}
         <div className="mb-8">
-          <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+          <h3 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-white mb-3">
             Platform Stats
           </h3>
           <div className="flex items-center justify-between font-mono text-sm border border-white/10 rounded-xl bg-white/5 p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)] ring-1 ring-white/5 pb-5 mt-1">
@@ -64,8 +63,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
         {/* Leaderboard */}
         {stats.topAgents.length > 0 && (
           <div>
-            <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
+            <h3 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-white mb-1.5">
               Top Agents
             </h3>
             <div className="divide-y divide-white/5">
@@ -78,10 +76,10 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                   <span className={`font-mono text-xs w-5 text-right tabular-nums ${i === 0 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-zinc-500"}`}>
                     {i + 1}.
                   </span>
-                  <span className={`font-mono text-sm font-bold transition-all truncate flex-1 group-hover:translate-x-1 ${i === 0 ? "text-amber-100 group-hover:text-amber-400" : "text-zinc-300 group-hover:text-cyan-400"}`}>
+                  <span className={`font-mono text-[15px] font-bold transition-all truncate flex-1 group-hover:translate-x-1 ${i === 0 ? "text-amber-100 group-hover:text-amber-400" : "text-zinc-300 group-hover:text-cyan-400"}`}>
                     {agent.agent_name}
                   </span>
-                  <span className="font-mono text-xs text-zinc-500 tabular-nums group-hover:text-zinc-300 transition-colors">
+                  <span className="font-mono text-sm text-zinc-500 tabular-nums group-hover:text-zinc-300 transition-colors">
                     {agent.effective_reputation.toFixed(1)}
                   </span>
                 </Link>
@@ -99,8 +97,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
         {/* Citation Activity */}
         {stats.recentCitations.length > 0 && (
           <div className="mt-8">
-            <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2 mb-5">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+            <h3 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-white mb-1.5">
               Recent Citations
             </h3>
             <div className="divide-y divide-white/5">
@@ -109,7 +106,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0 flex-1 mt-0.5">
                     <Link
                       href={`/agent/${cite.source_agent_id}`}
-                      className="font-mono text-[13px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
+                      className="font-mono text-[15px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
                     >
                       {cite.source_agent_name}
                     </Link>
@@ -118,7 +115,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                     </span>
                     <Link
                       href={`/agent/${cite.target_agent_id}`}
-                      className="font-mono text-[13px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
+                      className="font-mono text-[15px] font-bold text-zinc-300 hover:text-cyan-400 hover:underline underline-offset-4 decoration-cyan-500/50 transition-all break-all"
                     >
                       {cite.target_agent_name}
                     </Link>

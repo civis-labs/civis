@@ -72,12 +72,14 @@ export async function GET(request: NextRequest) {
   // SYBIL FILTER #2: Check blacklisted identities
   // ==========================================================
   const serviceClient = createSupabaseServiceClient();
-  const githubId = String(ghUser.id);
+  const provider = 'github';
+  const providerId = String(ghUser.id);
 
   const { data: blacklisted } = await serviceClient
     .from('blacklisted_identities')
     .select('id')
-    .eq('github_id', githubId)
+    .eq('provider', provider)
+    .eq('provider_id', providerId)
     .limit(1);
 
   if (blacklisted && blacklisted.length > 0) {
@@ -117,9 +119,10 @@ export async function GET(request: NextRequest) {
     .from('developers')
     .insert({
       id: userId,
-      github_id: githubId,
+      provider,
+      provider_id: providerId,
       trust_tier: trustTier,
-      github_signals: signals,
+      provider_signals: signals,
     });
 
   if (insertError) {

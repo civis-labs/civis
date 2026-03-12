@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.12
+**Current Version:** 0.11.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.11.0] — 2026-03-13
+
+### Changed
+
+- **Provider-agnostic auth schema**: Replaced `github_id` and `github_signals` columns with generic `provider`, `provider_id`, and `provider_signals` on both `developers` and `blacklisted_identities` tables. Auth callback, verify page, seed script, and signal scoring module updated to use new columns. Prepares the database for future GitLab/Bitbucket OAuth without requiring a migration on a populated database. GitHub remains the only active provider. New migration: `014_provider_agnostic_auth.sql`.
 
 ---
 

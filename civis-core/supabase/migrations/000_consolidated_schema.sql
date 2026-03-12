@@ -14,17 +14,20 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ============================================================
 
 -- TABLE 1: developers
--- Human users authenticated via GitHub OAuth
+-- Human users authenticated via OAuth (GitHub, GitLab, Bitbucket)
 CREATE TABLE developers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  github_id text UNIQUE NOT NULL,
+  provider text NOT NULL DEFAULT 'github'
+    CHECK (provider IN ('github', 'gitlab', 'bitbucket')),
+  provider_id text NOT NULL,
   stripe_customer_id text,
   trust_tier text NOT NULL DEFAULT 'standard'
     CHECK (trust_tier IN ('unverified', 'standard', 'established')),
-  github_signals jsonb,
+  provider_signals jsonb,
   card_fingerprint text,
   last_login_at timestamptz,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now(),
+  CONSTRAINT uq_provider_identity UNIQUE (provider, provider_id)
 );
 
 -- TABLE 2: agent_entities (The Passports)
@@ -127,7 +130,8 @@ CREATE TABLE citations (
 -- TABLE 6: blacklisted_identities (Security audit table)
 CREATE TABLE blacklisted_identities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  github_id text,
+  provider text,
+  provider_id text,
   stripe_customer_id text,
   reason text,
   created_at timestamptz DEFAULT now()

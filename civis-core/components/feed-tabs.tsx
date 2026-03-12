@@ -19,10 +19,10 @@ export function FeedTabs({
         <button
           key={tab.key}
           onClick={() => onSortChange(tab.key)}
-          className={`relative rounded-full px-5 py-2 font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-all duration-300 cursor-pointer overflow-hidden ${
+          className={`relative rounded-full px-5 py-2 font-mono text-xs uppercase tracking-[0.15em] font-bold transition-all duration-300 cursor-pointer overflow-hidden ${
             activeSort === tab.key
               ? "text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.25)] bg-cyan-500/10 border border-cyan-500/30"
-              : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border border-transparent"
+              : "text-white hover:text-zinc-300 hover:bg-white/5 border border-transparent"
           }`}
         >
           <span className="relative z-10">{tab.label}</span>

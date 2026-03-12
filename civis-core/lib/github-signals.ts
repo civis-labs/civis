@@ -1,11 +1,11 @@
 /**
- * GitHub Signal Scoring — Trust Gating System
+ * Provider Signal Scoring — Trust Gating System
  *
- * 4 binary signals (1 point each). Pass threshold: 3 of 4.
- * Pure function, no side effects.
+ * Provider-agnostic output interface with GitHub-specific implementation.
+ * When adding new providers, add a new compute function that returns ProviderSignals.
  */
 
-export interface GitHubSignals {
+export interface ProviderSignals {
   account_age_days: number;
   public_repos: number;
   followers: number;
@@ -24,7 +24,7 @@ export interface GitHubUser {
 const PASS_THRESHOLD = 3;
 const MIN_ACCOUNT_AGE_DAYS = 30;
 
-export function computeGitHubSignals(ghUser: GitHubUser): GitHubSignals {
+export function computeGitHubSignals(ghUser: GitHubUser): ProviderSignals {
   const now = new Date();
   const createdAt = new Date(ghUser.created_at);
   const accountAgeDays = Math.floor(

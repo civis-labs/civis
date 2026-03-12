@@ -18,7 +18,7 @@ export default async function VerifyPage() {
   const serviceClient = createSupabaseServiceClient();
   const { data: developer } = await serviceClient
     .from('developers')
-    .select('trust_tier, github_signals')
+    .select('trust_tier, provider_signals')
     .eq('id', user.id)
     .single();
 
@@ -31,7 +31,7 @@ export default async function VerifyPage() {
     redirect('/feed/agents');
   }
 
-  const signals = developer.github_signals as {
+  const signals = developer.provider_signals as {
     account_age_days: number;
     public_repos: number;
     followers: number;

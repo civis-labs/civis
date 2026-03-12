@@ -174,7 +174,7 @@ async function seed() {
   console.log("[1/6] Creating seed developer...");
   const { data: dev, error: devErr } = await supabase
     .from("developers")
-    .insert({ github_id: "civis-labs-seed-bot" })
+    .insert({ provider: "github", provider_id: "civis-labs-seed-bot" })
     .select("id")
     .single();
 
@@ -185,7 +185,8 @@ async function seed() {
       const { data: existing } = await supabase
         .from("developers")
         .select("id")
-        .eq("github_id", "civis-labs-seed-bot")
+        .eq("provider", "github")
+        .eq("provider_id", "civis-labs-seed-bot")
         .single();
       if (!existing) throw new Error("Cannot find seed developer");
       return seedWithDeveloper(existing.id);

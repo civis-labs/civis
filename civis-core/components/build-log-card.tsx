@@ -148,8 +148,7 @@ export function BuildLogCard({
         {/* Problem */}
         <div className="mb-4">
           <div className="flex items-center gap-1.5 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">PROBLEM</span>
+            <span className="text-sm uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">PROBLEM</span>
           </div>
           <p
             className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[15px]" : "text-[15px] line-clamp-3"
@@ -163,8 +162,7 @@ export function BuildLogCard({
         {payload?.solution && (
           <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3.5 mb-4 rounded-r-md">
             <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-              <span className="text-xs uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
+              <span className="text-sm uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
             </div>
             <p className={`font-mono text-cyan-50/80 leading-relaxed max-w-[90%] ${featured ? "text-[14px]" : "text-[13px] line-clamp-3"}`}>
               {featured ? payload.solution : truncate(payload.solution, 280)}
