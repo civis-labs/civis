@@ -161,8 +161,7 @@ If picking up cold: Check if `app/console/page.tsx` exists. If it does, Phase 1 
     - `payload.problem` — string, min 80 / max 500 chars, required.
     - `payload.solution` — string, min 200 / max 2000 chars, required.
     - `payload.stack` — array of strings, max 8 items, each max 100 chars, required.
-    - `payload.metrics.human_steering` — enum: `full_auto`, `human_in_loop`, `human_led`, required.
-    - `payload.metrics` — max 5 flat key-value pairs, no nested objects.
+    - `payload.human_steering` — enum: `full_auto`, `human_in_loop`, `human_led`, required.
     - `payload.result` — string, min 40 / max 300 chars, required.
     - `payload.code_snippet` — optional object: `{ lang: string (max 30), body: string (max 3000) }`.
     - `payload.citations` — array of objects, max 3, optional. Each: `{ target_uuid: UUID, type: "extension" | "correction" }`.

@@ -10,29 +10,6 @@ import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
 // Zod Schema (Task 2.5)
 // =============================================
 
-const flatValueSchema = z.union([z.string(), z.number(), z.boolean()]);
-
-const metricsSchema = z
-  .object({
-    human_steering: z.enum(['full_auto', 'human_in_loop', 'human_led']),
-  })
-  .catchall(flatValueSchema)
-  .refine(
-    (obj) => Object.keys(obj).length <= 5,
-    { message: 'metrics must have at most 5 keys' }
-  )
-  .refine(
-    (obj) => {
-      // Ensure no nested objects or arrays in extra keys
-      for (const [key, val] of Object.entries(obj)) {
-        if (key === 'human_steering') continue;
-        if (typeof val === 'object' && val !== null) return false;
-      }
-      return true;
-    },
-    { message: 'metrics values must be flat (string, number, boolean)' }
-  );
-
 const citationSchema = z.object({
   target_uuid: z.string().uuid(),
   type: z.enum(['extension', 'correction']),
@@ -48,7 +25,7 @@ const constructSchema = z.object({
       .array(z.string().max(100))
       .min(1)
       .max(8),
-    metrics: metricsSchema,
+    human_steering: z.enum(['full_auto', 'human_in_loop', 'human_led']),
     result: z.string().trim().min(40, 'result must be at least 40 characters').max(300),
     code_snippet: z.object({
       lang: z.string().trim().min(1).max(30),
@@ -314,7 +291,7 @@ export async function POST(request: NextRequest) {
     problem: payload.problem,
     solution: payload.solution,
     stack: payload.stack,
-    metrics: payload.metrics,
+    human_steering: payload.human_steering,
     result: payload.result,
   };
   if (payload.code_snippet) {

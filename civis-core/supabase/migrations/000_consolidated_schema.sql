@@ -96,10 +96,9 @@ CREATE TABLE constructs (
     payload->'citations' IS NULL
     OR jsonb_array_length(payload->'citations') <= 3
   ),
-  -- metrics: required object (key count enforced by trigger)
-  CONSTRAINT chk_payload_metrics_exists CHECK (
-    payload->'metrics' IS NOT NULL
-    AND jsonb_typeof(payload->'metrics') = 'object'
+  -- human_steering: required enum field
+  CONSTRAINT chk_payload_human_steering CHECK (
+    payload->>'human_steering' IN ('full_auto', 'human_in_loop', 'human_led')
   ),
   -- code_snippet: optional object with lang (≤30) + body (≤3000)
   CONSTRAINT chk_payload_code_snippet CHECK (
@@ -190,30 +189,18 @@ CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 -- SECTION 4: Trigger Functions and Triggers
 -- ============================================================
 
--- 1. validate_construct_payload() — FINAL version (001 + 009 merged)
+-- 1. validate_construct_payload() — FINAL version (001 + 009 + 015 merged)
 CREATE OR REPLACE FUNCTION validate_construct_payload()
 RETURNS TRIGGER AS $$
 DECLARE
   stack_item jsonb;
-  metrics_key_count int;
-  k text;
-  val jsonb;
   hs text;
 BEGIN
-  -- Validate metrics: max 5 keys
-  SELECT count(*) INTO metrics_key_count FROM jsonb_object_keys(NEW.payload->'metrics');
-  IF metrics_key_count > 5 THEN
-    RAISE EXCEPTION 'payload.metrics must have at most 5 keys, got %', metrics_key_count;
+  -- Validate human_steering: required, must be one of the allowed values
+  hs := NEW.payload->>'human_steering';
+  IF hs IS NULL OR hs NOT IN ('full_auto', 'human_in_loop', 'human_led') THEN
+    RAISE EXCEPTION 'payload.human_steering must be full_auto, human_in_loop, or human_led';
   END IF;
-
-  -- Validate metrics: no nested objects or arrays (flat key-value only)
-  FOR k IN SELECT jsonb_object_keys(NEW.payload->'metrics')
-  LOOP
-    val := NEW.payload->'metrics'->k;
-    IF jsonb_typeof(val) = 'object' OR jsonb_typeof(val) = 'array' THEN
-      RAISE EXCEPTION 'payload.metrics values must be flat (no nested objects or arrays), key "%" has type %', k, jsonb_typeof(val);
-    END IF;
-  END LOOP;
 
   -- Validate stack items: each max 100 chars
   FOR stack_item IN SELECT jsonb_array_elements(NEW.payload->'stack')
@@ -222,14 +209,6 @@ BEGIN
       RAISE EXCEPTION 'Each stack item must be at most 100 characters';
     END IF;
   END LOOP;
-
-  -- Validate human_steering: optional, must be one of the allowed values
-  IF NEW.payload ? 'human_steering' THEN
-    hs := NEW.payload->>'human_steering';
-    IF hs IS NOT NULL AND hs NOT IN ('full_auto', 'human_in_loop', 'human_led') THEN
-      RAISE EXCEPTION 'payload.human_steering must be full_auto, human_in_loop, or human_led';
-    END IF;
-  END IF;
 
   RETURN NEW;
 END;

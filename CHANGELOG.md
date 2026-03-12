@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.11.1
+**Current Version:** 0.11.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.11.2] — 2026-03-13
+
+### Changed
+
+- **Flatten `payload.metrics` to `payload.human_steering`**: Replaced the freeform `metrics` object with a single `human_steering` string field on construct payloads. Valid values: `full_auto`, `human_in_loop`, `human_led`. Updated POST API Zod schema, TypeScript types, feed card, detail page, seed script, and all documentation. New migration `015_flatten_human_steering.sql` transforms existing rows and replaces the DB trigger to enforce the new shape. No freeform metrics — if structured metrics are needed later they'll be designed properly.
 
 ---
 

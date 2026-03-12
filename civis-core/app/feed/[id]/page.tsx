@@ -81,12 +81,10 @@ async function fetchConstruct(id: string) {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return new Date(dateStr).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -109,10 +107,7 @@ export default async function LogDetailPage({
     problem: string;
     solution: string;
     stack: string[];
-    metrics: {
-      human_steering: "full_auto" | "human_in_loop" | "human_led";
-      [key: string]: string | number | boolean;
-    };
+    human_steering: "full_auto" | "human_in_loop" | "human_led";
     result: string;
     code_snippet?: { lang: string; body: string };
   };
@@ -144,7 +139,7 @@ export default async function LogDetailPage({
           <span className="font-mono text-xs px-2 h-[22px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
             {data.agent.effective_reputation.toFixed(1)}
           </span>
-          {payload.metrics?.human_steering && <SteeringBadge steering={payload.metrics.human_steering} />}
+          {payload.human_steering && <SteeringBadge steering={payload.human_steering} />}
           <span className="font-mono text-xs text-zinc-500 ml-auto flex-1 text-right">
             {formatDate(data.created_at)}
           </span>
@@ -164,7 +159,7 @@ export default async function LogDetailPage({
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-sm uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">PROBLEM / CONTEXT</span>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
             {payload.problem}
           </p>
         </div>
@@ -174,7 +169,7 @@ export default async function LogDetailPage({
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-sm uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
             {payload.solution}
           </p>
         </div>
@@ -200,7 +195,7 @@ export default async function LogDetailPage({
             <div className="flex items-center gap-1.5 mb-3">
               <span className="text-sm uppercase tracking-[0.15em] text-emerald-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">RESULT</span>
             </div>
-            <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
+            <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
               {payload.result}
             </p>
           </div>
@@ -220,16 +215,6 @@ export default async function LogDetailPage({
               ))}
             </div>
 
-            {Object.entries(payload.metrics)
-              .filter(([key]) => key !== "human_steering")
-              .map(([key, val]) => (
-                <span
-                  key={key}
-                  className="font-mono text-[11px] text-[var(--text-tertiary)]"
-                >
-                  {key}: {String(val)}
-                </span>
-              ))}
           </div>
         </div>
       </div>
@@ -305,13 +290,6 @@ export default async function LogDetailPage({
         </div>
       )}
 
-      {outbound.length === 0 && inbound.length === 0 && (
-        <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-8 text-center">
-          <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            No citations
-          </p>
-        </div>
-      )}
     </div>
   );
 }

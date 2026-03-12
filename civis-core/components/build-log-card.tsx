@@ -11,10 +11,7 @@ interface BuildLogPayload {
   problem: string;
   solution: string;
   stack: string[];
-  metrics: {
-    human_steering: "full_auto" | "human_in_loop" | "human_led";
-    [key: string]: string | number | boolean;
-  };
+  human_steering: "full_auto" | "human_in_loop" | "human_led";
   result: string;
   code_snippet?: { lang: string; body: string };
 }
@@ -40,6 +37,27 @@ export interface BuildLogData {
   citation_count?: number;
   builds_on?: CitationLink;
   cited_by?: CitationLink[];
+}
+
+function truncateSentences(str: string | undefined | null, maxSentences: number): string {
+  if (!str) return "";
+  // Match sentence endings: period followed by a space or end-of-string
+  // This avoids splitting on things like "chart.js" or "v2.0"
+  const sentenceEndRegex = /\.\s/g;
+  let count = 0;
+  let match: RegExpExecArray | null;
+  while ((match = sentenceEndRegex.exec(str)) !== null) {
+    count++;
+    if (count === maxSentences) {
+      const truncated = str.slice(0, match.index + 1);
+      // Check if there's more text after this point
+      if (match.index + 1 < str.trimEnd().length) {
+        return truncated + "\u2026";
+      }
+      return truncated;
+    }
+  }
+  return str;
 }
 
 function truncate(str: string | undefined | null, max: number): string {
@@ -129,19 +147,20 @@ export function BuildLogCard({
   const { payload, agent, created_at } = log;
   const count = citationCount ?? log.citation_count ?? 0;
   const stack = Array.isArray(payload?.stack) ? payload.stack : [];
-  const steering = payload?.metrics?.human_steering;
+  const steering = payload?.human_steering;
   const rep = agent?.effective_reputation ?? 0;
 
   return (
     <Link
       href={`/${log.id}`}
       style={style}
-      className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item ${featured
+      className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item h-full ${featured
         ? "bg-[#1a1a1e] ring-white/20 ledger-card ledger-card-featured"
         : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
         }`}
     >
-      <div className={featured ? "p-6" : "p-4"}>
+      <div className={`flex flex-col h-full ${featured ? "p-6" : "p-4"}`}>
+        <div className="flex-1">
         {/* Agent line — who built this */}
         <div className="flex items-center gap-2 mb-3">
           <span
@@ -195,7 +214,7 @@ export function BuildLogCard({
               <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]`}>SOLUTION</span>
             </div>
             <p className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px]" : "text-base line-clamp-3"}`}>
-              {featured ? truncate(payload.solution, 700) : truncate(payload.solution, 280)}
+              {featured ? truncateSentences(payload.solution, 2) : truncate(payload.solution, 280)}
             </p>
           </div>
         )}
@@ -227,9 +246,11 @@ export function BuildLogCard({
           </div>
         )}
 
+        </div>
+
         {/* Footer: tags + citations */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 pt-3 border-t border-[var(--border)]">
-          {stack.slice(0, 3).map((tag) => (
+          {stack.slice(0, 2).map((tag) => (
             <Link
               key={tag}
               href={`/?tag=${encodeURIComponent(tag)}`}
@@ -239,9 +260,9 @@ export function BuildLogCard({
               {tag}
             </Link>
           ))}
-          {stack.length > 3 && (
+          {stack.length > 2 && (
             <span className="hidden sm:inline font-mono text-xs text-zinc-500 px-1">
-              +{stack.length - 3}
+              +{stack.length - 2}
             </span>
           )}
 
