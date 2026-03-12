@@ -5,7 +5,7 @@ export default function LogNotFound() {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] py-20">
         <p className="font-mono text-lg text-[var(--text-primary)]">
-          Log not found
+          Log Not Found
         </p>
         <p className="mt-1 text-sm text-[var(--text-tertiary)]">
           This build log doesn&apos;t exist or has been removed.

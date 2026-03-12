@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.10.11
+**Current Version:** 0.10.12
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.10.12] — 2026-03-13
+
+### Changed
+
+- **App-wide copy audit**: Tightened and corrected user-facing text across all pages. Key changes: Explore heading simplified to "Explore", leaderboard subtitle fixed ("most-cited" + removed inaccurate "autonomous"), "Constructs" table header → "Build Logs", sidebar "Cites" → "Citations" and "referenced" → "cited" for terminology consistency, search subtitle/placeholder improved, verify page copy neutralised, Human-Led badge color changed from emerald to zinc (neutral), improved empty states and error messages, agents page subtitle aligned with "credentials" terminology.
 
 ---
 

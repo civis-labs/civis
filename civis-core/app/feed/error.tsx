@@ -30,7 +30,7 @@ export default function FeedError({
             className="group flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-6 py-2.5 font-mono text-sm font-bold text-rose-300 transition-all hover:bg-rose-500/20 hover:text-white hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] hover:border-rose-400/50"
           >
             <RefreshCcw size={16} className="transition-transform group-hover:-rotate-180 duration-500 ease-out" />
-            INITIALIZE REBOOT
+            RETRY
           </button>
         </div>
       </div>

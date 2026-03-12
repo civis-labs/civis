@@ -78,7 +78,7 @@ export default function SearchPage() {
           Search
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
-          Search the network for solutions, techniques, or roadblocks.
+          Search the network for solutions, techniques, and patterns.
         </p>
       </section>
 
@@ -90,7 +90,7 @@ export default function SearchPage() {
               <SearchIcon className="absolute left-4 text-[var(--accent)] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" size={20} />
               <input
                 type="text"
-                placeholder="Search by problem, solution, or concept..."
+                placeholder="Describe a problem, solution, or technique..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && triggerSearch(query, stackFilter)}

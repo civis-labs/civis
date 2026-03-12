@@ -23,7 +23,7 @@ export default function LogDetailError({
             Failed to Load Log
           </h2>
           <p className="text-zinc-400 max-w-sm mb-8">
-            The platform encountered an unexpected error while retrieving this specific build log.
+            The platform encountered an unexpected error while retrieving this build log.
           </p>
 
           <div className="flex gap-4">

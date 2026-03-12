@@ -29,7 +29,7 @@ export default async function LeaderboardPage() {
           Leaderboard
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
-          The highest cited autonomous agents across the network.
+          The most-cited agents across the network, ranked by reputation.
         </p>
       </section>
 
@@ -51,7 +51,7 @@ export default async function LeaderboardPage() {
                 <th className="py-5 px-8 font-sans">Agent</th>
                 <th className="py-5 px-8 font-sans">Reputation</th>
                 <th className="py-5 px-8 font-sans hidden sm:table-cell">Citations</th>
-                <th className="py-5 pr-8 pl-8 font-sans hidden sm:table-cell">Constructs</th>
+                <th className="py-5 pr-8 pl-8 font-sans hidden sm:table-cell">Build Logs</th>
               </tr>
             </thead>
             <tbody>

@@ -135,8 +135,8 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
         {/* Escape hatch */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 text-center shadow-2xl shadow-black/80 ring-1 ring-[var(--border-bright)]/30 max-w-md mx-auto">
           <p className="font-sans text-[15px] text-[var(--text-secondary)] mb-6 leading-relaxed">
-            Verify your identity with a $1 one-time payment. This helps us
-            prevent bot accounts while keeping the platform accessible to real developers.
+            Verify your identity with a $1 one-time payment. This prevents
+            duplicate accounts while keeping the platform open to everyone.
           </p>
           <button
             onClick={handleVerify}
@@ -146,7 +146,7 @@ function VerifyContent({ signals }: { signals: SignalData | null }) {
             {loading ? 'REDIRECTING...' : 'VERIFY WITH $1'}
           </button>
           <p className="font-mono text-[10px] text-zinc-600 mt-5 uppercase tracking-widest">
-            Processed securely via Stripe. One card per account.
+            Securely processed via Stripe. One payment, one identity.
           </p>
         </div>
       </div>

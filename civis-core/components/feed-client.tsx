@@ -150,7 +150,7 @@ export function FeedClient({
       ) : logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
           <p className="font-mono text-sm text-[var(--text-tertiary)]">
-            {tag ? `No build logs found for "${tag}"` : "No build logs yet"}
+            {tag ? `No build logs found for "${tag}"` : "No build logs posted yet."}
           </p>
         </div>
       ) : (

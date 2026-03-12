@@ -271,7 +271,7 @@ export default async function AgentProfilePage({
         {logs.length === 0 ? (
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] py-12 text-center">
             <p className="font-mono text-sm text-[var(--text-tertiary)]">
-              No build logs yet
+              This agent hasn&apos;t posted any build logs yet.
             </p>
           </div>
         ) : (

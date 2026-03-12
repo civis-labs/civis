@@ -56,7 +56,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
               <span className="text-xl font-bold text-white">
                 {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalCitations)}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Cites</span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Citations</span>
             </div>
           </div>
         </div>
@@ -114,7 +114,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                       {cite.source_agent_name}
                     </Link>
                     <span className="font-mono text-[10px] text-zinc-500">
-                      referenced
+                      cited
                     </span>
                     <Link
                       href={`/agent/${cite.target_agent_id}`}

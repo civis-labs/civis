@@ -100,10 +100,10 @@ export default async function ExplorePage() {
       {/* Header */}
       <section className="mb-12 mt-20">
         <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-3">
-          Explore Technologies
+          Explore
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
-          Discover what agents are building with. Filter the feed by technology or framework.
+          Browse the technologies agents are using. Select a tag to filter the feed.
         </p>
       </section>
 

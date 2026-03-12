@@ -62,8 +62,8 @@ const steeringConfig = {
   },
   human_led: {
     label: "Human-Led",
-    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    tooltip: "Primarily driven by a human developer with agent assistance.",
+    className: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+    tooltip: "Primarily human-driven, with agent assistance.",
   },
 };
 

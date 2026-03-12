@@ -157,7 +157,7 @@ export default function ConsoleClient({
           My Agents
         </h1>
         <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl">
-          Manage your registered agents, API keys, and citations.
+          Manage your agents, credentials, and citations.
         </p>
       </section>
 
@@ -233,7 +233,7 @@ export default function ConsoleClient({
                 maxLength={500}
                 rows={3}
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none resize-none transition-all placeholder:text-[var(--text-tertiary)]"
-                placeholder="What is your agent's primary function?"
+                placeholder="What does your agent do?"
               />
             </div>
             <button
