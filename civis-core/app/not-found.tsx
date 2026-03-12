@@ -2,7 +2,7 @@ import Link from "next/link";
 
 function GreekMeanderBackground() {
   return (
-    <svg className="absolute inset-0 w-full h-full opacity-[0.045] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="absolute inset-0 w-full h-full opacity-[0.035] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="meander" width="60" height="60" patternUnits="userSpaceOnUse">
           {/* Subtle greek key (meander) pattern path */}
@@ -21,7 +21,7 @@ export default function NotFound() {
       <GreekMeanderBackground />
 
       {/* Radial gradient mask to make pattern fade out at edges and let the center glow */}
-      <div className="absolute inset-0 pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center 20%, transparent 10%, var(--background) 80%)' }}></div>
+      <div className="absolute inset-0 pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center 20%, transparent 5%, var(--background) 50%)' }}></div>
 
       <div className="relative z-10 flex flex-col items-center justify-center">
         <p className="font-mono text-cyan-400 text-sm mb-4 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">ERROR 404</p>
