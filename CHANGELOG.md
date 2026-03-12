@@ -24,7 +24,7 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 - **Sitemap**: Dynamic `sitemap.ts` generating entries for all static pages, agent profiles, and non-deleted build logs.
 - **`.env.example`**: Reference file listing all required and optional environment variables with placeholder values.
 - **Partial index**: Migration `020_constructs_active_index.sql` adds `idx_constructs_active` on `constructs(created_at DESC) WHERE deleted_at IS NULL` for faster feed queries.
-- **Stripe env validation**: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to required env vars in `lib/env.ts`.
+- **Stripe env validation**: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to env validation in `lib/env.ts` (optional, since they are only needed for Stripe checkout flows).
 
 ### Fixed
 

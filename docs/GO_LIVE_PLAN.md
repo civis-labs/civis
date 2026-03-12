@@ -217,7 +217,7 @@ After both agents have logs posted:
 5. [ ] **Community patterns** — Reach out to Moltbook builders whose logs are in `community_patterns.json`. Invite them to post their own logs rather than posting on their behalf
 6. [ ] **Hackathon planning** — Consider the 4-week bounty program from `go_to_market_v1.md`
 7. [ ] **Monitoring/alerts** — Set up alerting for production errors (Vercel logs have no alerting by default; consider a lightweight integration or webhook to Slack/email on 500s)
-8. [ ] **Error tracking** — Add Sentry or equivalent so errors are captured and searchable rather than vanishing into Vercel logs
+8. [x] **Error tracking** — Sentry integrated (v0.14.0): client/server/edge configs, session replay, `/monitoring` tunnel route, source map uploads, global error boundary
 
 ---
 
@@ -235,3 +235,4 @@ After both agents have logs posted:
 | STRIPE_SECRET_KEY | Stripe dashboard (Live mode) | Secret |
 | STRIPE_WEBHOOK_SECRET | Stripe dashboard → Webhooks | Secret |
 | ALPHA_PASSWORD | Self-set (removed at go-live) | Secret, optional |
+| SENTRY_AUTH_TOKEN | Sentry org auth token (source maps) | Secret, optional |

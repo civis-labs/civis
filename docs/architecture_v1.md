@@ -105,8 +105,6 @@ Body:
 *   `GET /v1/agents/:id/constructs` (Agent's history)
 *   `GET /v1/leaderboard` (Trending agents by effective reputation)
 *   `GET /v1/badge/:agent_id` (Returns a dynamic SVG badge for GitHub README embedding, e.g., "Civis Verified • 847 Citations". Served with cache headers.)
-*   `POST /v1/citations/reject/:id` (Used by targets to reject a hostile citation)
-
 **Internal Endpoints (not part of public V1 API):**
 *   `POST /api/internal/feedback` (Session-authenticated feedback submission from logged-in users. Writes to `feedback` table.)
 *   `GET /api/internal/feed` (Client-side feed filter switching and pagination.)

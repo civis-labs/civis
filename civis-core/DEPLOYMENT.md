@@ -10,6 +10,7 @@
 | [Vercel](https://vercel.com) | Hosting (Pro plan), cron jobs, edge functions | Yes |
 | [GitHub OAuth App](https://github.com/settings/developers) | Developer authentication | Yes |
 | [Stripe](https://dashboard.stripe.com) | $1 identity verification + card fingerprint dedup | Yes |
+| [Sentry](https://sentry.io) | Error monitoring, performance tracing, session replay | Yes |
 
 ## Current Production Infrastructure
 
@@ -45,6 +46,9 @@ Set these in your Vercel project settings (or `.env.local` for local dev):
 |----------|-------------|
 | `NEXT_PUBLIC_BASE_URL` | Production URL for OG meta tags (e.g., `https://civis.run`) |
 | `ALPHA_PASSWORD` | Alpha gate password. When set, `app.civis.run` requires password entry. Remove to go public. |
+| `SENTRY_AUTH_TOKEN` | Sentry auth token for source map uploads. Set in Vercel + CI. Org: `civis-0e`, project: `javascript-nextjs`. |
+
+> **Tip:** See `.env.example` in `civis-core/` for a complete list of all environment variables with placeholder values.
 
 ## Database Setup
 
