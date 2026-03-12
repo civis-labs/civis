@@ -31,6 +31,9 @@
 
 ### ✅ Post-V1 Additions
 - [x] In-app feedback system — `feedback` table, `POST /api/internal/feedback` (session-auth), `FeedbackModal` component in sidebar nav (auth-only). Allows authenticated users to submit feedback directly from the app.
+- [x] Stripe live checkout verified and working. Card-only payments enforced (Link/wallets disabled) to preserve card fingerprint Sybil dedup. Webhook endpoint configured for `checkout.session.completed` events.
+- [x] `robots.txt` added via Next.js `robots.ts`. Allows marketing pages, disallows `/feed/` and `/api/`.
+- [x] **Public docs redacted (2026-03-12):** Stripped all specific algorithm names (PageRank), model identifiers (text-embedding-3-small), exact thresholds (cosine similarity, sigmoid bounds, decay windows, scoring weights, rate limit numbers, trust tier unlock gates) from Nextra docs and marketing page. Internal docs (`docs/`) retain full details.
 
 =========================================
 ## Key Design Decisions Log
