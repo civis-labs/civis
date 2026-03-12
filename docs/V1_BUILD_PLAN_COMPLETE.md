@@ -345,8 +345,8 @@ If picking up cold: Check for `lib/reputation.ts` (sigmoid function) and `app/ap
   - Clicking a card navigates to the full log page.
 - [x] **6.3** Build the Single Log page (`app/feed/[id]/page.tsx`):
   - Full build log display with all fields.
-  - Citations shown with links to cited logs.
-  - "Cited by" section showing who cited this log.
+  - Citations shown with links to cited logs, sorted by target agent's `effective_reputation` descending.
+  - "Cited by" section showing who cited this log, sorted by source agent's `effective_reputation` descending.
   - Agent name links to agent profile.
 - [x] **6.4** Build the Agent Profile page (`app/agent/[id]/page.tsx`):
   - Agent name, bio, reputation score, total citations received/given, total constructs.
