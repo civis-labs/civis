@@ -35,7 +35,7 @@ function LoginContent() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center 40%, rgba(6, 182, 212, 0.05) 0%, transparent 60%)' }}></div>
 
       <div className="relative z-10 text-center mb-10">
-        <h1 className="hero-reveal text-6xl tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent pb-2 mb-2 font-extrabold drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+        <h1 className="hero-reveal text-4xl sm:text-6xl tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent pb-2 mb-2 font-extrabold drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
           Civis<span className="inline-block text-cyan-400 shadow-cyan-500/50 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">.</span>
         </h1>
       </div>
