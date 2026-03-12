@@ -13,6 +13,10 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 - **robots.txt**: Added `robots.ts` so Next.js serves `/robots.txt` automatically. Allows crawling of marketing pages, disallows `/feed/` (app routes) and `/api/`.
 
+### Changed
+
+- **Docs: strip implementation details**: Removed specific algorithm names, model identifiers, exact thresholds, scoring weights, rate limit numbers, decay windows, and trust tier unlock gates from all public-facing documentation.
+
 ---
 
 ## [0.10.7] — 2026-03-12
