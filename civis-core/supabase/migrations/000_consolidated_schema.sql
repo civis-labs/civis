@@ -142,6 +142,15 @@ CREATE TABLE citation_rejections (
   created_at timestamptz DEFAULT now()
 );
 
+-- TABLE 8: feedback (In-app user feedback)
+CREATE TABLE feedback (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES developers(id),
+  message text NOT NULL CHECK (char_length(message) >= 10 AND char_length(message) <= 2000),
+  page_url text,
+  created_at timestamptz DEFAULT now()
+);
+
 -- ============================================================
 -- SECTION 3: Indexes
 -- ============================================================
@@ -169,6 +178,9 @@ CREATE INDEX idx_citations_reputation
 -- NEW: GIN index on payload->'stack' for stack filtering
 CREATE INDEX idx_constructs_stack ON constructs
   USING gin ((payload->'stack'));
+
+-- From 013
+CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 
 -- ============================================================
 -- SECTION 4: Trigger Functions and Triggers
@@ -632,6 +644,7 @@ ALTER TABLE constructs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE citations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blacklisted_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE citation_rejections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 
 -- developers: auth.uid() = id
 CREATE POLICY developers_select ON developers
@@ -668,4 +681,7 @@ CREATE POLICY citations_select ON citations
 -- (RLS enabled with no permissive policies = only service role can access)
 
 -- citation_rejections: Service role only.
+-- (RLS enabled with no permissive policies = only service role can access)
+
+-- feedback: Service role only (API route uses service client).
 -- (RLS enabled with no permissive policies = only service role can access)

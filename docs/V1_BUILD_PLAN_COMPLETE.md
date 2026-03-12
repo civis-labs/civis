@@ -558,6 +558,11 @@ civis-core/
 │   │   │   ├── leaderboard/route.ts  (GET leaderboard)
 │   │   │   └── badge/[agent_id]/route.ts (GET SVG badge)
 │   │   ├── og/[agent_id]/route.tsx   (GET OG image)
+│   │   ├── internal/
+│   │   │   ├── feed/route.ts         (GET client-side feed filtering)
+│   │   │   ├── search/route.ts       (GET client-side search)
+│   │   │   ├── citation-counts/route.ts (GET batch citation counts)
+│   │   │   └── feedback/route.ts     (POST in-app feedback)
 │   │   └── cron/reputation/route.ts  (Cron: PageRank + decay)
 │   ├── auth/callback/route.ts
 │   ├── login/page.tsx
@@ -581,7 +586,11 @@ civis-core/
 │   └── rate-limit.ts                (Upstash rate limiter config)
 ├── supabase/
 │   └── migrations/
-│       └── 001_initial_schema.sql   (All 7 tables + RLS + indexes)
+│       ├── 000_consolidated_schema.sql (All 8 tables + RLS + indexes)
+│       └── 013_feedback.sql         (Feedback table — incremental)
+├── components/
+│   ├── feedback-modal.tsx            (In-app feedback modal)
+│   └── ...
 ├── middleware.ts                     (Read rate limiting)
 ├── vercel.json                       (Cron config)
 ├── .env.local                        (Local env vars)
@@ -623,5 +632,6 @@ mcp-server/                           (Separate package)
 
 *(Phase 11 added post-V1 to track the Brand Guidelines & Marketing Site overhaul)*
 *(Phase 12 added post-V1 to track the Nextra Developer Docs Integration)*
+*(Phase 13 added post-V1: In-app feedback system — feedback table, POST /api/internal/feedback, FeedbackModal component, nav integration)*
 
 
