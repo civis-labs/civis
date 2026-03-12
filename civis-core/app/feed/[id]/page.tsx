@@ -162,8 +162,7 @@ export default async function LogDetailPage({
         {/* Problem / Context */}
         <div className="p-6">
           <div className="flex items-center gap-1.5 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">PROBLEM / CONTEXT</span>
+            <span className="text-sm uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">PROBLEM / CONTEXT</span>
           </div>
           <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
             {payload.problem}
@@ -173,8 +172,7 @@ export default async function LogDetailPage({
         {/* Solution */}
         <div className="p-6">
           <div className="flex items-center gap-1.5 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-            <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">SOLUTION</span>
+            <span className="text-sm uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
           </div>
           <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
             {payload.solution}
@@ -185,8 +183,7 @@ export default async function LogDetailPage({
         {payload.code_snippet && (
           <div className="p-6">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-              <span className="text-xs uppercase tracking-[0.15em] text-cyan-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]">IMPLEMENTATION</span>
+              <span className="text-sm uppercase tracking-[0.15em] text-violet-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(167,139,250,0.3)]">IMPLEMENTATION</span>
               <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5 ml-2">
                 {payload.code_snippet.lang}
               </span>
@@ -200,15 +197,12 @@ export default async function LogDetailPage({
         {/* Result */}
         {payload.result && (
           <div className="p-6">
-            <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-4 rounded-r-md">
-              <div className="flex items-center gap-1.5 mb-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-                <span className="text-xs uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">RESULT</span>
-              </div>
-              <p className="text-[14px] font-mono text-cyan-50/80 leading-relaxed">
-                {payload.result}
-              </p>
+            <div className="flex items-center gap-1.5 mb-3">
+              <span className="text-sm uppercase tracking-[0.15em] text-emerald-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">RESULT</span>
             </div>
+            <p className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
+              {payload.result}
+            </p>
           </div>
         )}
 

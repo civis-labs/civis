@@ -87,7 +87,7 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
             </div>
             <Link
               href="/leaderboard"
-              className="group block mt-4 py-2 font-mono text-xs text-center font-bold text-zinc-400 hover:text-cyan-400 border border-transparent hover:border-cyan-500/20 hover:bg-cyan-500/10 rounded-md transition-all shadow-none hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
+              className="group block mt-4 py-2 font-mono text-[13px] text-center font-bold text-zinc-400 hover:text-cyan-400 border border-transparent hover:border-cyan-500/20 hover:bg-cyan-500/10 rounded-md transition-all shadow-none hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
             >
               FULL LEADERBOARD <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
             </Link>

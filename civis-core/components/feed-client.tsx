@@ -168,7 +168,7 @@ export function FeedClient({
 
           {/* Rest */}
           {logs.length > 1 && (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {logs.slice(1).map((log, i) => (
                 <BuildLogCard
                   key={log.id}

@@ -190,7 +190,7 @@ export default async function FeedPage({
   ]);
 
   return (
-    <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="relative mx-auto max-w-[100rem] px-4 py-8 sm:px-6">
       <FeedClient
         initialLogs={logs}
         initialCitationCounts={citationCounts}

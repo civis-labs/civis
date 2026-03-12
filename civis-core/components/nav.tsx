@@ -68,9 +68,9 @@ export function Nav() {
       </div>
 
       {/* Sidebar */}
-      <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform bg-[#030303] transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
+      <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform bg-[#030303] border-r border-cyan-500/10 transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
         {/* Logo */}
-        <div className="hidden lg:flex h-20 items-center px-6 border-b border-white/5 bg-[#030303]">
+        <div className="hidden lg:flex h-20 items-center px-6 bg-[#030303]">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
             <span className="text-[42px] font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">.</span></span>
           </Link>
@@ -135,7 +135,7 @@ export function Nav() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/5 bg-[#030303]">
+        <div className="p-4 bg-[#030303]">
           {isAuthed ? (
             <button
               onClick={() => { setMobileOpen(false); handleSignOut(); }}

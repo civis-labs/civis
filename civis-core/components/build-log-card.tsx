@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Link2, Check } from "lucide-react";
 import { relativeTime } from "@/lib/time";
 
 interface BuildLogPayload {
@@ -42,10 +44,12 @@ export interface BuildLogData {
 
 function truncate(str: string | undefined | null, max: number): string {
   if (!str) return "";
-  if (str.length <= max) return str;
+  if (str.length <= max * 1.05) return str;
   const cut = str.slice(0, max);
   const lastPeriod = cut.lastIndexOf(". ");
   if (lastPeriod > max * 0.5) return cut.slice(0, lastPeriod + 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  if (lastSpace > max * 0.5) return cut.slice(0, lastSpace) + "\u2026";
   return cut.trimEnd() + "\u2026";
 }
 
@@ -84,6 +88,32 @@ export function SteeringBadge({
   );
 }
 
+function CopyLinkButton({ logId }: { logId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const url = `${window.location.origin}/${logId}`;
+        navigator.clipboard.writeText(url).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      }}
+      title="Copy link"
+      className="relative flex items-center justify-center w-7 h-7 rounded-md border border-zinc-700 hover:border-zinc-500 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-all cursor-pointer"
+    >
+      {copied ? (
+        <Check size={13} strokeWidth={2.5} className="text-cyan-400" />
+      ) : (
+        <Link2 size={13} strokeWidth={2} />
+      )}
+    </button>
+  );
+}
+
 export function BuildLogCard({
   log,
   citationCount,
@@ -107,7 +137,7 @@ export function BuildLogCard({
       href={`/${log.id}`}
       style={style}
       className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item ${featured
-        ? "bg-[#161618] ring-white/20 ledger-card ledger-card-featured"
+        ? "bg-[#1a1a1e] ring-white/20 ledger-card ledger-card-featured"
         : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
         }`}
     >
@@ -139,7 +169,7 @@ export function BuildLogCard({
 
         {/* Title — the hero of the card */}
         <h3
-          className={`font-semibold text-white leading-[1.3] mb-4 group-hover:text-cyan-400 transition-colors ${featured ? "text-2xl" : "text-xl"
+          className={`font-semibold text-white leading-[1.3] mb-4 group-hover:text-cyan-400 transition-colors ${featured ? "text-3xl" : "text-xl"
             }`}
         >
           {payload?.title ?? "Untitled"}
@@ -148,24 +178,24 @@ export function BuildLogCard({
         {/* Problem */}
         <div className="mb-4">
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-sm uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">PROBLEM</span>
+            <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]`}>PROBLEM</span>
           </div>
           <p
-            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[15px]" : "text-[15px] line-clamp-3"
+            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px]" : "text-base line-clamp-3"
               }`}
           >
-            {featured ? payload?.problem : truncate(payload?.problem, 180)}
+            {featured ? truncate(payload?.problem, 500) : truncate(payload?.problem, 180)}
           </p>
         </div>
 
-        {/* Solution — visually called out box now instead of result */}
+        {/* Solution */}
         {payload?.solution && (
-          <div className="bg-cyan-950/20 border-l-2 border-cyan-500 p-3.5 mb-4 rounded-r-md">
+          <div className="mb-4">
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-sm uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
+              <span className={`${featured ? "text-base" : "text-sm"} uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]`}>SOLUTION</span>
             </div>
-            <p className={`font-mono text-cyan-50/80 leading-relaxed max-w-[90%] ${featured ? "text-[14px]" : "text-[13px] line-clamp-3"}`}>
-              {featured ? payload.solution : truncate(payload.solution, 280)}
+            <p className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px]" : "text-base line-clamp-3"}`}>
+              {featured ? truncate(payload.solution, 700) : truncate(payload.solution, 280)}
             </p>
           </div>
         )}
@@ -217,11 +247,7 @@ export function BuildLogCard({
 
           <span className="flex-1" />
 
-          {payload?.code_snippet && (
-            <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5">
-              &lt;/&gt;
-            </span>
-          )}
+          <CopyLinkButton logId={log.id} />
 
           {count > 0 && (
             <span className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md shadow-[0_0_10px_rgba(34,211,238,0.1)] ml-2">

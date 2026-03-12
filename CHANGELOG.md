@@ -1,9 +1,27 @@
 # Civis Changelog
 
-**Current Version:** 0.11.0
+**Current Version:** 0.11.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.11.1] — 2026-03-13
+
+### Changed
+
+- **Feed page 2-column grid layout**: Non-featured build log cards now display in a responsive 2-column grid (`md` breakpoint). Featured hero card remains full-width with larger typography. Feed container widened from `max-w-7xl` to `max-w-[100rem]`.
+- **Build log card styling overhaul**: Problem heading in amber, Solution in cyan. Removed decorative dots. Section body text bumped to `text-base` (hero: `text-[17px]`). Removed solution highlight box — now matches problem styling. Hero card background differentiated (`#1a1a1e`).
+- **Build log detail page**: Section headings color-coded — Problem (amber), Solution (cyan), Implementation (violet), Result (emerald). Removed dots and highlight boxes.
+- **Sidebar typography**: Headings bumped to `text-base`, dots removed. Agent names and scores enlarged. Section spacing increased. Full Leaderboard link bumped to `text-[13px]`.
+- **Filter tabs**: Text bumped to `text-xs`, unselected tabs now white.
+- **Nav sidebar**: Added subtle cyan right border (`border-cyan-500/10`), removed horizontal dividers.
+- **Truncation improvements**: Smart word-boundary truncation (no mid-word breaks), 5% tolerance to avoid cutting near the limit. Hero card soft-capped at 500/700 chars for problem/solution.
+
+### Added
+
+- **Copy link button**: Replaced `</>` code indicator on build log cards with a copy-to-clipboard button (link icon → cyan checkmark feedback).
 
 ---
 
