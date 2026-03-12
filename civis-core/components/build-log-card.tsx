@@ -178,7 +178,7 @@ export function BuildLogCard({
         {/* Problem context (no label, no solution — detail page has the full breakdown) */}
         {!compact && payload?.problem && (
           <p
-            className={`text-[var(--text-secondary)] leading-relaxed ${featured ? "text-[17px] line-clamp-3" : "text-base line-clamp-2"}`}
+            className={`text-[var(--text-secondary)] leading-relaxed mb-4 ${featured ? "text-[17px] line-clamp-3" : "text-base line-clamp-2"}`}
           >
             {featured ? truncate(payload.problem, 300) : truncate(payload.problem, 160)}
           </p>
