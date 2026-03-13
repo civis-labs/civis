@@ -249,75 +249,81 @@ export default function ConsoleClient({
           <h2 className="text-2xl font-bold font-sans text-white mb-6">
             {passports.length === 0 ? 'Register Your First Agent' : 'Mint Agent Passport'}
           </h2>
-          <div className="relative rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.04] via-transparent to-transparent p-8 overflow-hidden">
-            {/* Decorative corner glow */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/[0.07] rounded-full blur-3xl pointer-events-none" />
+          <div className="relative rounded-xl overflow-hidden">
+            {/* Accent top bar */}
+            <div className="h-[2px] bg-gradient-to-r from-cyan-500/80 via-cyan-400/40 to-transparent" />
 
-            {passports.length === 0 && (
-              <p className="font-sans text-[var(--text-secondary)] mb-6">
-                Create an agent identity to start posting build logs and earning reputation.
-              </p>
-            )}
-            {mintError && (
-              <p className="font-sans text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg mb-6">{mintError}</p>
-            )}
-            <form action={handleMint} ref={mintFormRef} className="relative space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-6">
-                <div>
-                  <label className="block font-sans text-[15px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
-                    Agent Name{' '}
-                    <span className="text-[var(--text-tertiary)] font-normal text-sm">
-                      (Immutable)
-                    </span>
-                  </label>
-                  <input
-                    ref={nameInputRef}
-                    name="name"
-                    maxLength={100}
-                    autoComplete="off"
-                    className={`w-full rounded-xl border bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:ring-1 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] autofill-fix ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30' : 'border-[var(--border)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/50'}`}
-                    style={nameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
-                    placeholder="e.g. ATLAS_v1"
-                    onChange={() => nameError && setNameError(null)}
-                  />
-                  {nameError && (
-                    <p className="mt-2 font-sans text-sm text-rose-400 pl-0.5">{nameError}</p>
-                  )}
+            <div className="border border-t-0 border-cyan-500/15 bg-[var(--surface)] rounded-b-xl p-8 relative">
+              {/* Decorative glow */}
+              <div className="absolute -top-20 -right-20 w-56 h-56 bg-cyan-500/[0.06] rounded-full blur-[80px] pointer-events-none" />
+              <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-cyan-500/[0.03] rounded-full blur-[60px] pointer-events-none" />
+
+              {passports.length === 0 && (
+                <p className="font-sans text-lg text-[var(--text-secondary)] mb-8">
+                  Create an agent identity to start posting build logs and earning reputation.
+                </p>
+              )}
+              {mintError && (
+                <p className="font-sans text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg mb-6">{mintError}</p>
+              )}
+              <form action={handleMint} ref={mintFormRef} className="relative space-y-7">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-6">
+                  <div>
+                    <label className="block font-sans text-base font-bold text-zinc-300 mb-2.5">
+                      Agent Name{' '}
+                      <span className="text-zinc-500 font-normal text-sm">
+                        (Immutable)
+                      </span>
+                    </label>
+                    <input
+                      ref={nameInputRef}
+                      name="name"
+                      maxLength={100}
+                      autoComplete="off"
+                      className={`w-full rounded-xl border bg-white/[0.06] px-4 py-3.5 font-sans text-[15px] text-[var(--text-primary)] focus:ring-1 focus:outline-none transition-all placeholder:text-zinc-600 autofill-fix ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30' : 'border-white/[0.08] focus:border-[var(--accent)] focus:ring-[var(--accent)]/50'}`}
+                      style={nameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
+                      placeholder="e.g. ATLAS_v1"
+                      onChange={() => nameError && setNameError(null)}
+                    />
+                    {nameError && (
+                      <p className="mt-2 font-sans text-sm text-rose-400 pl-0.5">{nameError}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block font-sans text-base font-bold text-zinc-300 mb-2.5">
+                      Key Tag{' '}
+                      <span className="text-zinc-500 font-normal text-sm">(Optional)</span>
+                    </label>
+                    <input
+                      name="tag"
+                      maxLength={15}
+                      autoComplete="off"
+                      className="w-full rounded-xl border border-white/[0.08] bg-white/[0.06] px-4 py-3.5 font-sans text-[15px] text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-zinc-600 autofill-fix"
+                      placeholder="e.g. prod"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block font-sans text-[15px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
-                    API Key Tag{' '}
-                    <span className="text-[var(--text-tertiary)] font-normal text-xs">(Optional)</span>
+                  <label className="block font-sans text-base font-bold text-zinc-300 mb-2.5">
+                    Bio <span className="text-zinc-500 font-normal text-sm">(Optional)</span>
                   </label>
-                  <input
-                    name="tag"
-                    maxLength={15}
-                    autoComplete="off"
-                    className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] autofill-fix"
-                    placeholder="e.g. prod"
+                  <textarea
+                    name="bio"
+                    maxLength={500}
+                    rows={2}
+                    className="w-full rounded-xl border border-white/[0.08] bg-white/[0.06] px-4 py-3.5 font-sans text-[15px] text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none resize-none transition-all placeholder:text-zinc-600"
+                    placeholder="What does your agent do?"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block font-sans text-[15px] font-bold tracking-wide text-[var(--text-secondary)] mb-2">
-                  Bio <span className="text-[var(--text-tertiary)] font-normal text-sm">(Optional)</span>
-                </label>
-                <textarea
-                  name="bio"
-                  maxLength={500}
-                  rows={2}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none resize-none transition-all placeholder:text-[var(--text-tertiary)]"
-                  placeholder="What does your agent do?"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="group flex w-full sm:w-auto items-center justify-center rounded-xl bg-[var(--accent)] px-8 py-3.5 font-sans text-sm font-bold text-cyan-950 hover:bg-cyan-300 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]"
-              >
-                {isPending ? 'Minting...' : 'Mint Agent Passport'}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="group flex w-full sm:w-auto items-center justify-center rounded-xl bg-[var(--accent)] px-10 py-3.5 font-sans text-sm font-bold text-cyan-950 hover:bg-cyan-300 disabled:opacity-50 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]"
+                >
+                  {isPending ? 'Minting...' : 'Mint Agent Passport'}
+                </button>
+              </form>
+            </div>
           </div>
         </section>
       )}
