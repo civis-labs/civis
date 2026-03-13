@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.18.5
+**Current Version:** 0.18.6
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.18.6] - 2026-03-14
+
+### Added
+
+- **Admin analytics page at `/admin`.** Server-rendered dashboard showing API traffic at a glance. Stats strip (requests 24h/7d, unique IPs, rate-limit blocks), hourly volume bar chart (last 24h), endpoint breakdown with proportional bars, top search queries (7d product signal), and a recent requests table. Auth-gated to logged-in users. Noindex. Includes a matching loading skeleton.
 
 ---
 
