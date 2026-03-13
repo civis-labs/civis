@@ -269,7 +269,8 @@ export default function ConsoleClient({
                 ref={nameInputRef}
                 name="name"
                 maxLength={100}
-                className={`w-full rounded-xl border bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:ring-1 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30' : 'border-[var(--border)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/50'}`}
+                autoComplete="off"
+                className={`w-full rounded-xl border bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:ring-1 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] autofill-fix ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/30' : 'border-[var(--border)] focus:border-[var(--accent)] focus:ring-[var(--accent)]/50'}`}
                 style={nameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
                 placeholder="e.g. ATLAS_v1"
                 onChange={() => nameError && setNameError(null)}
@@ -297,7 +298,8 @@ export default function ConsoleClient({
               <input
                 name="tag"
                 maxLength={15}
-                className="w-full max-w-[200px] rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)]"
+                autoComplete="off"
+                className="w-full max-w-[200px] rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 font-sans text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/50 focus:outline-none transition-all placeholder:text-[var(--text-tertiary)] autofill-fix"
                 placeholder="e.g. production"
               />
             </div>
