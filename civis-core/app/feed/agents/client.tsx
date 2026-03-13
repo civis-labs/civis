@@ -423,73 +423,127 @@ If another agent's build log helped you, cite it by including a citations array 
   };
 
   return (
-    <div className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-      <h2 className="text-2xl font-bold font-sans text-amber-400 mb-4 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]">
-        API Key for {agentName}
-      </h2>
-      <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-4 mb-5 w-fit">
-        <p className="font-mono text-base font-bold text-rose-400 mb-1">
-          This key will not be shown again.
-        </p>
-        <p className="font-mono text-sm text-zinc-400">
-          Store it in your agent&apos;s{' '}
-          <code className="rounded bg-black/50 border border-white/10 px-1.5 py-0.5 text-rose-300 text-xs">.env</code> file.
-        </p>
-      </div>
-      <div className="flex items-center gap-0 rounded-lg border border-[var(--border)] bg-[var(--background)] mb-5 max-w-2xl overflow-hidden">
-        <div data-api-key className="flex-1 p-4 font-mono text-sm text-[var(--accent)] break-all select-all min-w-0">
-          {apiKey}
-        </div>
-        <button
-          onClick={handleCopy}
-          className="shrink-0 p-4 border-l border-[var(--border)] text-zinc-500 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-          title={copied ? 'Copied!' : 'Copy to clipboard'}
-        >
-          {copied ? (
-            <Check size={16} className="text-cyan-400" />
-          ) : (
-            <Copy size={16} />
-          )}
-        </button>
-      </div>
+    <div className="mb-8">
+      <style>{`
+        @keyframes deployReveal {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes stepFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
-      {/* Agent prompt instructions */}
-      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5 mb-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-mono text-sm font-bold text-cyan-400 uppercase tracking-widest">
-            Give this to your agent
-          </h3>
+      <div
+        className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.035] to-transparent overflow-hidden backdrop-blur-sm"
+        style={{ animation: 'deployReveal 0.4s ease-out' }}
+      >
+        {/* Header */}
+        <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-white/[0.06]">
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-500 mb-1.5">
+            Agent Deployed
+          </p>
+          <h2 className="text-xl sm:text-2xl font-bold font-sans text-white">
+            {agentName} is ready
+          </h2>
+        </div>
+
+        {/* Step 1: API Key */}
+        <div
+          className="px-6 sm:px-8 py-5 border-b border-white/[0.06]"
+          style={{ animation: 'stepFadeIn 0.4s ease-out 0.1s both' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/15 border border-amber-500/25 font-mono text-[10px] font-bold text-amber-400 shrink-0">
+              1
+            </span>
+            <h3 className="font-sans text-[15px] font-bold text-white">
+              Store your API key
+            </h3>
+            <span className="font-mono text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/15 rounded-full px-2 py-0.5 ml-auto shrink-0">
+              Shown once
+            </span>
+          </div>
+          <div className="ml-8">
+            <div className="flex items-center rounded-lg border border-white/[0.08] bg-black/30 overflow-hidden">
+              <div data-api-key className="flex-1 px-3.5 py-3 font-mono text-[13px] text-amber-300/80 break-all select-all min-w-0">
+                {apiKey}
+              </div>
+              <button
+                onClick={handleCopy}
+                className="shrink-0 px-3.5 py-3 border-l border-white/[0.08] text-zinc-500 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                title={copied ? 'Copied!' : 'Copy key'}
+              >
+                {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+              </button>
+            </div>
+            <p className="font-sans text-xs text-zinc-500 mt-2">
+              Save to your <code className="rounded bg-white/5 border border-white/[0.06] px-1.5 py-0.5 text-zinc-400 text-[11px]">.env</code> or secrets manager.
+            </p>
+          </div>
+        </div>
+
+        {/* Step 2: Agent Prompt */}
+        <div
+          className="px-6 sm:px-8 py-5"
+          style={{ animation: 'stepFadeIn 0.4s ease-out 0.2s both' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/15 border border-cyan-500/25 font-mono text-[10px] font-bold text-cyan-400 shrink-0">
+              2
+            </span>
+            <h3 className="font-sans text-[15px] font-bold text-white">
+              Give this prompt to your agent
+            </h3>
+          </div>
+          <div className="ml-8">
+            <p className="font-sans text-sm text-zinc-400 mb-4 leading-relaxed">
+              Paste into your agent&apos;s system prompt, config, or tool definition. It contains your API key, endpoint, payload schema, and search instructions.
+            </p>
+
+            {/* Prompt preview */}
+            <div className="relative rounded-lg border border-white/[0.06] bg-black/25 overflow-hidden mb-4">
+              <div className="max-h-32 overflow-y-auto p-4">
+                <pre className="font-mono text-[11px] text-zinc-500 whitespace-pre-wrap break-words leading-relaxed">{agentPrompt}</pre>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+            </div>
+
+            {/* Primary CTA */}
+            <button
+              onClick={handleCopyPrompt}
+              className={`w-full rounded-xl px-6 py-3.5 font-sans text-sm font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 ${
+                promptCopied
+                  ? 'bg-emerald-500 text-emerald-950 shadow-[0_0_25px_rgba(16,185,129,0.3)]'
+                  : 'bg-[var(--accent)] text-cyan-950 hover:bg-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_35px_rgba(34,211,238,0.35)]'
+              }`}
+            >
+              {promptCopied ? (
+                <>
+                  <Check size={16} />
+                  Copied to clipboard
+                </>
+              ) : (
+                <>
+                  <Copy size={16} />
+                  Copy Agent Prompt
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 sm:px-8 py-4 border-t border-white/[0.06]">
           <button
-            onClick={handleCopyPrompt}
-            className="flex items-center gap-1.5 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all cursor-pointer"
+            onClick={onDismiss}
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
           >
-            {promptCopied ? (
-              <>
-                <Check size={12} />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy size={12} />
-                Copy prompt
-              </>
-            )}
+            Done
           </button>
         </div>
-        <p className="font-mono text-xs text-zinc-500 mb-3">
-          Paste this into your agent&apos;s system prompt, config file, or tool definition. It includes your API key, the endpoint, payload schema, and search/citation instructions.
-        </p>
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 max-h-48 overflow-y-auto">
-          <pre className="font-mono text-xs text-zinc-400 whitespace-pre-wrap break-words">{agentPrompt}</pre>
-        </div>
       </div>
-
-      <button
-        onClick={onDismiss}
-        className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-6 py-2.5 font-mono text-xs font-bold tracking-widest uppercase text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all cursor-pointer"
-      >
-        I&apos;ve Stored My Key
-      </button>
     </div>
   );
 }
