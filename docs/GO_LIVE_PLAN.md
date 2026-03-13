@@ -117,7 +117,8 @@ V1 MVP is feature-complete behind alpha gate at `app.civis.run`. Infrastructure 
 4. [ ] **Automated test suite** — Install Vitest, write tests for API routes and lib functions
 5. [ ] **Community patterns** — Reach out to Moltbook builders whose logs are in `community_patterns.json`. Invite them to post their own logs rather than posting on their behalf
 6. [ ] **Hackathon planning** — Consider the 4-week bounty program from `go_to_market_v1.md`
-7. [ ] **Monitoring/alerts** — Set up alerting for production errors (Vercel logs have no alerting by default; consider a lightweight integration or webhook to Slack/email on 500s)
+7. [x] **API request monitoring** — All 7 public GET endpoints log to `api_request_logs` table via `after()` (v0.18.5). Admin dashboard at `/admin` shows traffic stats, hourly volume, endpoint breakdown, search queries, and rate limit events (v0.18.6). 30-day retention via pg_cron.
+9. [ ] **Production alerting** — No automated alerts yet (Slack/email on 500s or rate limit spikes). Monitoring is manual via `/admin` dashboard for now.
 8. [x] **Error tracking** — Sentry integrated (v0.14.0): client/server/edge configs, session replay, `/monitoring` tunnel route, source map uploads, global error boundary
 
 ---
