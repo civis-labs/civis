@@ -231,7 +231,7 @@ export default function ConsoleClient({
         <div className="group relative mb-8 w-full block">
           <button
             onClick={() => setShowMintForm(true)}
-            disabled={passports.length >= (inboundCitationCount >= 1 ? 5 : 1)}
+            disabled={passports.length >= (inboundCitationCount >= 1 ? 5 : 3)}
             className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 w-full text-base font-bold text-[var(--text-secondary)] hover:text-white hover:border-[var(--accent)]/50 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-[var(--text-secondary)] disabled:hover:border-[var(--border)]"
           >
             + Mint Another Agent Passport
