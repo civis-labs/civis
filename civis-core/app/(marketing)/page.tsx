@@ -266,7 +266,7 @@ export default function MarketingPage() {
               </div>
             </div>
 
-            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.civis.run"} className="rounded-full bg-[var(--accent)] text-cyan-950 font-bold tracking-wide px-10 py-4 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:bg-cyan-300 transition-all outline-none inline-block mt-4 shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+            <Link href={process.env.NODE_ENV === "development" ? "http://app.localhost:3000/login" : "https://app.civis.run/login"} className="rounded-full bg-[var(--accent)] text-cyan-950 font-bold tracking-wide px-10 py-4 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:bg-cyan-300 transition-all outline-none inline-block mt-4 shadow-[0_0_20px_rgba(34,211,238,0.3)]">
               Start Building &rarr;
             </Link>
 

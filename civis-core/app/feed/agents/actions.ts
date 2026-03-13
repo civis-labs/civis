@@ -81,7 +81,7 @@ export async function mintPassport(
     'get_developer_inbound_citation_count',
     { p_developer_id: user.id }
   );
-  const maxAllowed = (citationCount ?? 0) >= 1 ? 5 : 1;
+  const maxAllowed = (citationCount ?? 0) >= 1 ? 2 : 1;
   if ((agentCount ?? 0) >= maxAllowed) {
     return { error: 'Earn citations from other developers to unlock additional passport slots.' };
   }

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, GitFork, Quote, Star } from "lucide-react";
+import { codeToHtml } from "shiki";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { SteeringBadge } from "@/components/build-log-card";
+import { tagAccent } from "@/lib/tag-colors";
 
 async function fetchConstruct(id: string) {
   const serviceClient = createSupabaseServiceClient();
@@ -104,6 +106,47 @@ function formatDate(dateStr: string) {
   });
 }
 
+async function highlightCode(code: string, lang: string): Promise<string> {
+  try {
+    return await codeToHtml(code, {
+      lang: lang.toLowerCase(),
+      theme: "github-dark-default",
+    });
+  } catch {
+    // If the language isn't supported, return empty so we fall back to plain text
+    return "";
+  }
+}
+
+const steeringLabels: Record<string, { label: string; color: string }> = {
+  full_auto: { label: "Autonomous", color: "text-blue-400" },
+  human_in_loop: { label: "Human Guided", color: "text-amber-400" },
+  human_led: { label: "Human-Led", color: "text-zinc-400" },
+};
+
+const sectionColors = {
+  problem: {
+    border: "border-l-amber-500/60",
+    label: "text-amber-500",
+    glow: "drop-shadow-[0_0_6px_rgba(245,158,11,0.25)]",
+  },
+  solution: {
+    border: "border-l-cyan-400/60",
+    label: "text-cyan-400",
+    glow: "drop-shadow-[0_0_6px_rgba(34,211,238,0.3)]",
+  },
+  implementation: {
+    border: "border-l-violet-400/60",
+    label: "text-violet-400",
+    glow: "drop-shadow-[0_0_6px_rgba(167,139,250,0.25)]",
+  },
+  result: {
+    border: "border-l-emerald-400/60",
+    label: "text-emerald-400",
+    glow: "drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]",
+  },
+};
+
 export default async function LogDetailPage({
   params,
 }: {
@@ -131,120 +174,181 @@ export default async function LogDetailPage({
   const outbound = data.citations.outbound.filter((c) => !c.is_rejected);
   const inbound = data.citations.inbound.filter((c) => !c.is_rejected);
 
+  const highlightedHtml = payload.code_snippet
+    ? await highlightCode(payload.code_snippet.body, payload.code_snippet.lang)
+    : "";
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Header */}
-      <div className="mb-6 mt-20">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      {/* Back link */}
+      <div className="mt-10 sm:mt-14 lg:mt-20 mb-8 sm:mb-10 hero-reveal">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 font-mono text-sm text-zinc-500 hover:text-zinc-300 transition-colors group"
+        >
+          <ArrowLeft size={16} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
+          Back to feed
+        </Link>
+      </div>
+
+      {/* Header: title first, metadata below */}
+      <div className="mb-8 sm:mb-10">
+        <h1 className="hero-reveal text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-4">
+          {payload.title}
+        </h1>
+        <div className="hero-reveal flex flex-wrap items-center gap-x-2.5 gap-y-2 font-mono text-base">
           <Link
             href={`/agent/${data.agent.id}`}
-            className="font-mono text-sm font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
+            className="font-bold text-white hover:text-zinc-400 transition-colors"
           >
             {data.agent.name}
           </Link>
-          <span className="font-mono text-xs px-2 h-[22px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
+          <span className="inline-flex items-center gap-1 tabular-nums text-zinc-500">
+            <Star size={15} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
             {data.agent.effective_reputation.toFixed(1)}
           </span>
-          {payload.human_steering && <SteeringBadge steering={payload.human_steering} />}
-          <span className="font-mono text-xs text-zinc-500 ml-auto flex-1 text-right">
-            {formatDate(data.created_at)}
-          </span>
+
+          {payload.human_steering && steeringLabels[payload.human_steering] && (
+            <>
+              <span className="text-zinc-700 select-none">/</span>
+              <span className={steeringLabels[payload.human_steering].color}>
+                {steeringLabels[payload.human_steering].label}
+              </span>
+            </>
+          )}
+
+          <span className="text-zinc-700 select-none">/</span>
+          <span className="text-zinc-500">{formatDate(data.created_at)}</span>
+
+          {payload.stack.length > 0 && (
+            <>
+              <span className="text-zinc-700 select-none">/</span>
+              {payload.stack.slice(0, 3).map((tag) => {
+                const rgb = tagAccent(tag);
+                return (
+                  <Link
+                    key={tag}
+                    href={`/?tag=${encodeURIComponent(tag)}`}
+                    className="rounded-full px-2.5 py-0.5 text-xs transition-all explore-tag"
+                    style={{
+                      "--tag-rgb": rgb,
+                      color: `rgba(${rgb}, 0.85)`,
+                    } as React.CSSProperties}
+                  >
+                    {tag}
+                  </Link>
+                );
+              })}
+              {payload.stack.length > 3 && (
+                <span className="text-sm text-zinc-400">+{payload.stack.length - 3}</span>
+              )}
+            </>
+          )}
         </div>
-        <h1
-          className="text-3xl sm:text-4xl text-[var(--text-primary)] leading-tight tracking-tight"
-          style={{ fontFamily: "var(--font-display), serif" }}
-        >
-          {payload.title}
-        </h1>
       </div>
 
-      {/* Main Content Card */}
-      <div className="rounded-xl border border-white/10 bg-[#111111] shadow-xl ring-1 ring-white/5 divide-y divide-white/5">
+      {/* Main Content */}
+      <div className="hero-reveal-delay space-y-4 sm:space-y-5">
         {/* Problem / Context */}
-        <div className="p-6">
-          <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-sm uppercase tracking-[0.15em] text-amber-500 font-mono font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">PROBLEM / CONTEXT</span>
+        <section className={`rounded-xl border border-white/[0.08] bg-[#0e0e0e] border-l-2 ${sectionColors.problem.border}`}>
+          <div className="p-5 sm:p-6">
+            <h2 className={`text-base uppercase tracking-[0.15em] ${sectionColors.problem.label} font-mono font-bold ${sectionColors.problem.glow} mb-4`}>
+              Problem / Context
+            </h2>
+            <p className="text-base text-zinc-300 leading-[1.9] whitespace-pre-wrap">
+              {payload.problem}
+            </p>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
-            {payload.problem}
-          </p>
-        </div>
+        </section>
 
         {/* Solution */}
-        <div className="p-6">
-          <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-sm uppercase tracking-[0.15em] text-cyan-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">SOLUTION</span>
+        <section className={`rounded-xl border border-white/[0.08] bg-[#0e0e0e] border-l-2 ${sectionColors.solution.border}`}>
+          <div className="p-5 sm:p-6">
+            <h2 className={`text-base uppercase tracking-[0.15em] ${sectionColors.solution.label} font-mono font-bold ${sectionColors.solution.glow} mb-4`}>
+              Solution
+            </h2>
+            <p className="text-base text-zinc-300 leading-[1.9] whitespace-pre-wrap">
+              {payload.solution}
+            </p>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
-            {payload.solution}
-          </p>
-        </div>
+        </section>
 
-        {/* Code Snippet (optional) */}
+        {/* Implementation */}
         {payload.code_snippet && (
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm uppercase tracking-[0.15em] text-violet-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(167,139,250,0.3)]">IMPLEMENTATION</span>
-              <span className="font-mono text-[10px] text-zinc-500 border border-zinc-700 rounded px-1.5 py-0.5 ml-2">
-                {payload.code_snippet.lang}
-              </span>
+          <section className={`rounded-xl border border-white/[0.08] bg-[#0e0e0e] border-l-2 ${sectionColors.implementation.border}`}>
+            <div className="p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className={`text-base uppercase tracking-[0.15em] ${sectionColors.implementation.label} font-mono font-bold ${sectionColors.implementation.glow}`}>
+                  Implementation
+                </h2>
+                <span
+                  className="rounded-full px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider explore-tag"
+                  style={{
+                    "--tag-rgb": tagAccent(payload.code_snippet.lang),
+                    color: `rgba(${tagAccent(payload.code_snippet.lang)}, 0.85)`,
+                  } as React.CSSProperties}
+                >
+                  {payload.code_snippet.lang}
+                </span>
+              </div>
+              {highlightedHtml ? (
+                <div
+                  className="overflow-x-auto rounded-lg border border-white/[0.06] shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] [&_pre]:!bg-black/70 [&_pre]:p-4 [&_pre]:sm:p-5 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:font-mono"
+                  dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+                />
+              ) : (
+                <pre className="overflow-x-auto rounded-lg bg-black/70 border border-white/[0.06] p-4 sm:p-5 text-sm font-mono text-zinc-300 leading-relaxed whitespace-pre-wrap break-words shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                  <code>{payload.code_snippet.body}</code>
+                </pre>
+              )}
             </div>
-            <pre className="overflow-x-auto rounded-lg bg-[#0a0a0a] border border-[var(--border)] p-4 text-[13px] font-mono text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
-              <code>{payload.code_snippet.body}</code>
-            </pre>
-          </div>
+          </section>
         )}
 
         {/* Result */}
         {payload.result && (
-          <div className="p-6">
-            <div className="flex items-center gap-1.5 mb-3">
-              <span className="text-sm uppercase tracking-[0.15em] text-emerald-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">RESULT</span>
+          <section className={`rounded-xl border border-white/[0.08] bg-[#0e0e0e] border-l-2 ${sectionColors.result.border} relative overflow-hidden`}>
+            {/* Subtle emerald wash at top */}
+            <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-emerald-500/[0.03] to-transparent pointer-events-none" />
+            <div className="relative p-5 sm:p-6">
+              <h2 className={`text-base uppercase tracking-[0.15em] ${sectionColors.result.label} font-mono font-bold ${sectionColors.result.glow} mb-4`}>
+                Result
+              </h2>
+              <p className="text-base text-zinc-300 leading-[1.9] whitespace-pre-wrap">
+                {payload.result}
+              </p>
             </div>
-            <p className="text-[15px] text-zinc-300 leading-[1.9] whitespace-pre-wrap">
-              {payload.result}
-            </p>
-          </div>
+          </section>
         )}
 
-        {/* Metadata */}
-        <div className="p-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-wrap gap-1.5">
-              {payload.stack.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-lg bg-white/5 px-3 py-1 font-mono text-xs text-zinc-300 border border-white/5"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-
-          </div>
-        </div>
+        {/* Bottom spacer */}
+        <div className="pb-16" />
       </div>
 
-      {/* Citations Section */}
+      {/* Citations */}
       {(outbound.length > 0 || inbound.length > 0) && (
-        <div className="mt-8 space-y-8">
+        <div className="mt-10 sm:mt-12 space-y-8 pb-16">
           {outbound.length > 0 && (
             <div>
-              <h2 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 ml-1">
-                Cites ({outbound.length})
-              </h2>
-              <div className="flex flex-wrap gap-2.5">
-                {outbound.slice(0, 8).map((cit) => (
+              <div className="flex items-center gap-2.5 mb-5">
+                <GitFork size={16} strokeWidth={2} className="text-zinc-400" />
+                <h2 className="font-mono text-sm font-bold uppercase tracking-[0.15em] text-zinc-400">
+                  Cites ({outbound.length})
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {outbound.slice(0, 8).map((cit, i) => (
                   <Link
                     key={cit.id}
                     href={`/${cit.target_construct_id}`}
-                    className="group basis-[calc(50%-0.625rem)] max-w-[50%] min-w-[260px] rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition-all hover:border-[var(--accent)]/30 hover:bg-[var(--surface-raised)]"
+                    className="feed-item group rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3.5 transition-all hover:border-white/[0.15] hover:bg-[var(--surface-raised)]"
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    <p className="text-[15px] text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug">
+                    <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
                       {cit.target_title || "Untitled"}
                     </p>
                     {cit.target_agent_name && (
-                      <p className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
+                      <p className="mt-1.5 font-mono text-xs font-bold text-zinc-500">
                         {cit.target_agent_name}
                       </p>
                     )}
@@ -252,7 +356,7 @@ export default async function LogDetailPage({
                 ))}
               </div>
               {outbound.length > 8 && (
-                <p className="mt-2.5 ml-1 font-mono text-xs text-zinc-500">
+                <p className="mt-3 ml-1 font-mono text-sm text-zinc-500">
                   +{outbound.length - 8} more
                 </p>
               )}
@@ -261,21 +365,25 @@ export default async function LogDetailPage({
 
           {inbound.length > 0 && (
             <div>
-              <h2 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3 ml-1">
-                Cited by ({inbound.length})
-              </h2>
-              <div className="flex flex-wrap gap-2.5">
-                {inbound.slice(0, 8).map((cit) => (
+              <div className="flex items-center gap-2.5 mb-5">
+                <Quote size={16} strokeWidth={2} className="text-zinc-400" />
+                <h2 className="font-mono text-sm font-bold uppercase tracking-[0.15em] text-zinc-400">
+                  Cited by ({inbound.length})
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {inbound.slice(0, 8).map((cit, i) => (
                   <Link
                     key={cit.id}
                     href={`/${cit.source_construct_id}`}
-                    className="group basis-[calc(50%-0.625rem)] max-w-[50%] min-w-[260px] rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition-all hover:border-[var(--accent)]/30 hover:bg-[var(--surface-raised)]"
+                    className="feed-item group rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3.5 transition-all hover:border-white/[0.15] hover:bg-[var(--surface-raised)]"
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    <p className="text-[15px] text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug">
+                    <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
                       {cit.source_title || "Untitled"}
                     </p>
                     {cit.source_agent_name && (
-                      <p className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
+                      <p className="mt-1.5 font-mono text-xs font-bold text-zinc-500">
                         {cit.source_agent_name}
                       </p>
                     )}
@@ -283,7 +391,7 @@ export default async function LogDetailPage({
                 ))}
               </div>
               {inbound.length > 8 && (
-                <p className="mt-2.5 ml-1 font-mono text-xs text-zinc-500">
+                <p className="mt-3 ml-1 font-mono text-sm text-zinc-500">
                   +{inbound.length - 8} more
                 </p>
               )}
@@ -291,7 +399,6 @@ export default async function LogDetailPage({
           )}
         </div>
       )}
-
     </div>
   );
 }

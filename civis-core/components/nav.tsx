@@ -12,7 +12,8 @@ import {
   Search,
   Menu,
   X,
-  LogIn,
+  Github,
+  ArrowRight,
   Cpu,
   MessageSquare,
   BookOpen,
@@ -22,7 +23,7 @@ import { FeedbackModal } from "./feedback-modal";
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const [isAuthed, setIsAuthed] = useState(false);
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -70,11 +71,26 @@ export function Nav() {
       {/* Sidebar */}
       <nav className={`fixed inset-y-0 left-0 z-40 w-[240px] transform bg-[#030303] border-r border-cyan-500/10 transition-transform duration-300 lg:translate-x-0 flex flex-col ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:h-screen lg:pt-0 pt-14`}>
         {/* Logo */}
-        <div className="hidden lg:flex h-20 items-center px-6 bg-[#030303]">
+        <div className="hidden lg:flex h-20 items-center px-6 bg-[#030303] border-b border-white/[0.06]">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
             <span className="text-[42px] font-extrabold tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Civis<span className="inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">.</span></span>
           </Link>
         </div>
+
+        {/* Sign in CTA — only when logged out */}
+        {isAuthed === false && (
+          <div className="px-5 pt-5 pb-5 lg:pt-4 border-b border-white/[0.06]">
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="group flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/[0.08] px-4 py-3 text-[13px] font-bold text-cyan-400 transition-all duration-300 hover:border-cyan-400/50 hover:bg-cyan-500/[0.12] active:scale-[0.97]"
+            >
+              <Github size={16} strokeWidth={2} />
+              <span className="tracking-wide">SIGN IN</span>
+              <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        )}
 
         {/* Navigation Links */}
         <div className="flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto">
@@ -104,13 +120,15 @@ export function Nav() {
             );
           })}
 
+          <div className="mt-auto" />
+
           {/* Docs — always visible, opens in new tab */}
           <a
             href="https://civis.run/docs"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileOpen(false)}
-            className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08] mt-auto"
+            className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-white hover:bg-white/[0.08]"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative z-10 flex items-center justify-center group-hover:text-white transition-colors w-[20px]">
@@ -132,31 +150,22 @@ export function Nav() {
               <span className="tracking-wide relative z-10">Feedback</span>
             </button>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 bg-[#030303]">
-          {isAuthed ? (
+          {/* Divider before log out */}
+          {isAuthed && <div className="mx-4 my-1 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />}
+          {/* Log out — tucked at the bottom */}
+          {isAuthed && (
             <button
               onClick={() => { setMobileOpen(false); handleSignOut(); }}
-              className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-xs font-mono tracking-widest font-bold text-zinc-300 hover:text-white hover:border-rose-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]"
+              className="group relative flex items-center gap-3 rounded-xl mx-2 px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden text-zinc-400 hover:text-rose-400 hover:bg-rose-500/[0.06]"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <LogOut size={15} className="group-hover:text-rose-400 transition-colors relative z-10" />
-              <span className="relative z-10">LOG OUT</span>
+              <div className="relative z-10 flex items-center justify-center w-[20px]">
+                <LogOut size={20} strokeWidth={1.8} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="tracking-wide relative z-10">Log out</span>
             </button>
-          ) : (
-            <Link
-              href="/login"
-              onClick={() => setMobileOpen(false)}
-              className="group relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-xs font-mono tracking-widest font-bold text-zinc-300 hover:text-white hover:border-cyan-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <LogIn size={15} className="group-hover:text-cyan-400 transition-colors relative z-10" />
-              <span className="relative z-10">LOGIN</span>
-            </Link>
           )}
         </div>
+
       </nav>
 
       {/* Mobile overlay */}

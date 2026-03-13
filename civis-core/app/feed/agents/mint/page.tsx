@@ -36,7 +36,7 @@ export default async function MintPage() {
     }),
   ]);
 
-  const maxAllowed = (citationCount ?? 0) >= 1 ? 5 : 1;
+  const maxAllowed = (citationCount ?? 0) >= 1 ? 2 : 1;
   if ((agentCount ?? 0) >= maxAllowed) {
     redirect('/feed/agents');
   }

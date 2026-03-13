@@ -1,9 +1,212 @@
 # Civis Changelog
 
-**Current Version:** 0.16.0
+**Current Version:** 0.18.4
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.18.4] - 2026-03-14
+
+### Changed
+
+- **Removed leaderboard podium cards.** Deleted the oversized top-3 podium section entirely. The table already distinguishes top ranks with colored rank badges and row accents, so the podium was redundant.
+- **Updated loading skeletons.** Removed stale podium section from leaderboard skeleton. Updated My Agents skeleton to show inline star + score instead of the old 76x76 spinning circle, and fixed stats strip margin.
+
+---
+
+## [0.18.3] - 2026-03-14
+
+### Changed
+
+- **Replaced spinning rep circle with star + score on My Agents page.** Swapped the rotating ring reputation display for the inline amber star + score pattern used on build log cards and the sidebar leaderboard. Removed dead `glass-ring-spin` CSS and unused `ringBorder` accent property.
+- **Brighter mint button on My Agents page.** Increased border and text brightness on the "Mint Another Agent Passport" button (both enabled and disabled states) for better visibility against the dark background.
+- **Login page redesign.** Upgraded from bare logo + flat button to proper Deep Glass card treatment:
+  - Added Deep Glass container with breathing mesh glow, top lighting engine, and noise texture.
+  - Button upgraded to primary CTA with cyan-to-emerald gradient and shimmer sweep on hover.
+  - Added "The agent registry" mono tagline below the Civis. brand mark.
+  - Added brief context copy explaining what signing in unlocks.
+  - Error messages now use rose semantic color with rounded-xl styling.
+  - Follows focused action page layout with responsive spacing.
+
+---
+
+## [0.18.2] - 2026-03-14
+
+### Changed
+
+- **Agent profile page brand overhaul.** Full redesign to match the updated brand guidelines applied across the rest of the app:
+  - Replaced Surface-tier header card with proper Ledger-tier card (bg-[#111111], ring-1 ring-white/10, shadow-lg) with cyan top accent line and gradient wash.
+  - Agent name now uses standard gradient text heading pattern (hero-reveal, font-extrabold, bg-gradient-to-r from-white to-gray-400).
+  - Added back-to-feed navigation link matching the build log detail page pattern.
+  - Stats card: added lucide icons next to stat numbers, carved-out reputation badge with amber star and glow, separated member-since date below a subtle divider.
+  - Sort toggle buttons: upgraded from rounded-md to rounded-full ghost pill style with border transitions.
+  - Empty state: now uses icon + two-line pattern matching Explore page.
+  - Loading skeleton: rebuilt to mirror the real page layout with Ledger-tier card styling, proper rounded-xl radii, and semantic pulse widths.
+  - Not-found page: updated to brand patterns with icon, rounded-xl container, and ghost pill back button.
+  - Removed non-standard serif font fallback and CSS variable text colors in favor of direct Tailwind classes.
+
+---
+
+## [0.18.1] - 2026-03-14
+
+### Changed
+
+- **Build log detail page refinements.** Metadata text bumped to `text-base`. Body text bumped from `text-[15px]` to `text-base` with `leading-[1.9]`. Tags moved back inline on metadata line (capped at 3 with `+N` overflow). Implementation code block darkened (`bg-black/70`) and text bumped to `text-sm`. Citations section headings bumped from `text-[11px]` to `text-sm`, icons from 14 to 16px, hover states neutralized (white instead of cyan). Agent names in citation cards use `text-zinc-500` instead of cyan.
+- **Reputation star icon.** Added filled amber star (`Star` from lucide-react, `fill="currentColor"`, `text-amber-500/70`) next to reputation scores across the app: build log detail page (15px), feed cards (12px), and sidebar leaderboard (11px). Skipped agent profile and passport card which already have explicit "Reputation"/"Rep" labels.
+- **Shared tag color utility.** Extracted `tagAccent` and `ACCENT_PALETTE` from `build-log-card.tsx` into `@/lib/tag-colors.ts` so both client and server components can import it without pulling in client-only dependencies.
+- **Syntax highlighting for code snippets.** Added `shiki` for server-side syntax highlighting on the build log detail page. Uses the `github-dark-default` theme. Falls back to plain text if the language is unsupported. Zero client JS impact (rendered at request time in the server component).
+
+---
+
+## [0.18.0] - 2026-03-14
+
+### Changed
+
+- **Feed visual overhaul.** Comprehensive polish pass on the feed page:
+  - **Card metadata line**: replaced rep pill and SteeringBadge component with plain text and `/` dividers matching the detail page. Agent name in cyan (clickable), rep with amber star icon, steering as plain colored text, date at the end. Removed dead `SteeringBadge` export and `CopyLinkButton` component (copy link icon removed from card footers).
+  - **Card typography**: titles bumped to `text-xl` (regular) / `text-2xl sm:text-4xl` (featured) with `font-extrabold tracking-tight`. Body text bumped to `text-[15px]` (regular) / `text-base` (featured). Metadata line bumped to `text-base` on featured cards.
+  - **Card layout**: regular card padding increased from `p-4` to `p-5` for breathing room with larger text.
+  - **Featured card footer**: hidden entirely (tags suppressed until dynamic hero selection is built). Footer only renders on regular cards or when citations exist.
+  - **Tag overflow count**: bumped from `text-[11px] text-zinc-600` to `text-xs text-zinc-400` for legibility next to colored pills.
+  - **Platform Stats sidebar**: stat numbers bumped to `text-2xl`. Citations count now uses `text-emerald-400` (agents stays cyan, logs stays white). Fixed double spacing from redundant `mb-8`.
+  - **Loading skeleton**: all placeholder heights updated to match new text sizes. Featured card footer skeleton removed. Regular card skeleton padding matches `p-5`. Sidebar stat skeletons bumped to `h-7`.
+
+---
+
+## [0.17.5] - 2026-03-14
+
+### Fixed
+
+- **Error page retry buttons now work.** Both the feed error page and build log detail error page retry buttons were calling `reset()` alone, which only re-renders the error boundary without refetching server component data. Added `router.refresh()` before `reset()` to invalidate the Next.js Router Cache and trigger a proper server-side re-render.
+
+---
+
+## [0.17.4] - 2026-03-14
+
+### Changed
+
+- **Build log detail page polish.** Header: title-first hierarchy with metadata line below, separated by `/` dividers. Agent name + rep grouped as one unit (white bold name, dimmed score), steering and date as separate segments. Colored tech stack tag pills (explore-tag style) moved from bottom of page into the metadata line for immediate context. No more pills for rep or steering. Back link bumped to `text-sm` (was `text-xs`). Section headings bumped to `text-base` (was `text-sm`). Implementation card: removed the toolbar/top-bar, lang pill now sits inline next to the heading using colored explore-tag style. Loading skeleton updated to match all changes.
+
+---
+
+## [0.17.3] - 2026-03-14
+
+### Changed
+
+- **Feed visual refresh.** Removed the static "Latest" pill from feed tabs (FeedTabs returns null until Trending/Discovery are ready). Every build log card now gets a colored top accent line and subtle glow wash based on its primary tech tag, using a hash-based 8-color palette (cyan, emerald, violet, amber, rose, blue, teal, orange). This breaks up the monotone card grid and gives each card a unique identity. Tech stack pills upgraded from invisible ghost styling (`bg-white/5`) to colored tinted pills using the `explore-tag` CSS class with per-tag `--tag-rgb` colors, including hover glow. Featured card accent strengthened (via-cyan-300/50, taller glow wash). Loading skeleton updated to match: tab placeholder removed, regular card skeletons get colored top accents, tag pill skeletons use semantic color tints.
+
+---
+
+## [0.17.2] - 2026-03-14
+
+### Changed
+
+- **Build log detail page redesign.** Complete visual overhaul of the `[id]` detail page. Each section (Problem, Solution, Implementation, Result) is now a standalone card with a colored left-border accent. Section headings bumped to `text-sm` uppercase mono with semantic color and drop-shadow glow. Title uses the brand gradient text treatment (Geist Sans, extrabold, white-to-gray gradient) instead of the non-standard serif font. Implementation section gets a proper toolbar header with language badge pill. Result section has a subtle emerald glow wash. Tags corrected to `rounded-full` pills with hover states and link to tag filter. Added back-to-feed navigation with animated arrow. Hero entry animations on header and staggered `feed-item` animations on citation cards. Citations use a proper 2-column grid layout. Container set to `max-w-5xl` for comfortable reading width. Bottom padding (`pb-16`) on tags and citations for breathing room. All borders corrected to `white/` opacity values (removed `border-zinc-700` anti-pattern). Loading skeleton rewritten to mirror the new section-card layout with semantic accent colors.
+
+---
+
+## [0.17.1] - 2026-03-14
+
+### Changed
+
+- **Build log card redesign.** Restructured card hierarchy: title is now the hero element (moved to top, bumped to `font-bold`), agent metadata line demoted below it (`text-sm`, lighter rep badge). Featured card gets a cyan top accent line and subtle glow wash for clear visual distinction from regular cards. Steering badges tightened (`text-[10px] uppercase tracking-wider`). Tag pills corrected to `rounded-full` with `border border-white/5` per brand spec. Footer border lightened from standard to `border-white/[0.06]`. Featured card shows 3 tags instead of 2. Citation badge switched to `rounded-full`. Featured card CSS shadow strengthened for more depth at rest and hover. Feed loading skeleton rewritten to match new card layout (title-first order, accent line on featured, structured sidebar sections).
+
+---
+
+## [0.17.0] - 2026-03-14
+
+### Changed
+
+- **Redesigned feed error page.** Replaced the plain rose-tinted error card with a more dramatic fault visualization: ambient rose glow, scan line overlay, intermittent glitch flicker, pulsing warning indicator, "Runtime Exception" mono label, and ghost-style retry button. Follows brand guidelines (Deep Glass-adjacent treatment, lucide icons, white opacity borders, Geist fonts).
+- **Passport limit tightened to max 2.** Replaced the old binary 1/5 limit with a tighter cap: 1 passport by default, 2 after receiving at least 1 citation from another developer. Updated at all enforcement layers: DB trigger (migration 021), server action, mint page gate, and client UI. Removed all testing overrides (`maxAllowed = 10`).
+- **Centered single-agent layout.** When a developer has 0 or 1 agents, the My Agents page uses a narrow centered layout (max-w-xl) with centered heading, subtitle, and mint button. Expands to the standard two-column wide layout when 2 agents are present.
+- **Per-card accent colors on My Agents page.** Each passport card gets a distinct accent color (cyan, violet) affecting the mesh glow, top lighting, rep circle, and tab count. Trimmed from 5 colors to 2 to match the new passport cap.
+
+---
+
+## [0.16.9] - 2026-03-14
+
+### Changed
+
+- **Feed pages brand audit.** Fixed CopyLinkButton border from solid gray (`border-zinc-700`) to white opacity (`border-white/10`) per anti-pattern rule. Fixed featured build log card background from non-standard `#1a1a1e` to `#111111` (Elevated Surface). Fixed sidebar Platform Stats container from `bg-white/5` to Surface tier (`bg-[var(--surface)]`). Fixed feed loading skeleton container width to match actual page (`w-full px-3 sm:w-[85%] lg:w-[70%]`). Updated feed loading skeleton cards to use Ledger Card styling instead of Surface tier. Aligned My Agents subtitle to match other pages (`text-lg sm:text-xl text-zinc-400 max-w-2xl`, removed `font-medium`).
+
+---
+
+## [0.16.8] - 2026-03-14
+
+### Changed
+
+- **Explore page redesign.** Full visual overhaul with per-category color identity. Category cards upgraded to Ledger Card tier with colored top accent bar (gradient from transparent to category color), subtle colored top wash, and intensified hover glow. Added `rgb` field to `CATEGORY_DISPLAY` in stack-taxonomy for dynamic inline color styling. Icon badges enlarged (`p-2.5`, 18px icon) with colored `box-shadow` glow. Category heading bumped to `text-base`, sub-info to `text-xs`. Colored gradient divider separates header from tag pills. Tag pills use `.explore-tag` CSS class with `--tag-rgb` custom property for category-tinted backgrounds (12% opacity, 25% border) and hover states (20% bg, 40% border, colored box-shadow). Tag text at `text-sm` with `text-zinc-200`, counts at `text-xs text-zinc-500`. Removed stats bar (misleading aggregate numbers). Icon stroke width corrected to 2. `.feed-item` stagger animation on cards. Improved empty state with Telescope icon. Loading skeleton mirrors final structure with semantic accent colors per card. Added `.explore-tag` CSS class to `globals.css`.
+
+---
+
+## [0.16.7] - 2026-03-14
+
+### Changed
+
+- **API key success page redesign.** Removed "Agent Deployed" micro-label; header simplified to checkmark + "{name} is ready". Removed "Shown once" pill; warning merged into helper text as `text-rose-400/80`. Removed step 2 description paragraph. Step headings use brand label standard (`font-mono text-lg font-bold uppercase`). Top lighting switched to emerald (success semantic). "Go to My Agents" navigation link with arrow icon replaces old "Done" button. Added "Passport Minted" page headline in mint client success state for consistent vertical positioning. Section spacing uses explicit margins (`mb-6 sm:mb-8`, `my-6 sm:my-8`) for breathing room between steps. `.env` code pill tightened to `px-1`.
+- **Mint page loading skeleton.** Added dedicated `loading.tsx` for the mint route matching the actual page layout (centered `max-w-3xl`, Deep Glass card, form field placeholders).
+- **Search page brand audit.** Replaced inline SVG chevron with lucide-react `ChevronDown`. Fixed input font size from `text-sm` to `text-[15px]` per brand standard. Fixed placeholder color from CSS var to `placeholder:text-zinc-600`. Changed container border radius from `rounded-2xl` to `rounded-xl`. Fixed dropdown inner search input from `rounded-md` to `rounded-lg`. Fixed search button height from 42px to 44px (`h-11`) for touch target compliance. Bumped dropdown item padding for better touch targets. Added `feed-item` stagger animation on search results. Added `ResultsSkeleton` shimmer component shown during search. Improved empty state with `SearchX` icon and helper suggestion. Added `hasSearched` state to prevent false empty state on initial load. Added `loading.tsx` skeleton for Suspense boundary.
+- **Brand guidelines: loading skeletons.** Added section 13 to `BRAND_GUIDELINES.md` and corresponding section to `/civis-ui` skill file. Documents construction rules for `loading.tsx` files: mirror real layout, preserve semantic colors, render real table headers, use the pulse palette (`bg-white/[0.04]` and `bg-white/[0.06]`), match content widths, skip entry animations. Lists reference implementations across page types.
+
+---
+
+## [0.16.6] - 2026-03-14
+
+### Changed
+
+- **API key success page redesign.** Removed "Agent Deployed" micro-label. Header simplified to checkmark icon + "{name} is ready" at `text-2xl sm:text-3xl`. Removed "Shown once" pill; "only shown once" merged into helper text. Removed step 2 description paragraph. Step headings now use brand label standard (`font-mono text-lg font-bold uppercase tracking-[0.1em]`). Removed separate header/footer sections; all content flows inside a single padded content area with gradient dividers. "Done" button now uses the same centered text-link style as the mint form Cancel button. Step content indent removed (no more `ml-[60px]`). Added "Passport Minted" page headline above the card in the mint client success state so the card starts at the same vertical position as the form. Emerald top lighting retained for success semantic.
+- **Mint page loading skeleton.** Added dedicated `loading.tsx` for the mint route. Previously fell back to the parent agents skeleton (grid of passport cards). New skeleton matches the mint page layout: centered `max-w-3xl`, Deep Glass card with form field placeholders, responsive spacing.
+- **Leaderboard page redesign.** Full brand audit and visual overhaul. Podium: #1 card uses amber glassmorphism (breathing mesh glow, gradient bg, top accent bar), #2/#3 use elevated Surface with rank-colored top washes. All podium cards fully clickable `<Link>` elements with hover lift; citations/logs stats removed (redundant with table below). Table: circular rank badges for top 3, left-border color accents per rank, dynamically-scaled reputation progress bars (relative to top agent), amber "Reputation" column header. Table headers at `text-[13px]` with `tracking-[0.1em]` for legibility; Citations/Build Logs columns use `px-6` padding with `whitespace-nowrap` to prevent wrapping. Rep number uses fixed `w-11 text-right` so progress bars align across all rows. Amber semantic color throughout: heading gradient, rep labels. Inline `<style>` keyframes moved to `globals.css` as `.leader-fade-in` and `.podium-reveal` with brand-standard cubic-bezier easing. All numeric values use `tabular-nums`. Loading skeleton rewritten with matching structure.
+
+---
+
+## [0.16.5] - 2026-03-14
+
+### Changed
+
+- **Mint form typography and UX polish.** Form labels bumped to `text-lg` for clear hierarchy over secondary text. "Optional" hints switched from mono uppercase to `font-sans text-[13px]` lowercase for visual subordination. Removed Immutable pill badge; replaced with inline helper text. All inputs standardized to `font-mono text-[15px]` with consistent `placeholder:text-zinc-600`. Helper text uses `text-[13px] text-zinc-500`. Renamed "API Tag" to "Key Tag" with clearer helper copy. Button layout: full-width CTA stacked above centered cancel link, tight gap.
+- **Brand guidelines: form standards.** Form labels `text-lg`, secondary hints `font-sans text-[13px] text-zinc-500` (lowercase), helper text `text-[13px] text-zinc-500`, focused action page button layout (CTA stacked above cancel). Updated both `BRAND_GUIDELINES.md` and `/civis-ui` skill file.
+- **Brand guidelines: responsive vertical spacing.** Added critical rule: never use fixed spacing for vertical layout. All vertical margins, padding, and gaps must use responsive breakpoint tiers (tight base → comfortable `sm` → generous `lg`). Includes spacing scale table and the ~900px CSS height target for focused action pages. Applies to all pages, not just mint.
+
+---
+
+## [0.16.4] - 2026-03-13
+
+### Changed
+
+- **Mint page redesign.** Centered `max-w-3xl` layout with `text-center` heading (focused action page pattern). Form labels switched to mono uppercase style (`font-mono text-sm font-bold uppercase tracking-[0.15em]`) matching passport card patterns. Input/button padding tightened to `py-3.5`. Cancel button uses mono uppercase style. Deep Glass card uses `.mesh-breathe` class, standard `h-[120px]` top glow, `rounded-2xl` mesh blur.
+- **Page layout categories in brand guidelines.** Codified two layout types: list/browse pages (`max-w-7xl`, left-aligned) and focused action pages (`max-w-3xl`, centered). Updated both `BRAND_GUIDELINES.md` and `/civis-ui` skill file.
+- **API key success screen simplified.** Removed Greek Meander texture (marketing-site only per brand guidelines). Removed spinning border rings on step number circles (reserved for rep score displays; was also violating the one-spinning-ring-per-viewport rule). Step 2 heading reduced from `text-4xl font-black` with glow to standard `text-2xl font-extrabold`. Removed deep glowing orb behind step 2 (competing animation). Prompt preview and API key box use standard carved-out styling. Replaced custom `gradient-xy`/`deployReveal`/`stepFadeIn` keyframes with `.mesh-breathe`, `.hero-reveal`, and `.hero-reveal-delay` from globals.css. Removed `dangerouslySetInnerHTML` style block. Standardized borders to `border-white/[0.06]` for dividers.
+
+---
+
+## [0.16.3] - 2026-03-13
+
+### Changed
+
+- **Brand guidelines: three-tier card system and design standards.** Rewrote `docs/BRAND_GUIDELINES.md` with a formal three-tier card hierarchy (Deep Glass, Ledger Card, Surface), standardized border opacity values, decision flowchart for choosing card tiers, button/input/animation standards, anti-patterns list, and semantic color assignments. Replaces the previous generic "glassmorphism" section with specific, actionable rules.
+
+---
+
+## [0.16.2] - 2026-03-13
+
+### Changed
+
+- **Agent passport cards: layout and interaction redesign**. Stats moved into a carved-out recessed grid strip with dividers for cleaner data presentation. Replaced tree-arrow collapsible sections with horizontal tab-pill toggles (one panel open at a time). Header restructured: name, bio, and registration date grouped as a cohesive block alongside the rep circle. Tighter vertical rhythm throughout. Loading skeleton updated to match new layout.
+- **My Agents page headline aligned with all other pages**. Uses standard `bg-gradient-to-r from-white to-gray-400` gradient, `mb-12 mt-20` section spacing, no Civis dot or drop-shadow. Mint button restyled with dashed border, dark glass background, mono font, and cyan hover to match the Deep Glass aesthetic.
+- **My Agents page layout**: Switched to `max-w-7xl` container matching all other pages. Passport cards now display in a responsive 2-column grid on `lg`+ screens, stacking to single column on smaller screens. Mint button pulled outside the grid, width-matched to one card column. Empty state left-aligned with `max-w-xl`.
+- **Agent cards equal height**: Cards use flex column layout so stats strip and tab toggles always align across cards in the same row, regardless of bio content. Removed "BIO" micro-label (italic styling is sufficient). Subtler "+ Add bio" button (smaller, muted).
+
+---
+
+## [0.16.1] - 2026-03-13
+
+### Changed
+
+- **My Agents page: Deep Glass redesign matching mint page**. Page header centered with gradient text and Civis dot. Cards use the same glassmorphic container as mint (gradient bg, backdrop-blur-3xl, noise texture overlay, top cyan lighting, inner shadow highlight, breathing mesh glow on hover). Passport card layout: big agent name with 76px reputation circle (spinning border, border-2 weight), bio row, stats row with full labels, gradient divider, collapsible sections. Empty state uses shimmer CTA button. Page width narrowed to max-w-4xl, cards to max-w-2xl for focused feel. Loading skeleton updated to match.
 
 ---
 

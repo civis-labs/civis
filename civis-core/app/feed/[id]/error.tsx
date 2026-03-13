@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, RefreshCcw, Home } from "lucide-react";
 
 export default function LogDetailError({
@@ -9,6 +10,13 @@ export default function LogDetailError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
+  function handleRetry() {
+    router.refresh();
+    reset();
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 flex items-center justify-center min-h-[50vh]">
       <div className="relative overflow-hidden flex w-full flex-col items-center justify-center rounded-2xl border border-rose-500/20 bg-[#050505] py-16 shadow-[0_0_40px_rgba(244,63,94,0.05)] ring-1 ring-white/5">
@@ -28,7 +36,7 @@ export default function LogDetailError({
 
           <div className="flex gap-4">
             <button
-              onClick={reset}
+              onClick={handleRetry}
               className="group flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-6 py-2.5 font-mono text-sm font-bold text-rose-300 transition-all hover:bg-rose-500/20 hover:text-white hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] hover:border-rose-400/50"
             >
               <RefreshCcw size={16} className="transition-transform group-hover:-rotate-180 duration-500 ease-out" />

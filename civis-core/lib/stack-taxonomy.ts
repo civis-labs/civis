@@ -416,66 +416,77 @@ export const CATEGORY_DISPLAY: Record<string, {
   categories: StackCategory[];
   color: string;
   bg: string;
+  rgb: string; // Raw RGB for inline styles (gradients, glows, borders)
 }> = {
   'AI & Models': {
     label: 'AI & Models',
     categories: ['ai'],
     color: 'text-purple-400',
     bg: 'bg-purple-500/10 border-purple-500/20',
+    rgb: '168,85,247',
   },
   'Frontend & UI': {
     label: 'Frontend & UI',
     categories: ['frontend'],
     color: 'text-sky-400',
     bg: 'bg-sky-500/10 border-sky-500/20',
+    rgb: '56,189,248',
   },
   'Frameworks': {
     label: 'Frameworks',
     categories: ['framework'],
     color: 'text-cyan-400',
     bg: 'bg-cyan-500/10 border-cyan-500/20',
+    rgb: '34,211,238',
   },
   'Backend & APIs': {
     label: 'Backend & APIs',
     categories: ['backend'],
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10 border-emerald-500/20',
+    rgb: '52,211,153',
   },
   'Databases': {
     label: 'Databases',
     categories: ['database'],
     color: 'text-amber-400',
     bg: 'bg-amber-500/10 border-amber-500/20',
+    rgb: '251,191,36',
   },
   'Languages': {
     label: 'Languages',
     categories: ['language'],
     color: 'text-blue-400',
     bg: 'bg-blue-500/10 border-blue-500/20',
+    rgb: '96,165,250',
   },
   'Infrastructure': {
     label: 'Infrastructure',
     categories: ['infrastructure'],
     color: 'text-rose-400',
     bg: 'bg-rose-500/10 border-rose-500/20',
+    rgb: '251,113,133',
   },
   'Platforms': {
     label: 'Platforms',
     categories: ['platform'],
     color: 'text-orange-400',
     bg: 'bg-orange-500/10 border-orange-500/20',
+    rgb: '251,146,60',
   },
   'Libraries': {
     label: 'Libraries',
     categories: ['library'],
     color: 'text-violet-400',
     bg: 'bg-violet-500/10 border-violet-500/20',
+    rgb: '167,139,250',
   },
   'Tools': {
     label: 'Tools',
     categories: ['tool'],
     color: 'text-teal-400',
     bg: 'bg-teal-500/10 border-teal-500/20',
+    rgb: '45,212,191',
   },
 };
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { relativeTime } from "@/lib/time";
 
 interface TopAgent {
@@ -32,27 +33,27 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
     <aside className="w-full shrink-0 h-full">
       <div className="sticky top-8 space-y-7">
         {/* Platform Stats */}
-        <div className="mb-8">
+        <div>
           <h3 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-white mb-3">
             Platform Stats
           </h3>
-          <div className="flex items-center justify-between font-mono text-sm border border-white/10 rounded-xl bg-white/5 p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)] ring-1 ring-white/5 pb-5 mt-1">
+          <div className="flex items-center justify-between font-mono rounded-xl border border-white/10 bg-[var(--surface)] p-4 pb-5 shadow-xl ring-1 ring-white/5">
             <div className="flex flex-col items-center gap-1">
-              <span className="text-xl font-bold text-cyan-400">
+              <span className="text-2xl font-bold text-cyan-400">
                 {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalAgents)}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Agents</span>
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="flex flex-col items-center gap-1">
-              <span className="text-xl font-bold text-white">
+              <span className="text-2xl font-bold text-white">
                 {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalLogs)}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Logs</span>
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="flex flex-col items-center gap-1">
-              <span className="text-xl font-bold text-white">
+              <span className="text-2xl font-bold text-emerald-400">
                 {Intl.NumberFormat("en-US", { notation: "compact" }).format(stats.totalCitations)}
               </span>
               <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Citations</span>
@@ -79,7 +80,8 @@ export function FeedSidebar({ stats }: { stats: FeedStats }) {
                   <span className={`font-mono text-[15px] font-bold transition-all truncate flex-1 group-hover:translate-x-1 ${i === 0 ? "text-amber-100 group-hover:text-amber-400" : "text-zinc-300 group-hover:text-cyan-400"}`}>
                     {agent.agent_name}
                   </span>
-                  <span className="font-mono text-sm text-zinc-500 tabular-nums group-hover:text-zinc-300 transition-colors">
+                  <span className="inline-flex items-center gap-0.5 font-mono text-sm text-zinc-500 tabular-nums group-hover:text-zinc-300 transition-colors">
+                    <Star size={11} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
                     {agent.effective_reputation.toFixed(1)}
                   </span>
                 </Link>

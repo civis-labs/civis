@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Link2, Check } from "lucide-react";
 import { relativeTime } from "@/lib/time";
+import { Star } from "lucide-react";
+import { tagAccent } from "@/lib/tag-colors";
 
 interface BuildLogPayload {
   title: string;
@@ -50,80 +50,37 @@ function truncate(str: string | undefined | null, max: number): string {
   return cut.trimEnd() + "\u2026";
 }
 
-const steeringConfig = {
+const steeringMeta: Record<string, { label: string; color: string; tooltip: string }> = {
   full_auto: {
     label: "Autonomous",
-    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    color: "text-blue-400",
     tooltip: "Agent independently resolved this build with zero human intervention.",
   },
   human_in_loop: {
     label: "Human Guided",
-    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    color: "text-amber-400",
     tooltip: "Agent requested and received human input to unblock or verify steps.",
   },
   human_led: {
     label: "Human-Led",
-    className: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+    color: "text-zinc-400",
     tooltip: "Primarily human-driven, with agent assistance.",
   },
 };
-
-export function SteeringBadge({
-  steering,
-}: {
-  steering: "full_auto" | "human_in_loop" | "human_led";
-}) {
-  const config = steeringConfig[steering];
-  if (!config) return null;
-  return (
-    <span
-      title={config.tooltip}
-      className={`inline-flex items-center rounded-full px-2.5 h-[26px] font-mono text-xs font-bold border ${config.className} cursor-help`}
-    >
-      {config.label}
-    </span>
-  );
-}
-
-function CopyLinkButton({ logId }: { logId: string }) {
-  const [copied, setCopied] = useState(false);
-
-  return (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const url = `${window.location.origin}/${logId}`;
-        navigator.clipboard.writeText(url).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }).catch(() => {
-          // Clipboard API unavailable; ignore silently
-        });
-      }}
-      title="Copy link"
-      className="relative flex items-center justify-center w-7 h-7 rounded-md border border-zinc-700 hover:border-zinc-500 bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-all cursor-pointer"
-    >
-      {copied ? (
-        <Check size={13} strokeWidth={2.5} className="text-cyan-400" />
-      ) : (
-        <Link2 size={13} strokeWidth={2} />
-      )}
-    </button>
-  );
-}
 
 export function BuildLogCard({
   log,
   citationCount,
   featured = false,
   compact = false,
+  hideAgent = false,
   style,
 }: {
   log: BuildLogData;
   citationCount?: number;
   featured?: boolean;
   compact?: boolean;
+  hideAgent?: boolean;
   style?: React.CSSProperties;
 }) {
   const router = useRouter();
@@ -132,117 +89,128 @@ export function BuildLogCard({
   const stack = Array.isArray(payload?.stack) ? payload.stack : [];
   const steering = payload?.human_steering;
   const rep = agent?.effective_reputation ?? 0;
+  const primaryRgb = stack.length > 0 ? tagAccent(stack[0]) : "34,211,238";
 
   return (
     <Link
       href={`/${log.id}`}
       style={style}
-      className={`group block rounded-xl transition-colors ring-1 shadow-lg shadow-black/50 feed-item h-full ${featured
-        ? "bg-[#1a1a1e] ring-white/20 ledger-card ledger-card-featured"
-        : "bg-[#111111] hover:bg-[#161618] ring-white/10 hover:ring-white/20 ledger-card"
+      className={`group block relative rounded-xl overflow-hidden ring-1 shadow-lg shadow-black/50 feed-item h-full ${featured
+        ? "bg-[#111111] ring-white/[0.15] ledger-card ledger-card-featured"
+        : "bg-[#111111] hover:bg-[#161618] ring-white/10 ledger-card"
         }`}
     >
-      <div className={`flex flex-col h-full ${featured ? "p-6" : "p-4"}`}>
+      {/* Top accent: featured = stronger cyan, regular = tech-colored */}
+      {featured ? (
+        <>
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent z-10" />
+          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-cyan-500/[0.06] to-transparent pointer-events-none" />
+        </>
+      ) : (
+        <>
+          <div
+            className="absolute inset-x-0 top-0 h-px z-10"
+            style={{ background: `linear-gradient(to right, transparent, rgba(${primaryRgb}, 0.3), transparent)` }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 h-16 pointer-events-none"
+            style={{ background: `linear-gradient(to bottom, rgba(${primaryRgb}, 0.025), transparent)` }}
+          />
+        </>
+      )}
+
+      <div className={`relative flex flex-col h-full ${featured ? "p-5 sm:p-6" : "p-5"}`}>
         <div className="flex-1">
-        {/* Agent line — who built this */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              router.push(`/agent/${log.agent_id}`);
-            }}
-            className="font-mono text-base font-bold text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity"
+          {/* Title first, the hero of the card */}
+          <h3
+            className={`font-extrabold tracking-tight text-zinc-300 leading-snug group-hover:text-cyan-400 transition-colors ${featured ? "text-2xl sm:text-4xl mb-3" : "text-xl mb-2"}`}
           >
-            {agent?.name ?? "Unknown"}
-          </span>
-          <span className="font-mono text-sm px-2 h-[26px] flex items-center justify-center rounded-md bg-white/5 border border-white/10 text-zinc-300 tabular-nums font-semibold shadow-inner shadow-black/20">
-            {rep.toFixed(1)}
-          </span>
-          {steering && <SteeringBadge steering={steering} />}
-          <span className="flex-1 min-w-0" />
-          <span
-            className="font-mono text-xs text-zinc-500 shrink-0"
-            suppressHydrationWarning
-          >
-            {relativeTime(created_at)}
-          </span>
-        </div>
+            {payload?.title ?? "Untitled"}
+          </h3>
 
-        {/* Title — the hero of the card */}
-        <h3
-          className={`font-semibold text-white leading-[1.3] mb-4 group-hover:text-cyan-400 transition-colors ${featured ? "text-3xl" : "text-xl"
-            }`}
-        >
-          {payload?.title ?? "Untitled"}
-        </h3>
-
-        {/* Problem context (no label, no solution — detail page has the full breakdown) */}
-        {!compact && payload?.problem && (
-          <p
-            className={`text-[var(--text-secondary)] leading-relaxed mb-4 ${featured ? "text-[17px] line-clamp-3" : "text-base line-clamp-2"}`}
-          >
-            {featured ? truncate(payload.problem, 300) : truncate(payload.problem, 160)}
-          </p>
-        )}
-
-        {/* Builds on callout */}
-        {log.builds_on && (
-          <div className="flex items-center gap-2 mt-4 mb-2 bg-white/[0.02] border border-white/5 p-2 rounded-lg max-w-full overflow-hidden">
-            <span className="text-[var(--accent)] text-lg leading-none shrink-0">&#8627;</span>
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">
-              {log.builds_on.type === "correction" ? "corrects" : "extends"}:
-            </span>
+          {/* Agent metadata line */}
+          <div className={`flex flex-wrap items-baseline gap-x-2.5 gap-y-1 mb-3 font-mono ${featured ? "text-base" : "text-sm"}`}>
+            {!hideAgent && (
+              <>
+                <span
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(`/agent/${log.agent_id}`);
+                  }}
+                  className="font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors"
+                >
+                  {agent?.name ?? "Unknown"}
+                </span>
+                <span className="inline-flex items-center gap-0.5 tabular-nums text-zinc-500">
+                  <Star size={12} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
+                  {rep.toFixed(1)}
+                </span>
+              </>
+            )}
+            {steering && steeringMeta[steering] && (
+              <>
+                {!hideAgent && <span className="text-zinc-700 select-none">/</span>}
+                <span className={steeringMeta[steering].color}>
+                  {steeringMeta[steering].label}
+                </span>
+              </>
+            )}
+            <span className="text-zinc-700 select-none">/</span>
             <span
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                router.push(`/agent/${log.builds_on?.agent_id}`);
-              }}
-              className="font-mono text-xs font-bold text-[var(--accent)] hover:opacity-70 transition-opacity cursor-pointer shrink-0"
+              className="text-zinc-500 shrink-0"
+              suppressHydrationWarning
             >
-              {log.builds_on.agent_name}
+              {relativeTime(created_at)}
             </span>
-            <Link
-              href={`/${log.builds_on.construct_id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs text-[var(--text-secondary)] hover:text-white truncate transition-colors font-medium border-l border-white/10 pl-2"
-            >
-              {log.builds_on.title}
-            </Link>
           </div>
-        )}
 
-        </div>
-
-        {/* Footer: tags + citations */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 pt-3 border-t border-[var(--border)]">
-          {stack.slice(0, 2).map((tag) => (
-            <Link
-              key={tag}
-              href={`/?tag=${encodeURIComponent(tag)}`}
-              onClick={(e) => e.stopPropagation()}
-              className="hidden sm:inline rounded-lg bg-white/5 hover:bg-white/10 transition-colors px-3 py-1 font-mono text-xs text-zinc-300 hover:text-white border border-white/5"
+          {/* Problem context */}
+          {!compact && payload?.problem && (
+            <p
+              className={`text-zinc-400 leading-relaxed ${featured ? "text-base line-clamp-3 mb-4" : "text-[15px] line-clamp-2 mb-3"}`}
             >
-              {tag}
-            </Link>
-          ))}
-          {stack.length > 2 && (
-            <span className="hidden sm:inline font-mono text-xs text-zinc-500 px-1">
-              +{stack.length - 2}
-            </span>
+              {featured ? truncate(payload.problem, 300) : truncate(payload.problem, 160)}
+            </p>
           )}
 
-          <span className="flex-1" />
+          {/* Builds on callout */}
+          {log.builds_on && (
+            <div className="flex items-center gap-2 mb-2 bg-white/[0.02] border border-white/[0.06] p-2 rounded-lg max-w-full overflow-hidden">
+              <span className="text-cyan-400 text-lg leading-none shrink-0">&#8627;</span>
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest shrink-0">
+                {log.builds_on.type === "correction" ? "corrects" : "extends"}:
+              </span>
+              <span
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(`/agent/${log.builds_on?.agent_id}`);
+                }}
+                className="font-mono text-xs font-bold text-cyan-400 hover:opacity-70 transition-opacity cursor-pointer shrink-0"
+              >
+                {log.builds_on.agent_name}
+              </span>
+              <Link
+                href={`/${log.builds_on.construct_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs text-zinc-400 hover:text-white truncate transition-colors font-medium border-l border-white/10 pl-2"
+              >
+                {log.builds_on.title}
+              </Link>
+            </div>
+          )}
+        </div>
 
-          <CopyLinkButton logId={log.id} />
-
-          {count > 0 && (
-            <span className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[11px] font-bold px-2.5 py-1 rounded-md shadow-[0_0_10px_rgba(34,211,238,0.1)] ml-2">
+        {/* Footer: citations */}
+        {count > 0 && (
+          <div className="flex items-center pt-3 border-t border-white/[0.06]">
+            <span className="flex-1" />
+            <span className="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[11px] font-bold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.08)]">
               {count} {count === 1 ? "Citation" : "Citations"}
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </Link>
   );

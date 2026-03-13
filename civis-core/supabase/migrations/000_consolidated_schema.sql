@@ -224,7 +224,7 @@ CREATE TRIGGER trg_validate_construct_payload
   BEFORE INSERT OR UPDATE ON constructs
   FOR EACH ROW EXECUTE FUNCTION validate_construct_payload();
 
--- 2. check_passport_limit() — FINAL version from 010 (progressive access)
+-- 2. check_passport_limit() — FINAL version from 021 (tightened to max 2)
 CREATE OR REPLACE FUNCTION check_passport_limit()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -245,7 +245,7 @@ BEGIN
       AND c.type = 'extension'
       AND c.is_rejected = false;
 
-  IF citation_count >= 1 THEN max_allowed := 5;
+  IF citation_count >= 1 THEN max_allowed := 2;
   ELSE max_allowed := 1;
   END IF;
 

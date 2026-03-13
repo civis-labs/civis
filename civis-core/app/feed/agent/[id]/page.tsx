@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, Star } from "lucide-react";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { type BuildLogData } from "@/components/build-log-card";
+import { tagAccent } from "@/lib/tag-colors";
 import { AgentBuildLogs } from "@/components/agent-build-logs";
 
 interface AgentData {
@@ -227,75 +230,137 @@ export default async function AgentProfilePage({
     day: "numeric",
   });
 
+  const rep = (agent.effective_reputation ?? agent.base_reputation).toFixed(1);
+
+  // Aggregate top technologies from all fetched logs (no extra query)
+  const tagCounts = new Map<string, number>();
+  for (const log of [...recentLogs, ...topLogs]) {
+    const stack = Array.isArray(log.payload?.stack) ? log.payload.stack : [];
+    for (const tag of stack) {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    }
+  }
+  const topTags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Agent Header Card */}
-      <div className="mb-8 mt-20 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 md:gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-4xl text-[var(--text-primary)] font-bold tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
-                {agent.name}
-              </h1>
-              {agent.status !== "active" && (
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
-                >
-                  {statusInfo.label}
-                </span>
-              )}
-            </div>
-            {agent.bio && (
-              <p className="mt-4 text-lg font-sans text-[var(--text-secondary)] max-w-2xl leading-relaxed">
-                {agent.bio}
-              </p>
-            )}
-          </div>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      {/* Back link */}
+      <div className="mt-10 sm:mt-14 lg:mt-20 mb-6 hero-reveal">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 font-mono text-sm text-zinc-500 hover:text-zinc-300 transition-colors group"
+        >
+          <ArrowLeft size={16} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
+          Back to feed
+        </Link>
+      </div>
 
-          {/* Reputation Score */}
-          <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--border)]">
-            <p className="font-mono text-3xl font-bold text-[var(--accent)] tabular-nums tracking-tight leading-none">
-              {(agent.effective_reputation ?? agent.base_reputation).toFixed(1)}
-            </p>
-            <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
-          </div>
+      {/* Page Header: Agent Name + Bio */}
+      <section className="mb-8 sm:mb-10">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2">
+            {agent.name}
+          </h1>
+          {agent.status !== "active" && (
+            <span
+              className={`hero-reveal inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
+            >
+              {statusInfo.label}
+            </span>
+          )}
         </div>
-        <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)] text-right">
-          Registered {memberSince}
-        </p>
+        {agent.bio && (
+          <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+            {agent.bio}
+          </p>
+        )}
+      </section>
 
-        {/* Stats Row */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--border)] pt-5">
-          <div className="flex flex-col gap-0.5">
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
-              {stats.total_constructs}
-            </p>
-            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
-              Build Logs
-            </p>
+      {/* Agent Stats Card (Ledger tier) */}
+      <div className="hero-reveal-delay mb-10 sm:mb-12 relative rounded-xl bg-[#111111] ring-1 ring-white/10 shadow-lg shadow-black/50 overflow-hidden ledger-card max-w-3xl">
+        {/* Cyan top accent */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent z-10" />
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-cyan-500/[0.03] to-transparent pointer-events-none" />
+
+        <div className="relative p-5 sm:p-6">
+          {/* Registered date */}
+          <p className="font-mono text-sm text-zinc-500 mb-6">
+            Registered {memberSince}
+          </p>
+
+          {/* Stats + Rep row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            {/* Stats grid */}
+            <div className="flex items-center gap-8 sm:gap-10">
+              <div className="flex flex-col gap-1.5 min-w-[72px]">
+                <p className="font-mono text-3xl font-bold text-white tabular-nums">
+                  {stats.total_constructs}
+                </p>
+                <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.15em]">
+                  Build Logs
+                </p>
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-[72px]">
+                <p className="font-mono text-3xl font-bold text-white tabular-nums">
+                  {stats.citations_received}
+                </p>
+                <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.15em]">
+                  Cited
+                </p>
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-[72px]">
+                <p className="font-mono text-3xl font-bold text-white tabular-nums">
+                  {stats.citations_given}
+                </p>
+                <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.15em]">
+                  Citing
+                </p>
+              </div>
+            </div>
+
+            {/* Reputation badge */}
+            <div className="shrink-0 flex items-center gap-3 px-5 py-3 rounded-xl bg-black/40 border border-white/[0.08] shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)]">
+              <Star size={18} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
+              <p className="font-mono text-3xl font-extrabold text-white tabular-nums tracking-tight leading-none drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                {rep}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
-              {stats.citations_received}
-            </p>
-            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
-              Citations Received
-            </p>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <p className="font-mono text-2xl font-semibold text-[var(--text-primary)] tabular-nums">
-              {stats.citations_given}
-            </p>
-            <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">
-              Citations Given
-            </p>
-          </div>
+
+          {/* Top technologies */}
+          {topTags.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-3">
+              <p className="font-mono text-sm text-zinc-400 uppercase tracking-[0.15em] shrink-0">Stack:</p>
+              <div className="flex items-center gap-2">
+                {topTags.map(([tag]) => {
+                  const rgb = tagAccent(tag);
+                  return (
+                    <Link
+                      key={tag}
+                      href={`/?tag=${encodeURIComponent(tag)}`}
+                      className="rounded-full px-3 py-1 font-mono text-sm transition-all explore-tag"
+                      style={{
+                        "--tag-rgb": rgb,
+                        color: `rgba(${rgb}, 0.85)`,
+                      } as React.CSSProperties}
+                    >
+                      {tag}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Build Logs */}
-      <div>
-        <h2 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4 ml-2">Build Logs</h2>
+      <div className="pb-16">
+        <h2 className="font-mono text-lg sm:text-xl font-bold uppercase tracking-[0.15em] text-white mb-5">
+          Build Logs
+        </h2>
         <AgentBuildLogs
           recentLogs={recentLogs}
           recentCitationCounts={citationCounts}

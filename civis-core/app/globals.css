@@ -126,15 +126,16 @@ body::after {
 /* Featured card extra */
 .ledger-card-featured {
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 1px 3px rgba(0, 0, 0, 0.03);
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(34, 211, 238, 0.03);
 }
 
 .ledger-card-featured:hover {
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.06),
-    0 12px 32px rgba(0, 0, 0, 0.7),
-    0 4px 12px rgba(34, 211, 238, 0.06);
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.7),
+    0 4px 16px rgba(34, 211, 238, 0.08);
 }
 
 /* Result callout block */
@@ -256,4 +257,78 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-tertiary);
+}
+
+/* Deep Glass: breathing mesh background */
+@keyframes meshBreathe {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.mesh-breathe {
+  background-size: 200% 200%;
+  animation: meshBreathe 10s ease-in-out infinite;
+}
+
+/* Deep Glass: button shimmer sweep */
+@keyframes shimmerSweep {
+  from {
+    transform: translateX(-150%) skew(-12deg);
+  }
+
+  to {
+    transform: translateX(150%) skew(-12deg);
+  }
+}
+
+/* Leaderboard: fade-in-up for table rows */
+@keyframes leaderFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leader-fade-in {
+  animation: leaderFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Leaderboard: podium card reveal */
+@keyframes podiumReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.podium-reveal {
+  animation: podiumReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Explore page: category-tinted tag pills */
+.explore-tag {
+  background: rgba(var(--tag-rgb), 0.12);
+  border: 1px solid rgba(var(--tag-rgb), 0.25);
+}
+
+.explore-tag:hover {
+  background: rgba(var(--tag-rgb), 0.2);
+  border-color: rgba(var(--tag-rgb), 0.4);
+  box-shadow: 0 0 12px rgba(var(--tag-rgb), 0.1);
 }

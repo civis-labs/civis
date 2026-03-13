@@ -128,9 +128,7 @@ export function FeedClient({
           </div>
         )}
 
-        <div className="flex justify-end mb-4 mt-24">
-          <FeedTabs activeSort={sort} onSortChange={handleSortChange} />
-        </div>
+        <div className="mt-20" />
       </div>
 
       {/* Row 2: Cards (Left Col) */}
