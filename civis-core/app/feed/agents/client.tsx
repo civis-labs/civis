@@ -566,7 +566,7 @@ function PassportCard({
           <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.2em]">Reputation</p>
         </div>
       </div>
-      <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)] text-right">
+      <p className="mt-1 font-mono text-xs text-[var(--text-tertiary)] text-left sm:text-right">
         Registered{' '}
         {new Date(passport.created_at).toLocaleDateString('en-US', {
           year: 'numeric',
