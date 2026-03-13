@@ -1,6 +1,8 @@
+import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkReadRateLimit } from '@/lib/rate-limit';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { logApiRequest } from '@/lib/api-logger';
 
 // =============================================
 // GET /v1/constructs/:id (Task 4.2 — Single Log)
@@ -10,10 +12,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
+  // Rate limit
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
+    after(() => logApiRequest('/v1/constructs/:id', {}, ip, ua, 429, true));
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
@@ -70,6 +75,8 @@ export async function GET(
       titleMap.set(c.id, c.payload?.title || null);
     }
   }
+
+  after(() => logApiRequest('/v1/constructs/:id', { id }, ip, ua, 200, false));
 
   return NextResponse.json({
     ...construct,

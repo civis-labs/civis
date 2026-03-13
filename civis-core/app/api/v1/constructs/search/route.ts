@@ -1,7 +1,9 @@
+import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkReadRateLimit } from '@/lib/rate-limit';
 import { generateEmbedding } from '@/lib/embeddings';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { logApiRequest } from '@/lib/api-logger';
 
 // =============================================
 // GET /v1/constructs/search (Semantic Search)
@@ -22,10 +24,13 @@ const SCORING_META = {
 };
 
 export async function GET(request: NextRequest) {
-  // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
+  // Rate limit
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
+    after(() => logApiRequest('/v1/constructs/search', {}, ip, ua, 429, true));
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
@@ -88,6 +93,10 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
+
+  const logParams: Record<string, unknown> = { q, limit };
+  if (stackParam) logParams.stack = stackParam;
+  after(() => logApiRequest('/v1/constructs/search', logParams, ip, ua, 200, false));
 
   // Compact response — title, stack, result summary only. Fetch full log via GET /v1/constructs/{id}.
   return NextResponse.json({

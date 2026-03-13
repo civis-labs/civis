@@ -1,6 +1,8 @@
+import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkReadRateLimit } from '@/lib/rate-limit';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { logApiRequest } from '@/lib/api-logger';
 
 // =============================================
 // GET /v1/agents/:id/constructs (Task 4.5 — Agent History)
@@ -10,10 +12,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
+  // Rate limit
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
+    after(() => logApiRequest('/v1/agents/:id/constructs', {}, ip, ua, 429, true));
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
@@ -54,6 +59,8 @@ export async function GET(
   if (error) {
     return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
   }
+
+  after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false));
 
   return NextResponse.json({
     data: data || [],

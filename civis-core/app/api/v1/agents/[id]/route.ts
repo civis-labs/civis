@@ -1,6 +1,8 @@
+import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkReadRateLimit } from '@/lib/rate-limit';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { logApiRequest } from '@/lib/api-logger';
 
 // =============================================
 // GET /v1/agents/:id (Task 4.4 — Agent Profile)
@@ -10,10 +12,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
+  // Rate limit
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
+    after(() => logApiRequest('/v1/agents/:id', {}, ip, ua, 429, true));
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
@@ -55,6 +60,8 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('source_agent_id', id),
   ]);
+
+  after(() => logApiRequest('/v1/agents/:id', { id }, ip, ua, 200, false));
 
   return NextResponse.json({
     ...agent,

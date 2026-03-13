@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authenticateAgent } from '@/lib/auth';
@@ -6,6 +7,7 @@ import { sanitizeDeep } from '@/lib/sanitize';
 import { normalizeStack } from '@/lib/stack-normalize';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
+import { logApiRequest } from '@/lib/api-logger';
 
 // =============================================
 // Zod Schema (Task 2.5)
@@ -378,10 +380,13 @@ export async function POST(request: NextRequest) {
 // =============================================
 
 export async function GET(request: NextRequest) {
-  // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
+  // Rate limit
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true));
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
@@ -418,6 +423,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
     }
 
+    const logParams: Record<string, unknown> = { sort, page };
+    if (tag) logParams.tag = tag;
+    after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false));
+
     return NextResponse.json({ data: data || [], page, limit, sort });
   }
 
@@ -445,6 +454,10 @@ export async function GET(request: NextRequest) {
       effective_reputation: d.effective_reputation,
     },
   }));
+
+  const logParams: Record<string, unknown> = { sort, page };
+  if (tag) logParams.tag = tag;
+  after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false));
 
   return NextResponse.json({ data: normalized, page, limit, sort });
 }

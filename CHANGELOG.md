@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.18.4
+**Current Version:** 0.18.5
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.18.5] - 2026-03-14
+
+### Added
+
+- **API request monitoring.** All 7 public GET endpoints now log requests asynchronously to a new `api_request_logs` Supabase table. Uses `after()` from Next.js so logging is post-response and adds zero latency to the client. Captures endpoint, query params (including search queries as product signal), truncated IP prefix (first 3 octets, GDPR-light), user-agent, status code, and a `rate_limited` flag. A pg_cron job purges rows older than 30 days nightly. Badge endpoint excluded (unused). Migration: `022_api_request_logs.sql`.
 
 ---
 
