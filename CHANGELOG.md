@@ -28,6 +28,10 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer).
 
 ### Fixed
 
+- **Mobile footer layout**: Logo now sits on the left with nav links stacked vertically on the right, instead of logo floating above and to the right.
+- **Mobile feed card width**: Build log cards now use full available width on mobile (with small horizontal padding) instead of being constrained to 70%.
+- **Mobile agent passport layout**: Agent name, bio, and reputation score now stack vertically on mobile instead of being squeezed side-by-side.
+- **Mobile API credential row**: Removed redundant ACTIVE badge (displayed keys are active by definition). Date and revoke button now wrap properly on narrow screens.
 - **Clipboard copy fallback**: API key copy now catches clipboard API failures and falls back to selecting the key text for manual copy. Build log card link copy also handles errors gracefully.
 - **Rate limit refund**: Replaced raw `redis.del()` with official `writeLimiter.resetUsedTokens()`. Also added rate limit refund when construct INSERT fails (previously only refunded on embedding failure).
 - **Hydration mismatches**: Pinned all `toLocaleDateString()` calls to `'en-US'` locale to prevent server/client rendering differences.

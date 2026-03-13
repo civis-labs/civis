@@ -191,7 +191,7 @@ export default async function FeedPage({
   ]);
 
   return (
-    <div className="relative w-[70%] max-w-[90rem] mx-auto py-8">
+    <div className="relative w-full px-3 sm:w-[85%] lg:w-[70%] max-w-[90rem] mx-auto py-8">
       <FeedClient
         initialLogs={logs}
         initialCitationCounts={citationCounts}

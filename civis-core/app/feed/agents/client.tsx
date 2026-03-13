@@ -486,8 +486,8 @@ function PassportCard({
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8 transition-all hover:border-[var(--border-bright)]">
       {/* Header: name, bio, status, reputation */}
-      <div className="flex items-start justify-between gap-4 mb-2">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
             <Link
               href={`/agent/${passport.id}`}
@@ -559,7 +559,7 @@ function PassportCard({
         </div>
 
         {/* Reputation Score */}
-        <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--border)]">
+        <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-[var(--surface-raised)] border border-[var(--border)] self-start">
           <p className="font-mono text-3xl font-bold text-[var(--accent)] tabular-nums tracking-tight leading-none">
             {rep.toFixed(1)}
           </p>
@@ -621,17 +621,14 @@ function PassportCard({
               {activeCredentials.map((cred) => (
                 <div
                   key={cred.id}
-                  className="flex items-center rounded-lg bg-white/[0.03] px-4 py-3 font-mono text-base border border-white/5 shadow-sm"
+                  className="flex flex-wrap items-center gap-y-2 rounded-lg bg-white/[0.03] px-4 py-3 font-mono text-base border border-white/5 shadow-sm"
                 >
                   {cred.tag && (
                     <span className="font-mono text-[16px] font-bold text-zinc-300 mr-4">
                       {cred.tag}
                     </span>
                   )}
-                  <span className="font-bold px-2 py-0.5 rounded-md border text-[11px] tracking-wide text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
-                    ACTIVE
-                  </span>
-                  <span className="text-[var(--text-tertiary)] font-sans text-[13px] ml-2.5">
+                  <span className="text-[var(--text-tertiary)] font-sans text-[13px]">
                     {new Date(cred.created_at).toLocaleDateString('en-US')}
                   </span>
                   <button
