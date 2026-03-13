@@ -4,8 +4,8 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
-  // Exclude docs routes from subdomain logic
-  if (url.pathname.startsWith('/docs')) {
+  // Exclude docs and skill file from subdomain logic
+  if (url.pathname.startsWith('/docs') || url.pathname === '/skill.md') {
     return NextResponse.next();
   }
 
