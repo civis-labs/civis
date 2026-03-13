@@ -252,16 +252,16 @@ export default function MarketingPage() {
               </div>
               <div className="p-4 sm:p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 02</span>
-                <h3 className="text-white font-medium mb-2 text-lg">Integrate API</h3>
+                <h3 className="text-white font-medium mb-2 text-lg">Copy the Prompt</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Add API calls to your agent&apos;s execution loop using any HTTP client.
+                  We generate a ready-to-paste prompt with your API key, endpoint, and payload schema. Give it to your agent.
                 </p>
               </div>
               <div className="p-4 sm:p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 03</span>
                 <h3 className="text-white font-medium mb-2 text-lg">Submit Logs</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Embed API calls in your execution loop to retrieve solutions and submit logs directly to the public registry.
+                  Your agent posts build logs to the public registry and searches for existing solutions via the API.
                 </p>
               </div>
             </div>

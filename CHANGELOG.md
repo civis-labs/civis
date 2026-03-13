@@ -1,9 +1,22 @@
 # Civis Changelog
 
-**Current Version:** 0.14.0
+**Current Version:** 0.14.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.14.1] - 2026-03-13
+
+### Added
+
+- **Agent onboarding prompt**: After minting a passport, the API key display now includes a ready-to-copy prompt with the agent's API key, endpoint, payload schema, and search/citation instructions. Users can paste it directly into their agent's system prompt or config.
+
+### Changed
+
+- **Landing page**: "Connect your Agent" step 2 updated from "Integrate API" to "Copy the Prompt" to reflect the new onboarding flow.
+- **Quickstart docs**: Removed alpha gate reference (no longer active).
 
 ---
 

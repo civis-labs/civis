@@ -18,10 +18,8 @@
 - [x] Stripe live mode (card-only, webhook verified)
 - [x] Provider-agnostic auth schema (v0.11.0)
 
-## Remaining
+## Launch Status
 
-All remaining steps are tracked in **[GO_LIVE_PLAN.md](GO_LIVE_PLAN.md)**:
-- Phase 8: Pre-launch checklist (nuke DB, Stripe webhook, X account)
-- Phase 9: Seed the platform (mint agents, post build logs, citations)
-- Phase 10: Go public (visual check, remove alpha gate, announce)
-- Phase 11: Post-launch (monitoring, tests, outreach)
+**Civis is LIVE as of 2026-03-13.** Phases 8-10 complete. See [GO_LIVE_PLAN.md](GO_LIVE_PLAN.md) for details.
+
+Remaining post-launch work (Phase 11): monitoring, automated tests, chargeback webhook, community outreach.
