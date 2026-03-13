@@ -89,36 +89,36 @@ export default async function AdminPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-16">
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
             API Monitor
           </h1>
-          <p className="text-zinc-500 text-sm mt-1 font-mono">Public v1 telemetry</p>
+          <p className="text-zinc-500 text-base mt-1.5 font-mono">Public v1 telemetry</p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-zinc-500 mt-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+        <div className="flex items-center gap-2 text-sm font-mono text-zinc-500 mt-2">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           Live
         </div>
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map(({ label, value, Icon, color }) => (
-          <div key={label} className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-4">
-            <div className={`mb-2 ${color}`}><Icon size={15} strokeWidth={2} /></div>
-            <div className="text-2xl font-mono font-bold text-white">{value.toLocaleString()}</div>
-            <div className="text-[11px] font-mono text-zinc-500 mt-0.5 uppercase tracking-wider">{label}</div>
+          <div key={label} className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5">
+            <div className={`mb-2 ${color}`}><Icon size={18} strokeWidth={2} /></div>
+            <div className="text-3xl font-mono font-bold text-white">{value.toLocaleString()}</div>
+            <div className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-wider">{label}</div>
           </div>
         ))}
       </div>
 
       {/* Hourly chart */}
-      <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-4 mb-5">
-        <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-4">
+      <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5 mb-6">
+        <div className="text-xs font-mono text-zinc-500 uppercase tracking-[0.2em] mb-4">
           Requests per hour, last 24h
         </div>
-        <div className="flex items-end gap-[3px]" style={{ height: '72px' }}>
+        <div className="flex items-end gap-[3px]" style={{ height: '96px' }}>
           {hourlyData.map(({ hour, count }) => {
             const heightPct = Math.max((count / maxHourly) * 100, count > 0 ? 6 : 2);
             const label = hour.getUTCHours().toString().padStart(2, '0') + ':00';
@@ -126,7 +126,7 @@ export default async function AdminPage() {
               <div
                 key={hour.toISOString()}
                 className="flex-1 flex flex-col justify-end group relative"
-                style={{ height: '72px' }}
+                style={{ height: '96px' }}
                 title={`${label} UTC: ${count} req`}
               >
                 <div
@@ -138,35 +138,35 @@ export default async function AdminPage() {
           })}
         </div>
         <div className="flex justify-between mt-2 px-0.5">
-          <span className="text-[10px] font-mono text-zinc-600">
+          <span className="text-xs font-mono text-zinc-600">
             {hourlyData[0]?.hour.getUTCHours().toString().padStart(2, '0')}:00 UTC
           </span>
-          <span className="text-[10px] font-mono text-zinc-600">now</span>
+          <span className="text-xs font-mono text-zinc-600">now</span>
         </div>
       </div>
 
       {/* Endpoint breakdown + search queries */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
         {/* Endpoint breakdown */}
-        <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-4">
-          <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-4">
+        <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5">
+          <div className="text-xs font-mono text-zinc-500 uppercase tracking-[0.2em] mb-5">
             Endpoint breakdown (24h)
           </div>
           {endpoints.length === 0 ? (
-            <p className="text-zinc-600 text-sm font-mono">No data yet.</p>
+            <p className="text-zinc-600 text-base font-mono">No data yet.</p>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {endpoints.map(([endpoint, count]) => (
                 <div key={endpoint} className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-zinc-300 truncate flex-1 min-w-0">{endpoint}</span>
-                  <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden shrink-0">
+                  <span className="text-sm font-mono text-zinc-300 truncate flex-1 min-w-0">{endpoint}</span>
+                  <div className="w-20 h-1.5 rounded-full bg-white/[0.06] overflow-hidden shrink-0">
                     <div
                       className="h-full bg-cyan-500/50 rounded-full"
                       style={{ width: `${todayCount > 0 ? (count / todayCount) * 100 : 0}%` }}
                     />
                   </div>
-                  <span className="text-xs font-mono text-zinc-400 w-6 text-right shrink-0">{count}</span>
+                  <span className="text-sm font-mono text-zinc-400 w-8 text-right shrink-0">{count}</span>
                 </div>
               ))}
             </div>
@@ -174,18 +174,18 @@ export default async function AdminPage() {
         </div>
 
         {/* Top search queries */}
-        <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-4">
-          <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-4">
+        <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5">
+          <div className="text-xs font-mono text-zinc-500 uppercase tracking-[0.2em] mb-5">
             Top search queries (7d)
           </div>
           {topQueries.length === 0 ? (
-            <p className="text-zinc-600 text-sm font-mono">No searches yet.</p>
+            <p className="text-zinc-600 text-base font-mono">No searches yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {topQueries.map(([query, count]) => (
                 <div key={query} className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-mono text-zinc-300 truncate">{query}</span>
-                  <span className="text-[11px] font-mono text-zinc-500 shrink-0 tabular-nums">{count}x</span>
+                  <span className="text-base font-mono text-zinc-300 truncate">{query}</span>
+                  <span className="text-sm font-mono text-zinc-500 shrink-0 tabular-nums">{count}x</span>
                 </div>
               ))}
             </div>
@@ -195,17 +195,17 @@ export default async function AdminPage() {
 
       {/* Recent requests */}
       <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/[0.06]">
-          <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-[0.2em]">
+        <div className="px-5 py-3.5 border-b border-white/[0.06]">
+          <span className="text-xs font-mono text-zinc-500 uppercase tracking-[0.2em]">
             Recent requests
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs font-mono">
+          <table className="w-full text-sm font-mono">
             <thead>
               <tr className="border-b border-white/[0.06]">
                 {['Time (UTC)', 'Endpoint', 'Params', 'IP', 'User-Agent', 'Status'].map(h => (
-                  <th key={h} className="px-4 py-2.5 text-left text-[11px] font-normal text-zinc-600 uppercase tracking-wider whitespace-nowrap">
+                  <th key={h} className="px-5 py-3 text-left text-xs font-normal text-zinc-600 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -214,22 +214,22 @@ export default async function AdminPage() {
             <tbody>
               {recentRows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-600">No data yet.</td>
+                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-600 text-base">No data yet.</td>
                 </tr>
               )}
               {recentRows.map(row => {
                 const d = new Date(row.ts);
                 const time = `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`;
-                const ua = row.user_agent ? row.user_agent.slice(0, 28) + (row.user_agent.length > 28 ? '…' : '') : '-';
+                const ua = row.user_agent ? row.user_agent.slice(0, 32) + (row.user_agent.length > 32 ? '…' : '') : '-';
                 const params = row.params ? JSON.stringify(row.params) : '-';
                 return (
                   <tr key={row.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-2 text-zinc-500 whitespace-nowrap">{time}</td>
-                    <td className="px-4 py-2 text-zinc-300 whitespace-nowrap">{row.endpoint}</td>
-                    <td className="px-4 py-2 text-zinc-500 max-w-[180px] truncate">{params}</td>
-                    <td className="px-4 py-2 text-zinc-500 whitespace-nowrap">{row.ip_prefix || '-'}</td>
-                    <td className="px-4 py-2 text-zinc-600 whitespace-nowrap">{ua}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">
+                    <td className="px-5 py-2.5 text-zinc-500 whitespace-nowrap">{time}</td>
+                    <td className="px-5 py-2.5 text-zinc-300 whitespace-nowrap">{row.endpoint}</td>
+                    <td className="px-5 py-2.5 text-zinc-500 max-w-[240px] truncate">{params}</td>
+                    <td className="px-5 py-2.5 text-zinc-500 whitespace-nowrap">{row.ip_prefix || '-'}</td>
+                    <td className="px-5 py-2.5 text-zinc-600 whitespace-nowrap">{ua}</td>
+                    <td className="px-5 py-2.5 whitespace-nowrap">
                       <span className={row.rate_limited ? 'text-rose-400' : 'text-emerald-400'}>
                         {row.rate_limited ? '429' : row.status_code}
                       </span>
