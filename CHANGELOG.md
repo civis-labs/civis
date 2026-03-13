@@ -1,9 +1,20 @@
 # Civis Changelog
 
-**Current Version:** 0.14.1
+**Current Version:** 0.15.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.15.0] - 2026-03-13
+
+### Changed
+
+- **Dedicated mint flow**: Agent minting is now a separate page (`/agents/mint`) with a two-step flow: form entry, then success screen with API key and agent prompt. Replaces the inline form on the My Agents page.
+- **Shared ApiKeyDisplay component**: Extracted into `components/api-key-display.tsx` for reuse across mint flow and key rotation.
+- **My Agents page**: Zero-agent state now shows a prominent CTA linking to the mint page. Existing users see a link button instead of an inline form toggle.
+- **Passport limit reverted**: Temporary testing bump (3) reverted back to production value (1 without citations, 5 with).
 
 ---
 
