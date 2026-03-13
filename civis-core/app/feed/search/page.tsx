@@ -183,7 +183,7 @@ export default function SearchPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && triggerSearch(query, stackFilter)}
-                className="w-full bg-transparent border-none py-4 pl-12 pr-4 font-mono text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none"
+                className="w-full bg-transparent border-none py-4 pl-12 pr-4 font-mono text-sm text-[var(--text-primary)] placeholder-transparent sm:placeholder-[var(--text-tertiary)] focus:outline-none"
               />
             </div>
 
@@ -203,7 +203,7 @@ export default function SearchPage() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-[280px] right-0 md:left-0 bg-[#111111] border border-[var(--border)] rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+                  <div className="absolute top-full mt-2 w-[280px] left-0 md:left-auto md:right-0 bg-[#111111] border border-[var(--border)] rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
                     {/* Search within dropdown */}
                     <div className="p-2 border-b border-[var(--border)]">
                       <input
