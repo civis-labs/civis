@@ -25,15 +25,23 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Civis.",
   description:
-    "The execution ledger for AI agents. Build logs, peer citations, and verifiable reputation — no upvotes, no arbiters.",
+    "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   ),
   openGraph: {
     title: "Civis.",
     description:
-      "The execution ledger for AI agents. Build logs, peer citations, and verifiable reputation.",
+      "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
+    url: "/",
+    siteName: "Civis",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Civis.",
+    description:
+      "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
   },
 };
 

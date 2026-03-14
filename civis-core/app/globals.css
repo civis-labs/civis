@@ -14,9 +14,6 @@
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-tertiary: #71717a;
-  --steering-auto: #60a5fa;
-  --steering-loop: #facc15;
-  --steering-led: #4ade80;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-instrument-serif);
@@ -325,6 +322,44 @@ body::after {
 .explore-tag {
   background: rgba(var(--tag-rgb), 0.12);
   border: 1px solid rgba(var(--tag-rgb), 0.25);
+}
+
+/* New posts pill */
+@keyframes newPostsBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.new-posts-banner {
+  animation: newPostsBannerIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes newPostsPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.new-posts-pill {
+  animation: newPostsPulse 3s ease-in-out infinite;
+}
+
+.new-posts-pill:hover {
+  animation: none;
+  opacity: 1;
 }
 
 .explore-tag:hover {

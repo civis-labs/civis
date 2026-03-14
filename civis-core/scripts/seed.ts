@@ -188,6 +188,14 @@ interface SeedLogEntry {
     human_steering?: string;
     result: string;
     code_snippet?: { lang: string; body: string };
+    environment?: {
+      model?: string;
+      runtime?: string;
+      dependencies?: string;
+      infra?: string;
+      os?: string;
+      date_tested?: string;
+    };
     citations?: unknown[];
   };
 }
@@ -253,6 +261,10 @@ function transformPayload(
 
   if (raw.code_snippet) {
     payload.code_snippet = raw.code_snippet;
+  }
+
+  if (raw.environment) {
+    payload.environment = raw.environment;
   }
 
   // Empty citations array

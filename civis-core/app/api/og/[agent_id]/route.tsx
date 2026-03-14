@@ -9,7 +9,6 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ agent_id: string }> }
 ) {
-  // Rate limit
   const ip = _req.headers.get('x-real-ip') || 'unknown';
   const rateLimit = await checkReadRateLimit(ip);
   if (!rateLimit.success) {
@@ -24,7 +23,6 @@ export async function GET(
 
   const supabase = createSupabaseServiceClient();
 
-  // Fetch agent
   const { data: agent, error: agentErr } = await supabase
     .from("agent_entities")
     .select("name, bio, effective_reputation, base_reputation")
@@ -35,29 +33,13 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  // Fetch citation count (non-rejected inbound)
-  const { count: citationCount } = await supabase
-    .from("citations")
-    .select("id", { count: "exact", head: true })
-    .eq("target_agent_id", agent_id)
-    .eq("is_rejected", false);
-
-  // Fetch construct count
-  const { count: constructCount } = await supabase
-    .from("constructs")
-    .select("id", { count: "exact", head: true })
-    .eq("agent_id", agent_id);
-
-  const citations = citationCount ?? 0;
-  const constructs = constructCount ?? 0;
   const reputation = agent.effective_reputation ?? agent.base_reputation ?? 0;
   const bio = agent.bio
-    ? agent.bio.length > 120
-      ? agent.bio.slice(0, 117) + "..."
+    ? agent.bio.length > 90
+      ? agent.bio.slice(0, 87) + "..."
       : agent.bio
-    : "AI Agent on Civis";
+    : "";
 
-  // Placeholder OG card — founder will replace the design
   return new ImageResponse(
     (
       <div
@@ -66,99 +48,84 @@ export async function GET(
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          backgroundColor: "#0a0a0a",
-          padding: "60px",
-          fontFamily: "monospace",
+          backgroundColor: "#000000",
+          position: "relative",
+          overflow: "hidden",
+          padding: "72px 80px",
         }}
       >
-        {/* Top: Civis branding */}
+        {/* Radial glow */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "40px",
+            position: "absolute",
+            top: "-100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "800px",
+            height: "500px",
+            background:
+              "radial-gradient(ellipse at center, rgba(34,211,238,0.07) 0%, transparent 65%)",
           }}
-        >
-          <span
-            style={{
-              color: "#00d4aa",
-              fontSize: "24px",
-              fontWeight: "bold",
-              letterSpacing: "4px",
-            }}
-          >
-            CIVIS
+        />
+
+        {/* Bottom accent line */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "4px",
+            background:
+              "linear-gradient(to right, transparent 5%, rgba(34,211,238,0.6) 50%, transparent 95%)",
+          }}
+        />
+
+        {/* Top: Civis. brand */}
+        <div style={{ display: "flex", alignItems: "baseline", marginBottom: "48px" }}>
+          <span style={{ fontSize: "40px", fontWeight: 800, color: "#ffffff", letterSpacing: "-1px" }}>
+            Civis
+          </span>
+          <span style={{ fontSize: "40px", fontWeight: 800, color: "#22d3ee" }}>
+            .
           </span>
         </div>
 
         {/* Agent name */}
-        <div
+        <span
           style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
+            fontSize: "96px",
+            fontWeight: 800,
+            color: "#ffffff",
+            lineHeight: 1.1,
+            letterSpacing: "-3px",
+            marginBottom: "24px",
           }}
         >
+          {agent.name}
+        </span>
+
+        {/* Bio */}
+        {bio && (
           <span
             style={{
-              color: "#ffffff",
-              fontSize: "64px",
-              fontWeight: "bold",
-              lineHeight: 1.1,
-            }}
-          >
-            {agent.name}
-          </span>
-          <span
-            style={{
-              color: "#888888",
-              fontSize: "24px",
-              marginTop: "16px",
+              fontSize: "36px",
+              color: "#71717a",
               lineHeight: 1.4,
             }}
           >
             {bio}
           </span>
-        </div>
+        )}
 
-        {/* Bottom: Stats */}
-        <div
-          style={{
-            display: "flex",
-            gap: "60px",
-            marginTop: "auto",
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
-              style={{ color: "#00d4aa", fontSize: "48px", fontWeight: "bold" }}
-            >
-              {citations}
-            </span>
-            <span style={{ color: "#666666", fontSize: "18px" }}>
-              Citations
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
-              style={{ color: "#ffffff", fontSize: "48px", fontWeight: "bold" }}
-            >
-              {reputation}
-            </span>
-            <span style={{ color: "#666666", fontSize: "18px" }}>
-              Reputation
-            </span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
-              style={{ color: "#ffffff", fontSize: "48px", fontWeight: "bold" }}
-            >
-              {constructs}
-            </span>
-            <span style={{ color: "#666666", fontSize: "18px" }}>
-              Build Logs
-            </span>
-          </div>
+        {/* Rep score, bottom-left */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto" }}>
+          <span style={{ fontSize: "56px", color: "#f59e0b" }}>
+            ★
+          </span>
+          <span style={{ fontSize: "64px", fontWeight: 800, color: "#f59e0b", letterSpacing: "-2px" }}>
+            {reputation.toFixed(1)}
+          </span>
         </div>
       </div>
     ),

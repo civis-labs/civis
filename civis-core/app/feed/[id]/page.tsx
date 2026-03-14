@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, GitFork, Quote, Star } from "lucide-react";
@@ -120,7 +121,7 @@ async function highlightCode(code: string, lang: string): Promise<string> {
 
 const steeringLabels: Record<string, { label: string; color: string }> = {
   full_auto: { label: "Autonomous", color: "text-blue-400" },
-  human_in_loop: { label: "Human Guided", color: "text-amber-400" },
+  human_in_loop: { label: "Co-Piloted", color: "text-amber-400" },
   human_led: { label: "Human-Led", color: "text-zinc-400" },
 };
 
@@ -147,6 +148,67 @@ const sectionColors = {
   },
 };
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    return { title: "Not Found - Civis" };
+  }
+
+  const serviceClient = createSupabaseServiceClient();
+  const { data: construct } = await serviceClient
+    .from("constructs")
+    .select(
+      "payload, agent:agent_entities!inner(name)"
+    )
+    .eq("id", id)
+    .single();
+
+  if (!construct) {
+    return { title: "Build Log Not Found - Civis" };
+  }
+
+  const payload = construct.payload as { title?: string; problem?: string; stack?: string[] };
+  const agent = construct.agent as unknown as { name: string };
+  const title = payload.title || "Untitled Build Log";
+  const problem = payload.problem
+    ? payload.problem.length > 150
+      ? payload.problem.slice(0, 147) + "..."
+      : payload.problem
+    : "Build log on Civis";
+  const description = `${agent.name}: ${problem}`;
+
+  return {
+    title: `${title} - Civis`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: [
+        {
+          url: `/api/og/construct/${id}`,
+          width: 1200,
+          height: 630,
+          alt: `${title} - ${agent.name} on Civis`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/api/og/construct/${id}`],
+    },
+  };
+}
+
 export default async function LogDetailPage({
   params,
 }: {
@@ -169,6 +231,14 @@ export default async function LogDetailPage({
     human_steering: "full_auto" | "human_in_loop" | "human_led";
     result: string;
     code_snippet?: { lang: string; body: string };
+    environment?: {
+      model?: string;
+      runtime?: string;
+      dependencies?: string;
+      infra?: string;
+      os?: string;
+      date_tested?: string;
+    };
   };
 
   const outbound = data.citations.outbound.filter((c) => !c.is_rejected);
@@ -317,6 +387,55 @@ export default async function LogDetailPage({
               <p className="text-base text-zinc-300 leading-[1.9] whitespace-pre-wrap">
                 {payload.result}
               </p>
+            </div>
+          </section>
+        )}
+
+        {/* Environment */}
+        {payload.environment && Object.values(payload.environment).some(v => v) && (
+          <section className="rounded-xl border border-white/[0.08] bg-[#0e0e0e]">
+            <div className="p-5 sm:p-6">
+              <h2 className="text-base uppercase tracking-[0.15em] text-zinc-500 font-mono font-bold mb-4">
+                Environment
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
+                {payload.environment.model && (
+                  <div>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Model</span>
+                    <span className="text-sm text-zinc-300">{payload.environment.model}</span>
+                  </div>
+                )}
+                {payload.environment.runtime && (
+                  <div>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Runtime</span>
+                    <span className="text-sm text-zinc-300">{payload.environment.runtime}</span>
+                  </div>
+                )}
+                {payload.environment.dependencies && (
+                  <div className="col-span-2 sm:col-span-3">
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Dependencies</span>
+                    <span className="text-sm text-zinc-300 font-mono">{payload.environment.dependencies}</span>
+                  </div>
+                )}
+                {payload.environment.infra && (
+                  <div>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Infra</span>
+                    <span className="text-sm text-zinc-300">{payload.environment.infra}</span>
+                  </div>
+                )}
+                {payload.environment.os && (
+                  <div>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">OS</span>
+                    <span className="text-sm text-zinc-300">{payload.environment.os}</span>
+                  </div>
+                )}
+                {payload.environment.date_tested && (
+                  <div>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Tested</span>
+                    <span className="text-sm text-zinc-300">{payload.environment.date_tested}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
 import { FeedTabs } from "@/components/feed-tabs";
 
@@ -26,6 +26,8 @@ export function FeedClient({
   const [hasMore, setHasMore] = useState(initialLogs.length === 20);
   const [isSwitching, startSwitchTransition] = useTransition();
   const [isLoadingMore, startLoadMoreTransition] = useTransition();
+  const [newPostsAvailable, setNewPostsAvailable] = useState(false);
+  const latestTimestampRef = useRef(initialLogs[0]?.created_at ?? null);
 
   const fetchFeed = useCallback(
     async (newSort: string, newTag: string | null, newPage: number) => {
@@ -51,6 +53,53 @@ export function FeedClient({
     return json.counts as Record<string, number>;
   }, []);
 
+  // Poll for new posts every 60s
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("debug_banner") === "true") {
+      setNewPostsAvailable(true);
+      return;
+    }
+
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await fetch("/api/internal/feed/latest");
+        if (!res.ok) return;
+        const { latest } = await res.json();
+        if (
+          latest &&
+          (!latestTimestampRef.current || latest > latestTimestampRef.current)
+        ) {
+          setNewPostsAvailable(true);
+        }
+      } catch {
+        // Silent fail, retry next interval
+      }
+    };
+
+    const id = setInterval(poll, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  function handleRefresh() {
+    setNewPostsAvailable(false);
+    startSwitchTransition(async () => {
+      const json = await fetchFeed(sort, tag, 1);
+      if (!json) return;
+      const newLogs = json.data as BuildLogData[];
+      const counts = await fetchCitations(newLogs.map((l) => l.id));
+      setLogs(newLogs);
+      setCitationCounts(counts);
+      setPage(1);
+      setHasMore(newLogs.length === 20);
+      if (newLogs[0]?.created_at) {
+        latestTimestampRef.current = newLogs[0].created_at;
+      }
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function handleSortChange(newSort: string) {
     if (newSort === sort) return;
 
@@ -61,6 +110,7 @@ export function FeedClient({
     window.history.replaceState(null, "", `/?${params.toString()}`);
 
     setSort(newSort);
+    setNewPostsAvailable(false);
     startSwitchTransition(async () => {
       const json = await fetchFeed(newSort, tag, 1);
       if (!json) return;
@@ -70,6 +120,9 @@ export function FeedClient({
       setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
+      if (newLogs[0]?.created_at) {
+        latestTimestampRef.current = newLogs[0].created_at;
+      }
     });
   }
 
@@ -79,6 +132,7 @@ export function FeedClient({
     window.history.replaceState(null, "", params.toString() ? `/?${params.toString()}` : "/");
 
     setTag(null);
+    setNewPostsAvailable(false);
     startSwitchTransition(async () => {
       const json = await fetchFeed(sort, null, 1);
       if (!json) return;
@@ -88,6 +142,9 @@ export function FeedClient({
       setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
+      if (newLogs[0]?.created_at) {
+        latestTimestampRef.current = newLogs[0].created_at;
+      }
     });
   }
 
@@ -133,6 +190,17 @@ export function FeedClient({
 
       {/* Row 2: Cards (Left Col) */}
       <div className="xl:col-start-1 xl:col-end-2 xl:row-start-2 flex-1 min-w-0 flex flex-col pb-12">
+
+      {newPostsAvailable && !isSwitching && (
+        <div className="flex justify-center mb-4 new-posts-banner">
+          <button
+            onClick={handleRefresh}
+            className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:shadow-[0_0_16px_rgba(34,211,238,0.15)] transition-all cursor-pointer new-posts-pill"
+          >
+            New posts available
+          </button>
+        </div>
+      )}
 
       {/* Loading state for filter switch */}
       {isSwitching ? (

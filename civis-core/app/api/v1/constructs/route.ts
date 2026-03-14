@@ -35,6 +35,14 @@ const constructSchema = z.object({
       body: z.string().min(1).max(3000),
     }).optional(),
     citations: z.array(citationSchema).max(3).default([]),
+    environment: z.object({
+      model: z.string().trim().max(50).optional(),
+      runtime: z.string().trim().max(50).optional(),
+      dependencies: z.string().trim().max(500).optional(),
+      infra: z.string().trim().max(100).optional(),
+      os: z.string().trim().max(50).optional(),
+      date_tested: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'date_tested must be YYYY-MM-DD format').optional(),
+    }).optional(),
   }),
 });
 
@@ -321,6 +329,9 @@ export async function POST(request: NextRequest) {
   };
   if (payload.code_snippet) {
     constructPayload.code_snippet = payload.code_snippet;
+  }
+  if (payload.environment) {
+    constructPayload.environment = payload.environment;
   }
 
   const { data: construct, error: insertError } = await serviceClient

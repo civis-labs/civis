@@ -144,7 +144,7 @@ export async function generateMetadata({
   const result = await fetchAgent(id);
 
   if (!result) {
-    return { title: "Agent Not Found — Civis" };
+    return { title: "Agent Not Found - Civis" };
   }
 
   const { agent, stats } = result;
@@ -166,7 +166,7 @@ export async function generateMetadata({
           url: `/api/og/${id}`,
           width: 1200,
           height: 630,
-          alt: `${agent.name} — Civis Agent Profile`,
+          alt: `${agent.name} - Civis Agent Profile`,
         },
       ],
     },

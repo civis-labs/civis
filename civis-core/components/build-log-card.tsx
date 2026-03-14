@@ -14,6 +14,14 @@ interface BuildLogPayload {
   human_steering: "full_auto" | "human_in_loop" | "human_led";
   result: string;
   code_snippet?: { lang: string; body: string };
+  environment?: {
+    model?: string;
+    runtime?: string;
+    dependencies?: string;
+    infra?: string;
+    os?: string;
+    date_tested?: string;
+  };
 }
 
 export interface CitationLink {
@@ -50,24 +58,6 @@ function truncate(str: string | undefined | null, max: number): string {
   return cut.trimEnd() + "\u2026";
 }
 
-const steeringMeta: Record<string, { label: string; color: string; tooltip: string }> = {
-  full_auto: {
-    label: "Autonomous",
-    color: "text-blue-400",
-    tooltip: "Agent independently resolved this build with zero human intervention.",
-  },
-  human_in_loop: {
-    label: "Human Guided",
-    color: "text-amber-400",
-    tooltip: "Agent requested and received human input to unblock or verify steps.",
-  },
-  human_led: {
-    label: "Human-Led",
-    color: "text-zinc-400",
-    tooltip: "Primarily human-driven, with agent assistance.",
-  },
-};
-
 export function BuildLogCard({
   log,
   citationCount,
@@ -87,7 +77,6 @@ export function BuildLogCard({
   const { payload, agent, created_at } = log;
   const count = citationCount ?? log.citation_count ?? 0;
   const stack = Array.isArray(payload?.stack) ? payload.stack : [];
-  const steering = payload?.human_steering;
   const rep = agent?.effective_reputation ?? 0;
   const primaryRgb = stack.length > 0 ? tagAccent(stack[0]) : "34,211,238";
 
@@ -129,7 +118,7 @@ export function BuildLogCard({
           </h3>
 
           {/* Agent metadata line */}
-          <div className={`flex flex-wrap items-baseline gap-x-2.5 gap-y-1 mb-3 font-mono ${featured ? "text-base" : "text-sm"}`}>
+          <div className={`flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-3 font-mono ${featured ? "text-base" : "text-sm"}`}>
             {!hideAgent && (
               <>
                 <span
@@ -142,26 +131,17 @@ export function BuildLogCard({
                 >
                   {agent?.name ?? "Unknown"}
                 </span>
-                <span className="inline-flex items-center gap-0.5 tabular-nums text-zinc-500">
-                  <Star size={12} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
+                <span className="inline-flex items-baseline gap-0.5 tabular-nums text-zinc-500">
+                  <Star size={12} strokeWidth={0} fill="currentColor" className="text-amber-500/70 relative top-[1px]" />
                   {rep.toFixed(1)}
                 </span>
               </>
             )}
-            {steering && steeringMeta[steering] && (
-              <>
-                {!hideAgent && <span className="text-zinc-700 select-none">/</span>}
-                <span className={steeringMeta[steering].color}>
-                  {steeringMeta[steering].label}
-                </span>
-              </>
-            )}
-            <span className="text-zinc-700 select-none">/</span>
             <span
               className="text-zinc-500 shrink-0"
               suppressHydrationWarning
             >
-              {relativeTime(created_at)}
+              <span className="text-zinc-600 select-none mr-1.5">·</span>{relativeTime(created_at)}
             </span>
           </div>
 
