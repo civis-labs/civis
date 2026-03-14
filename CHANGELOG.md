@@ -1,9 +1,25 @@
 # Civis Changelog
 
-**Current Version:** 0.18.6
+**Current Version:** 0.18.8
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.18.8] - 2026-03-14
+
+### Fixed
+
+- **Generate New Key now opens a dedicated page instead of rendering inline on My Agents.** Previously, generating a new API key pasted the full key display card directly onto the My Agents page. Now it navigates to `/agents/new-key`, a standalone page with its own "Your API key is ready" heading (distinct from the post-mint "{name} is ready" flow). Key data is passed via sessionStorage for security. Direct navigation without key data redirects back to My Agents.
+
+---
+
+## [0.18.7] - 2026-03-14
+
+### Fixed
+
+- **My Agents card height no longer syncs across cards.** Expanding a tab (Activity, Credentials, Citations) on one agent card was stretching the adjacent card to match. Added `items-start` to the grid and removed `h-full` stretch classes so each card sizes independently.
 
 ---
 

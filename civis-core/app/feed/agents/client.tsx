@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Copy, Check, Pencil, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Pencil, Star } from 'lucide-react';
 import {
   revokeCredential,
   generateNewKey,
   updateBio,
 } from './actions';
 import { relativeTime } from '@/lib/time';
-import { ApiKeyDisplay } from '@/components/api-key-display';
+import { storeNewKeyData } from './new-key/client';
 
 // =============================================
 // Types
@@ -119,10 +120,7 @@ export default function ConsoleClient({
   activityLogs,
   inboundCitationCount,
 }: ConsoleClientProps) {
-  const [newKey, setNewKey] = useState<{
-    apiKey: string;
-    agentName: string;
-  } | null>(null);
+  const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -143,7 +141,8 @@ export default function ConsoleClient({
       if (result.error) {
         setActionError(result.error);
       } else if (result.apiKey) {
-        setNewKey({ apiKey: result.apiKey, agentName: result.agentName! });
+        storeNewKeyData({ apiKey: result.apiKey, agentName: result.agentName! });
+        router.push('/agents/new-key');
       }
     });
   };
@@ -162,15 +161,6 @@ export default function ConsoleClient({
           Manage your agents, credentials, and citations.
         </p>
       </section>
-
-      {/* API Key Display */}
-      {newKey && (
-        <ApiKeyDisplay
-          apiKey={newKey.apiKey}
-          agentName={newKey.agentName}
-          onDismiss={() => setNewKey(null)}
-        />
-      )}
 
       {/* Action Error */}
       {actionError && (
@@ -232,7 +222,7 @@ export default function ConsoleClient({
 
       {/* Passport Grid */}
       {passports.length > 0 && (
-        <section className={`grid gap-6 ${isSingle ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+        <section className={`grid gap-6 items-start ${isSingle ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
           {passports.map((passport, index) => {
             const creds = credentials.filter(
               (c) => c.agent_id === passport.id
@@ -333,18 +323,18 @@ function PassportCard({
   ];
 
   return (
-    <div className="group relative h-full">
+    <div className="group relative">
       {/* Breathing mesh glow */}
       <div className={`absolute -inset-[2px] bg-gradient-to-r ${accent.meshGlow} rounded-2xl blur-[30px] opacity-0 ${accent.hoverMesh} mesh-breathe transition-opacity duration-1000 pointer-events-none -z-10`} />
 
       {/* Glass card */}
-      <div className="relative h-full rounded-2xl border border-white/[0.12] bg-gradient-to-b from-[#111111]/90 to-[#050505]/95 backdrop-blur-3xl overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_0_50px_rgba(0,0,0,0.8)] group-hover:border-white/[0.18] transition-all duration-500">
+      <div className="relative rounded-2xl border border-white/[0.12] bg-gradient-to-b from-[#111111]/90 to-[#050505]/95 backdrop-blur-3xl overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_0_50px_rgba(0,0,0,0.8)] group-hover:border-white/[0.18] transition-all duration-500">
         {/* Top lighting */}
         <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${accent.topLine} to-transparent opacity-70`} />
         <div className={`absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b ${accent.topWash} to-transparent pointer-events-none`} />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJub25lIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiPjwvcmVjdD4KPC9zdmc+')] opacity-50 pointer-events-none z-0" />
 
-        <div className="relative p-6 sm:p-8 z-10 h-full flex flex-col">
+        <div className="relative p-6 sm:p-8 z-10 flex flex-col">
           {/* Header: Name + Status + Rep */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -432,7 +422,6 @@ function PassportCard({
           </div>
 
           {/* Stats strip */}
-          <div className="mt-auto" />
           <div className="mt-8 grid grid-cols-3 rounded-xl bg-black/60 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-white/[0.08] divide-x divide-white/[0.06]">
             {[
               { value: stats.construct_count, label: 'Build Logs' },

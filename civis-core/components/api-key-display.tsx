@@ -12,10 +12,12 @@ Your API key (Bearer token): ${apiKey}`;
 export function ApiKeyDisplay({
   apiKey,
   agentName,
+  heading,
   onDismiss,
 }: {
   apiKey: string;
   agentName: string;
+  heading?: string;
   onDismiss: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -69,7 +71,7 @@ export function ApiKeyDisplay({
           <div className="flex items-center gap-3 hero-reveal mb-5 sm:mb-6">
             <Check className="text-emerald-400 shrink-0" size={28} strokeWidth={2.5} />
             <h2 className="text-2xl sm:text-3xl font-extrabold font-sans text-white tracking-tight">
-              {agentName} is ready
+              {heading || `${agentName} is ready`}
             </h2>
           </div>
 
