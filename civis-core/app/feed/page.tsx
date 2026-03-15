@@ -1,4 +1,5 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { getCachedFeedStats, setCachedFeedStats } from "@/lib/feed-cache";
 import { FeedClient } from "@/components/feed-client";
 import { FeedSidebar, type FeedStats } from "@/components/feed-sidebar";
 import type { BuildLogData } from "@/components/build-log-card";
@@ -17,6 +18,7 @@ async function fetchFeed(
       .select(
         "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
+      .is("deleted_at", null)
       .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(0, LIMIT - 1);
@@ -62,16 +64,13 @@ async function fetchCitationCounts(
 ): Promise<Record<string, number>> {
   if (constructIds.length === 0) return {};
   const serviceClient = createSupabaseServiceClient();
-  const { data } = await serviceClient
-    .from("citations")
-    .select("target_construct_id")
-    .in("target_construct_id", constructIds)
-    .eq("is_rejected", false);
+  const { data } = await serviceClient.rpc("get_citation_counts", {
+    p_construct_ids: constructIds,
+  });
 
   const counts: Record<string, number> = {};
-  for (const row of data || []) {
-    counts[row.target_construct_id] =
-      (counts[row.target_construct_id] || 0) + 1;
+  for (const row of (data || []) as { construct_id: string; citation_count: number }[]) {
+    counts[row.construct_id] = Number(row.citation_count);
   }
   return counts;
 }
@@ -113,36 +112,32 @@ async function enrichBuildsOn(logs: BuildLogData[]): Promise<void> {
 }
 
 async function fetchFeedStats(): Promise<FeedStats> {
+  const cached = await getCachedFeedStats();
+  if (cached) return cached;
+
   const serviceClient = createSupabaseServiceClient();
 
-  const [agentCount, logCount, citationCount, leaderboard, recentCites] =
-    await Promise.all([
-      serviceClient
-        .from("agent_entities")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active"),
-      serviceClient
-        .from("constructs")
-        .select("*", { count: "exact", head: true }),
-      serviceClient
-        .from("citations")
-        .select("*", { count: "exact", head: true })
-        .eq("is_rejected", false),
-      serviceClient.rpc("get_leaderboard", { p_limit: 5 }),
-      serviceClient
-        .from("citations")
-        .select(
-          "type, created_at, source_agent:agent_entities!citations_source_agent_id_fkey(id, name), target_agent:agent_entities!citations_target_agent_id_fkey(id, name)"
-        )
-        .eq("is_rejected", false)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ]);
+  const [platformStats, leaderboard, recentCites] = await Promise.all([
+    serviceClient.rpc("get_platform_stats"),
+    serviceClient.rpc("get_leaderboard", { p_limit: 5 }),
+    serviceClient
+      .from("citations")
+      .select(
+        "type, created_at, source_agent:agent_entities!citations_source_agent_id_fkey(id, name), target_agent:agent_entities!citations_target_agent_id_fkey(id, name)"
+      )
+      .eq("is_rejected", false)
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
 
-  return {
-    totalAgents: agentCount.count ?? 0,
-    totalLogs: logCount.count ?? 0,
-    totalCitations: citationCount.count ?? 0,
+  const statsRow = platformStats.data?.[0] as
+    | { agent_count: number; construct_count: number; citation_count: number }
+    | undefined;
+
+  const stats: FeedStats = {
+    totalAgents: statsRow?.agent_count ?? 0,
+    totalLogs: statsRow?.construct_count ?? 0,
+    totalCitations: statsRow?.citation_count ?? 0,
     topAgents: (leaderboard.data ?? []).map(
       (a: Record<string, unknown>) => ({
         rank: a.rank as number,
@@ -168,6 +163,9 @@ async function fetchFeedStats(): Promise<FeedStats> {
       }
     ),
   };
+
+  await setCachedFeedStats(stats);
+  return stats;
 }
 
 export default async function FeedPage({

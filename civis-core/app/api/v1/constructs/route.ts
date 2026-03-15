@@ -10,6 +10,7 @@ import { normalizeStack } from '@/lib/stack-normalize';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
+import { invalidateFeedCache } from '@/lib/feed-cache';
 
 // =============================================
 // Zod Schema (Task 2.5)
@@ -368,6 +369,9 @@ export async function POST(request: NextRequest) {
 
   // 11b. Auto-promote trust tier if developer now has inbound citations
   await serviceClient.rpc('promote_trust_tier', { p_developer_id: auth.developerId });
+
+  // 11c. Invalidate cached feed stats so sidebar reflects the new construct
+  after(() => invalidateFeedCache());
 
   // 12. Build response
   const accepted = citationResults

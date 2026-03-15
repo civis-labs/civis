@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
+import { invalidateFeedCache } from '@/lib/feed-cache';
 
 // =============================================
 // Cron: Reputation Refresh (Task 5.5)
@@ -31,6 +32,8 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  await invalidateFeedCache();
 
   return NextResponse.json({ status: 'ok', refreshed_at: new Date().toISOString() });
 }

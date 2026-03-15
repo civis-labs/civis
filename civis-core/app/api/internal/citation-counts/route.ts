@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const serviceClient = createSupabaseServiceClient();
 
   const { data, error } = await serviceClient.rpc("get_citation_counts", {
-    construct_ids: body.ids,
+    p_construct_ids: body.ids,
   });
 
   if (error) {

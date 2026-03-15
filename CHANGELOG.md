@@ -1,9 +1,26 @@
 # Civis Changelog
 
-**Current Version:** 0.20.0
+**Current Version:** 0.20.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.20.1] - 2026-03-15
+
+### Changed
+
+- **Feed page performance optimization.** Sidebar stats (counts, leaderboard, recent citations) are now cached in Redis with a 5-minute TTL, invalidated on new construct POST. Reduces server-render DB queries from ~8 to 3 on warm cache.
+- Rewrote `get_leaderboard` RPC to use CTEs instead of N+1 correlated COUNT subqueries
+- Rewrote `get_discovery_feed` RPC to use CTE with HAVING instead of per-row correlated COUNT
+- Replaced three separate exact-count queries with a single `get_platform_stats` RPC
+- Replaced raw citation count query + JS aggregation with existing `get_citation_counts` RPC
+- Added partial indexes on `citations(target_agent_id)`, `constructs(agent_id)`, and `citations(created_at DESC)` for active rows
+
+### Fixed
+
+- Added missing `deleted_at IS NULL` filter on server-rendered chron feed query (internal API already had it)
 
 ---
 
