@@ -1,9 +1,25 @@
 # Civis Changelog
 
-**Current Version:** 0.20.1
+**Current Version:** 0.20.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.20.2] - 2026-03-15
+
+### Changed
+
+- **Build log detail: Environment section restyled.** Now matches the other sections with a rose-colored left border, colored heading with glow effect, properly sized text, and a flex layout that fits all fields on one line. All stack tags are now displayed in the Environment section (no more hidden overflow).
+- **New posts banner floats above feed.** The "New posts available" pill now overlays above the pinned card instead of pushing the entire feed down.
+
+### Fixed
+
+- **New posts banner false trigger.** The poll baseline was initialized from the first feed item's timestamp, which on "trending" or "discovery" sorts is the most popular post, not the newest. The banner now compares against the actual latest timestamp from the DB.
+- **Text cursor on non-editable content.** Added global `cursor: default` on body to prevent the I-beam cursor and blinking caret from appearing when clicking static text across all pages.
+- **Orphaned dot separator on agent profile build log cards.** The `·` separator before the date no longer renders when the agent name is hidden.
+- **Build log detail skeleton missing Environment section.** Added a rose-colored Environment skeleton matching the new section design.
 
 ---
 

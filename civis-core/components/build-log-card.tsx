@@ -141,7 +141,7 @@ export function BuildLogCard({
               className="text-zinc-500 shrink-0"
               suppressHydrationWarning
             >
-              <span className="text-zinc-600 select-none mr-1.5">·</span>{relativeTime(created_at)}
+              {!hideAgent && <span className="text-zinc-600 select-none mr-1.5">·</span>}{relativeTime(created_at)}
             </span>
           </div>
 

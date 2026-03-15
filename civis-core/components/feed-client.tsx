@@ -9,6 +9,7 @@ interface FeedClientProps {
   initialCitationCounts: Record<string, number>;
   initialSort: string;
   initialTag: string | null;
+  initialLatestTimestamp: string | null;
 }
 
 export function FeedClient({
@@ -16,6 +17,7 @@ export function FeedClient({
   initialCitationCounts,
   initialSort,
   initialTag,
+  initialLatestTimestamp,
   sidebar,
 }: FeedClientProps & { sidebar?: React.ReactNode }) {
   const [sort, setSort] = useState(initialSort);
@@ -27,7 +29,7 @@ export function FeedClient({
   const [isSwitching, startSwitchTransition] = useTransition();
   const [isLoadingMore, startLoadMoreTransition] = useTransition();
   const [newPostsAvailable, setNewPostsAvailable] = useState(false);
-  const latestTimestampRef = useRef(initialLogs[0]?.created_at ?? null);
+  const latestTimestampRef = useRef(initialLatestTimestamp);
 
   const fetchFeed = useCallback(
     async (newSort: string, newTag: string | null, newPage: number) => {
@@ -82,6 +84,16 @@ export function FeedClient({
     return () => clearInterval(id);
   }, []);
 
+  async function syncLatestTimestamp() {
+    try {
+      const res = await fetch("/api/internal/feed/latest");
+      if (res.ok) {
+        const { latest } = await res.json();
+        if (latest) latestTimestampRef.current = latest;
+      }
+    } catch {}
+  }
+
   function handleRefresh() {
     setNewPostsAvailable(false);
     startSwitchTransition(async () => {
@@ -93,9 +105,7 @@ export function FeedClient({
       setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
-      if (newLogs[0]?.created_at) {
-        latestTimestampRef.current = newLogs[0].created_at;
-      }
+      await syncLatestTimestamp();
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -120,9 +130,7 @@ export function FeedClient({
       setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
-      if (newLogs[0]?.created_at) {
-        latestTimestampRef.current = newLogs[0].created_at;
-      }
+      await syncLatestTimestamp();
     });
   }
 
@@ -142,9 +150,7 @@ export function FeedClient({
       setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
-      if (newLogs[0]?.created_at) {
-        latestTimestampRef.current = newLogs[0].created_at;
-      }
+      await syncLatestTimestamp();
     });
   }
 
@@ -192,13 +198,15 @@ export function FeedClient({
       <div className="xl:col-start-1 xl:col-end-2 xl:row-start-2 flex-1 min-w-0 flex flex-col pb-12">
 
       {newPostsAvailable && !isSwitching && (
-        <div className="flex justify-center mb-4 new-posts-banner">
-          <button
-            onClick={handleRefresh}
-            className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:shadow-[0_0_16px_rgba(34,211,238,0.15)] transition-all cursor-pointer new-posts-pill"
-          >
-            New posts available
-          </button>
+        <div className="relative h-0">
+          <div className="absolute left-0 right-0 -top-2 flex justify-center z-20 pointer-events-none">
+            <button
+              onClick={handleRefresh}
+              className="rounded-full border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-sm px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:shadow-[0_0_16px_rgba(34,211,238,0.15)] transition-all cursor-pointer new-posts-pill pointer-events-auto shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+            >
+              New posts available
+            </button>
+          </div>
         </div>
       )}
 

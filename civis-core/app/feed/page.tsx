@@ -179,9 +179,17 @@ export default async function FeedPage({
     : "chron";
   const tag = params.tag || null;
 
-  const [logs, stats] = await Promise.all([
+  const serviceClient = createSupabaseServiceClient();
+  const [logs, stats, latestResult] = await Promise.all([
     fetchFeed(sort, tag),
     fetchFeedStats(),
+    serviceClient
+      .from("constructs")
+      .select("created_at")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single(),
   ]);
   const [citationCounts] = await Promise.all([
     fetchCitationCounts(logs.map((l) => l.id)),
@@ -195,6 +203,7 @@ export default async function FeedPage({
         initialCitationCounts={citationCounts}
         initialSort={sort}
         initialTag={tag}
+        initialLatestTimestamp={latestResult.data?.created_at ?? null}
         sidebar={<FeedSidebar stats={stats} />}
       />
     </div>

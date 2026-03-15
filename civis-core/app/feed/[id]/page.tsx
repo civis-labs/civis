@@ -104,6 +104,7 @@ function formatDate(dateStr: string) {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -145,6 +146,11 @@ const sectionColors = {
     border: "border-l-emerald-400/60",
     label: "text-emerald-400",
     glow: "drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]",
+  },
+  environment: {
+    border: "border-l-rose-400/60",
+    label: "text-rose-400",
+    glow: "drop-shadow-[0_0_6px_rgba(251,113,133,0.25)]",
   },
 };
 
@@ -310,7 +316,9 @@ export default async function LogDetailPage({
                 );
               })}
               {payload.stack.length > 3 && (
-                <span className="text-sm text-zinc-400">+{payload.stack.length - 3}</span>
+                <a href="#environment" className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors">
+                  +{payload.stack.length - 3}
+                </a>
               )}
             </>
           )}
@@ -392,53 +400,76 @@ export default async function LogDetailPage({
         )}
 
         {/* Environment */}
-        {payload.environment && Object.values(payload.environment).some(v => v) && (
-          <section className="rounded-xl border border-white/[0.08] bg-[#0e0e0e]">
+        {(payload.environment && Object.values(payload.environment).some(v => v)) || payload.stack.length > 0 ? (
+          <section id="environment" className={`rounded-xl border border-white/[0.08] bg-[#0e0e0e] border-l-2 ${sectionColors.environment.border}`}>
             <div className="p-5 sm:p-6">
-              <h2 className="text-base uppercase tracking-[0.15em] text-zinc-500 font-mono font-bold mb-4">
+              <h2 className={`text-base uppercase tracking-[0.15em] ${sectionColors.environment.label} font-mono font-bold ${sectionColors.environment.glow} mb-4`}>
                 Environment
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
-                {payload.environment.model && (
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {payload.environment?.runtime && (
                   <div>
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Model</span>
-                    <span className="text-sm text-zinc-300">{payload.environment.model}</span>
+                    <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">Runtime</span>
+                    <span className="text-base text-zinc-300">{payload.environment.runtime}</span>
                   </div>
                 )}
-                {payload.environment.runtime && (
+                {payload.environment?.model && (
                   <div>
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Runtime</span>
-                    <span className="text-sm text-zinc-300">{payload.environment.runtime}</span>
+                    <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">Model</span>
+                    <span className="text-base text-zinc-300">{payload.environment.model}</span>
                   </div>
                 )}
-                {payload.environment.dependencies && (
-                  <div className="col-span-2 sm:col-span-3">
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Dependencies</span>
-                    <span className="text-sm text-zinc-300 font-mono">{payload.environment.dependencies}</span>
+                {payload.environment?.infra && (
+                  <div>
+                    <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">Infra</span>
+                    <span className="text-base text-zinc-300">{payload.environment.infra}</span>
                   </div>
                 )}
-                {payload.environment.infra && (
+                {payload.environment?.os && (
                   <div>
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Infra</span>
-                    <span className="text-sm text-zinc-300">{payload.environment.infra}</span>
+                    <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">OS</span>
+                    <span className="text-base text-zinc-300">{payload.environment.os}</span>
                   </div>
                 )}
-                {payload.environment.os && (
+                {payload.environment?.date_tested && (
                   <div>
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">OS</span>
-                    <span className="text-sm text-zinc-300">{payload.environment.os}</span>
-                  </div>
-                )}
-                {payload.environment.date_tested && (
-                  <div>
-                    <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-600 mb-0.5">Tested</span>
-                    <span className="text-sm text-zinc-300">{payload.environment.date_tested}</span>
+                    <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">Tested</span>
+                    <span className="text-base text-zinc-300">{payload.environment.date_tested}</span>
                   </div>
                 )}
               </div>
+              {payload.environment?.dependencies && (
+                <div className="mt-3">
+                  <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-1">Dependencies</span>
+                  <span className="text-base text-zinc-300 font-mono">{payload.environment.dependencies}</span>
+                </div>
+              )}
+              {payload.stack.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                  <span className="block font-mono text-xs uppercase tracking-[0.15em] text-zinc-500 mb-2">Stack</span>
+                  <div className="flex flex-wrap gap-2">
+                    {payload.stack.map((tag) => {
+                      const rgb = tagAccent(tag);
+                      return (
+                        <Link
+                          key={tag}
+                          href={`/?tag=${encodeURIComponent(tag)}`}
+                          className="rounded-full px-2.5 py-0.5 text-xs transition-all explore-tag cursor-pointer"
+                          style={{
+                            "--tag-rgb": rgb,
+                            color: `rgba(${rgb}, 0.85)`,
+                          } as React.CSSProperties}
+                        >
+                          {tag}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Bottom spacer */}
         <div className="pb-16" />
