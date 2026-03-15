@@ -1,6 +1,7 @@
 import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkReadRateLimit } from '@/lib/rate-limit';
+import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
+import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { logApiRequest } from '@/lib/api-logger';
 
@@ -15,13 +16,20 @@ export async function GET(
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || null;
 
-  // Rate limit
-  const rateLimit = await checkReadRateLimit(ip);
-  if (!rateLimit.success) {
-    after(() => logApiRequest('/v1/agents/:id/constructs', {}, ip, ua, 429, true));
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  // Auth + tiered rate limit
+  const auth = await authorizeRead(request);
+  if (auth.status === 'invalid_key') {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+  if (auth.status === 'rate_limited') {
+    after(() => logApiRequest('/v1/agents/:id/constructs', {}, ip, ua, 429, true, false));
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+    );
   }
 
+  const isAuthed = auth.status === 'authenticated';
   const { id } = await params;
 
   // Validate UUID
@@ -60,12 +68,20 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
   }
 
-  after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false));
+  const items = (data || []).map((d) =>
+    isAuthed ? d : { ...d, payload: stripGatedContent(d.payload as Record<string, unknown>) }
+  );
 
-  return NextResponse.json({
-    data: data || [],
-    agent: { id: agent.id, name: agent.name },
-    page,
-    limit,
-  });
+  after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false, isAuthed));
+
+  return NextResponse.json(
+    {
+      data: items,
+      agent: { id: agent.id, name: agent.name },
+      page,
+      limit,
+      ...(isAuthed ? authedMeta() : gatedMeta()),
+    },
+    { headers: rateLimitHeaders(auth.rateLimit) }
+  );
 }

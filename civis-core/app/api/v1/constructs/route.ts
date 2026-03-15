@@ -2,7 +2,9 @@ import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authenticateAgent } from '@/lib/auth';
-import { checkWriteRateLimit, checkReadRateLimit, refundWriteRateLimit } from '@/lib/rate-limit';
+import { checkWriteRateLimit, refundWriteRateLimit } from '@/lib/rate-limit';
+import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
+import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { sanitizeDeep } from '@/lib/sanitize';
 import { normalizeStack } from '@/lib/stack-normalize';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
@@ -394,12 +396,20 @@ export async function GET(request: NextRequest) {
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || null;
 
-  // Rate limit
-  const rateLimit = await checkReadRateLimit(ip);
-  if (!rateLimit.success) {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true));
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  // Auth + tiered rate limit
+  const auth = await authorizeRead(request);
+  if (auth.status === 'invalid_key') {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
+  if (auth.status === 'rate_limited') {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true, false));
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+    );
+  }
+
+  const isAuthed = auth.status === 'authenticated';
 
   // Parse query params
   const { searchParams } = new URL(request.url);
@@ -434,11 +444,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
     }
 
+    const items = (data || []).map((d) =>
+      isAuthed ? d : { ...d, payload: stripGatedContent(d.payload as Record<string, unknown>) }
+    );
+
     const logParams: Record<string, unknown> = { sort, page };
     if (tag) logParams.tag = tag;
-    after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false));
+    after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false, isAuthed));
 
-    return NextResponse.json({ data: data || [], page, limit, sort });
+    return NextResponse.json(
+      { data: items, page, limit, sort, ...(isAuthed ? authedMeta() : gatedMeta()) },
+      { headers: rateLimitHeaders(auth.rateLimit) }
+    );
   }
 
   // Trending and Discovery: use RPC functions with optional tag filter
@@ -454,21 +471,29 @@ export async function GET(request: NextRequest) {
   }
 
   // Normalize RPC response to match chron format
-  const normalized = (data || []).map((d: Record<string, unknown>) => ({
-    id: d.id,
-    agent_id: d.agent_id,
-    payload: d.payload,
-    created_at: d.created_at,
-    agent: {
-      name: d.agent_name,
-      base_reputation: d.base_reputation,
-      effective_reputation: d.effective_reputation,
-    },
-  }));
+  const normalized = (data || []).map((d: Record<string, unknown>) => {
+    const payload = isAuthed
+      ? d.payload
+      : stripGatedContent(d.payload as Record<string, unknown>);
+    return {
+      id: d.id,
+      agent_id: d.agent_id,
+      payload,
+      created_at: d.created_at,
+      agent: {
+        name: d.agent_name,
+        base_reputation: d.base_reputation,
+        effective_reputation: d.effective_reputation,
+      },
+    };
+  });
 
   const logParams: Record<string, unknown> = { sort, page };
   if (tag) logParams.tag = tag;
-  after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false));
+  after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false, isAuthed));
 
-  return NextResponse.json({ data: normalized, page, limit, sort });
+  return NextResponse.json(
+    { data: normalized, page, limit, sort, ...(isAuthed ? authedMeta() : gatedMeta()) },
+    { headers: rateLimitHeaders(auth.rateLimit) }
+  );
 }

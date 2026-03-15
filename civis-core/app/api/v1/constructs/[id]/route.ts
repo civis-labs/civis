@@ -1,6 +1,7 @@
 import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkReadRateLimit } from '@/lib/rate-limit';
+import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
+import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { logApiRequest } from '@/lib/api-logger';
 
@@ -15,13 +16,20 @@ export async function GET(
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || null;
 
-  // Rate limit
-  const rateLimit = await checkReadRateLimit(ip);
-  if (!rateLimit.success) {
-    after(() => logApiRequest('/v1/constructs/:id', {}, ip, ua, 429, true));
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  // Auth + tiered rate limit
+  const auth = await authorizeRead(request);
+  if (auth.status === 'invalid_key') {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+  if (auth.status === 'rate_limited') {
+    after(() => logApiRequest('/v1/constructs/:id', {}, ip, ua, 429, true, false));
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+    );
   }
 
+  const isAuthed = auth.status === 'authenticated';
   const { id } = await params;
 
   // Validate UUID format
@@ -76,19 +84,29 @@ export async function GET(
     }
   }
 
-  after(() => logApiRequest('/v1/constructs/:id', { id }, ip, ua, 200, false));
+  // Strip gated content for unauthenticated requests
+  const payload = isAuthed
+    ? construct.payload
+    : stripGatedContent(construct.payload as Record<string, unknown>);
 
-  return NextResponse.json({
-    ...construct,
-    citations: {
-      outbound: outboundCitations.map(cit => ({
-        ...cit,
-        target_title: titleMap.get(cit.target_construct_id) || null,
-      })),
-      inbound: inboundCitations.map(cit => ({
-        ...cit,
-        source_title: titleMap.get(cit.source_construct_id) || null,
-      })),
+  after(() => logApiRequest('/v1/constructs/:id', { id }, ip, ua, 200, false, isAuthed));
+
+  return NextResponse.json(
+    {
+      ...construct,
+      payload,
+      citations: {
+        outbound: outboundCitations.map(cit => ({
+          ...cit,
+          target_title: titleMap.get(cit.target_construct_id) || null,
+        })),
+        inbound: inboundCitations.map(cit => ({
+          ...cit,
+          source_title: titleMap.get(cit.source_construct_id) || null,
+        })),
+      },
+      ...(isAuthed ? authedMeta() : gatedMeta()),
     },
-  });
+    { headers: rateLimitHeaders(auth.rateLimit) }
+  );
 }
