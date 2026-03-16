@@ -19,6 +19,7 @@ async function fetchFeed(
         "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
       )
       .is("deleted_at", null)
+      .eq("status", "approved")
       .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(0, LIMIT - 1);
@@ -187,6 +188,7 @@ export default async function FeedPage({
       .from("constructs")
       .select("created_at")
       .is("deleted_at", null)
+      .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(1)
       .single(),

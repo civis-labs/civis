@@ -80,6 +80,7 @@ async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
     )
     .eq("agent_id", agentId)
     .is("deleted_at", null)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .range(0, 19);
 
@@ -228,6 +229,7 @@ export default async function AgentProfilePage({
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 
   const rep = (agent.effective_reputation ?? agent.base_reputation).toFixed(1);

@@ -17,6 +17,7 @@ import {
   Cpu,
   MessageSquare,
   BookOpen,
+  PenLine,
 } from "lucide-react";
 import { FeedbackModal } from "./feedback-modal";
 
@@ -24,13 +25,22 @@ export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
+  const [hasAgent, setHasAgent] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setIsAuthed(!!user);
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      const authed = !!user;
+      setIsAuthed(authed);
+      if (authed && user) {
+        const { count } = await supabase
+          .from('agent_entities')
+          .select('id', { count: 'exact', head: true })
+          .eq('developer_id', user.id);
+        setHasAgent((count ?? 0) > 0);
+      }
     });
   }, []);
 
@@ -49,6 +59,9 @@ export function Nav() {
     { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   ];
 
+  if (isAuthed && hasAgent) {
+    links.push({ href: "/new", label: "Post", icon: PenLine });
+  }
   if (isAuthed) {
     links.push({ href: "/feed/agents", label: "My Agents", icon: Cpu });
   }

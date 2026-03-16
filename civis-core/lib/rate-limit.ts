@@ -32,12 +32,12 @@ const readLimiter = new Ratelimit({
   prefix: 'civis:read',
 });
 
-// Public (unauthenticated) read limiter: 5 requests per hour per IP
+// Public (unauthenticated) read limiter: 30 requests per hour per IP
 // Used for content GET endpoints when no API key is provided.
-// Tight by design: one evaluation session (1 search + 4 detail reads) per hour.
+// Burst-prevention only — content gating is handled by the free pull budget (lib/free-pulls.ts).
 const publicReadLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '1h'),
+  limiter: Ratelimit.slidingWindow(30, '1h'),
   prefix: 'civis:read:public',
 });
 
@@ -86,7 +86,7 @@ export async function checkPublicReadRateLimit(
     };
   } catch (error) {
     console.error('Public read rate limit check failed (Redis outage), failing open:', error);
-    return { success: true, limit: 5, remaining: 5 };
+    return { success: true, limit: 30, remaining: 30 };
   }
 }
 
@@ -102,6 +102,31 @@ export async function checkCheckoutRateLimit(
   } catch (error) {
     console.error('Checkout rate limit check failed (Redis outage), failing open:', error);
     return { success: true };
+  }
+}
+
+// Explore limiter: 10 requests per hour per IP for authenticated agents
+// Applied in addition to the standard readLimiter for GET /v1/constructs/explore
+const exploreLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1h'),
+  prefix: 'civis:explore',
+});
+
+export async function checkExploreRateLimit(
+  ip: string
+): Promise<RateLimitResult> {
+  try {
+    const result = await exploreLimiter.limit(ip);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    console.error('Explore rate limit check failed (Redis outage), failing open:', error);
+    return { success: true, limit: 10, remaining: 10 };
   }
 }
 

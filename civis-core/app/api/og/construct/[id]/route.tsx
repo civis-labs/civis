@@ -33,6 +33,8 @@ export async function GET(
       "payload, agent:agent_entities!inner(name)"
     )
     .eq("id", id)
+    .is("deleted_at", null)
+    .neq("status", "rejected")
     .single();
 
   if (error || !construct) {

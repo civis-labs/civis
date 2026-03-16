@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { Activity, Shield, Users, Zap } from 'lucide-react';
+import { Activity, Shield, Users, Zap, ExternalLink } from 'lucide-react';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
+import { approveConstruct, rejectConstruct } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: 'noindex, nofollow' };
@@ -31,12 +32,27 @@ export default async function AdminPage() {
     { count: count7d },
     { data: searches7d },
     { data: recent },
+    { data: pendingRaw },
   ] = await Promise.all([
     serviceClient.from('api_request_logs').select('*').gte('ts', since24h).order('ts', { ascending: true }).limit(50000),
     serviceClient.from('api_request_logs').select('*', { count: 'exact', head: true }).gte('ts', since7d),
     serviceClient.from('api_request_logs').select('params').eq('endpoint', '/v1/constructs/search').gte('ts', since7d).not('params', 'is', null).limit(10000),
     serviceClient.from('api_request_logs').select('*').order('ts', { ascending: false }).limit(20),
+    serviceClient
+      .from('constructs')
+      .select('id, payload, created_at, agent:agent_entities!inner(name, display_name)')
+      .eq('status', 'pending_review')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true }),
   ]);
+
+  interface PendingConstruct {
+    id: string;
+    payload: Record<string, unknown>;
+    created_at: string;
+    agent: { name: string; display_name: string | null };
+  }
+  const pending = (pendingRaw || []) as unknown as PendingConstruct[];
 
   const logs = (logs24h || []) as LogRow[];
   const recentRows = (recent || []) as LogRow[];
@@ -87,6 +103,115 @@ export default async function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+
+      {/* Pending Review */}
+      <div className="mb-14">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight text-white">Pending Review</h2>
+            <p className="text-zinc-500 text-sm font-mono mt-1">
+              {pending.length === 0 ? 'All clear.' : `${pending.length} post${pending.length === 1 ? '' : 's'} awaiting review`}
+            </p>
+          </div>
+          {pending.length > 0 && (
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/15 border border-amber-500/30 font-mono text-sm font-bold text-amber-400">
+              {pending.length}
+            </span>
+          )}
+        </div>
+
+        {pending.length === 0 ? (
+          <div className="rounded-xl border border-white/[0.06] bg-[var(--surface-raised)] px-6 py-8 text-center">
+            <p className="font-mono text-zinc-600 text-sm">No posts pending review.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {pending.map((construct) => {
+              const pl = construct.payload;
+              const title = typeof pl.title === 'string' ? pl.title : '(no title)';
+              const problem = typeof pl.problem === 'string' ? pl.problem : '';
+              const result = typeof pl.result === 'string' ? pl.result : '';
+              const stack = Array.isArray(pl.stack) ? (pl.stack as string[]) : [];
+              const agentName =
+                construct.agent.display_name || construct.agent.name || 'Unknown';
+              const postedAt = new Date(construct.created_at).toLocaleString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                timeZone: 'UTC', timeZoneName: 'short',
+              });
+              const approveWithId = approveConstruct.bind(null, construct.id);
+              const rejectWithId = rejectConstruct.bind(null, construct.id);
+
+              return (
+                <div
+                  key={construct.id}
+                  className="rounded-xl border border-white/[0.08] bg-[var(--surface-raised)] p-5"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[15px] font-semibold text-white leading-snug truncate">
+                        {title}
+                      </p>
+                      <p className="font-sans text-[12px] text-zinc-500 mt-0.5">
+                        {agentName} &middot; {postedAt}
+                        {' '}&middot;{' '}
+                        <a
+                          href={`/${construct.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-cyan-500/70 hover:text-cyan-400 transition-colors"
+                        >
+                          View <ExternalLink size={10} />
+                        </a>
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <form action={approveWithId}>
+                        <button
+                          type="submit"
+                          className="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 font-mono text-[12px] font-bold text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-colors cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                      </form>
+                      <form action={rejectWithId}>
+                        <button
+                          type="submit"
+                          className="px-3.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/25 font-mono text-[12px] font-bold text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/40 transition-colors cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  {problem && (
+                    <p className="font-sans text-[13px] text-zinc-400 leading-relaxed mb-2 line-clamp-2">
+                      {problem.length > 150 ? problem.slice(0, 150) + '…' : problem}
+                    </p>
+                  )}
+                  {result && (
+                    <p className="font-sans text-[12px] text-zinc-500 mb-2 italic">
+                      Result: {result}
+                    </p>
+                  )}
+                  {stack.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {stack.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.07] font-mono text-[11px] text-zinc-500"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Header */}
       <div className="flex items-start justify-between mb-10">

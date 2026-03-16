@@ -477,7 +477,7 @@ function PassportCard({
                       </span>
                     )}
                     <span className="text-zinc-500 font-sans text-xs">
-                      {new Date(cred.created_at).toLocaleDateString('en-US')}
+                      {new Date(cred.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                     </span>
                     <button
                       onClick={() => setRevokeTarget(cred.id)}

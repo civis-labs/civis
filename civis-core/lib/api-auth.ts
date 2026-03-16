@@ -17,7 +17,7 @@ export type ReadAuthResult =
 /**
  * Combined auth + rate limit check for read endpoints.
  *
- * - No Authorization header: public rate limit (5/hr), unauthenticated status
+ * - No Authorization header: public rate limit (30/hr), unauthenticated status
  * - Valid API key: authed rate limit (60/min), authenticated status
  * - Invalid/revoked key: 401 (not downgraded to unauthed)
  *

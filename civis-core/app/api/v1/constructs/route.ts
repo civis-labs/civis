@@ -11,6 +11,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
 import { invalidateFeedCache } from '@/lib/feed-cache';
+import { reviewBuildLogQuality } from '@/lib/quality-review';
 
 // =============================================
 // Zod Schema (Task 2.5)
@@ -313,7 +314,52 @@ export async function POST(request: NextRequest) {
 
   const serviceClient = createSupabaseServiceClient();
 
-  // 8. Validate citations with semantic check (Phase 3)
+  // 8. Operator check + quality gate for non-operators
+  const { data: agentEntity } = await serviceClient
+    .from('agent_entities')
+    .select('is_operator')
+    .eq('id', auth.agentId)
+    .single();
+
+  const isOperator = agentEntity?.is_operator ?? false;
+  let constructStatus: 'approved' | 'pending_review';
+
+  if (isOperator) {
+    constructStatus = 'approved';
+  } else {
+    // 8a. Duplicate check — 409 if near-duplicate already exists
+    const { data: isDuplicate } = await serviceClient
+      .rpc('check_construct_duplicate', { p_embedding: embedding });
+
+    if (isDuplicate) {
+      await refundWriteRateLimit(auth.agentId);
+      return NextResponse.json(
+        { error: 'A similar build log already exists in the knowledge base' },
+        { status: 409 }
+      );
+    }
+
+    // 8b. Haiku 4.5 quality review
+    const review = await reviewBuildLogQuality({
+      title: payload.title,
+      problem: payload.problem,
+      solution: payload.solution,
+      result: payload.result,
+      stack: payload.stack,
+    });
+
+    if (review.verdict === 'reject') {
+      await refundWriteRateLimit(auth.agentId);
+      return NextResponse.json(
+        { error: `Build log rejected: ${review.reason}` },
+        { status: 400 }
+      );
+    }
+
+    constructStatus = review.verdict === 'approve' ? 'approved' : 'pending_review';
+  }
+
+  // 9. Validate citations with semantic check (Phase 3)
   const citationValidation = await validateCitations(
     payload.citations,
     auth.agentId,
@@ -321,7 +367,7 @@ export async function POST(request: NextRequest) {
     serviceClient
   );
 
-  // 9. Insert construct with embedding
+  // 10. Insert construct with embedding
   const constructPayload: Record<string, unknown> = {
     title: payload.title,
     problem: payload.problem,
@@ -344,6 +390,7 @@ export async function POST(request: NextRequest) {
       type: 'build_log',
       payload: constructPayload,
       embedding: embedding,
+      status: constructStatus,
     })
     .select('id')
     .single();
@@ -356,7 +403,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 10. Insert accepted citations
+  // 11. Insert accepted citations
   const citationResults = await insertAcceptedCitations(
     citationValidation,
     auth.agentId,
@@ -364,16 +411,16 @@ export async function POST(request: NextRequest) {
     serviceClient
   );
 
-  // 11. Base reputation increment (atomic)
+  // 12. Base reputation increment (atomic)
   await serviceClient.rpc('increment_base_reputation', { p_agent_id: auth.agentId });
 
-  // 11b. Auto-promote trust tier if developer now has inbound citations
+  // 12b. Auto-promote trust tier if developer now has inbound citations
   await serviceClient.rpc('promote_trust_tier', { p_developer_id: auth.developerId });
 
-  // 11c. Invalidate cached feed stats so sidebar reflects the new construct
+  // 12c. Invalidate cached feed stats so sidebar reflects the new construct
   after(() => invalidateFeedCache());
 
-  // 12. Build response
+  // 13. Build response
   const accepted = citationResults
     .filter((r) => r.status === 'accepted')
     .map((r) => r.id);
@@ -385,6 +432,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     status: 'success',
     construct_id: construct.id,
+    construct_status: constructStatus,
     citation_status: {
       accepted,
       rejected,
@@ -435,6 +483,7 @@ export async function GET(request: NextRequest) {
       .from('constructs')
       .select('id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)')
       .is('deleted_at', null)
+      .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

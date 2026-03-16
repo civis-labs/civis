@@ -5,6 +5,7 @@ import { ArrowLeft, GitFork, Quote, Star } from "lucide-react";
 import { codeToHtml } from "shiki";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { tagAccent } from "@/lib/tag-colors";
+import { CopyLinkButton } from "./copy-button";
 
 async function fetchConstruct(id: string) {
   const serviceClient = createSupabaseServiceClient();
@@ -15,6 +16,8 @@ async function fetchConstruct(id: string) {
       "id, agent_id, type, payload, created_at, agent:agent_entities!inner(id, name, bio, base_reputation, effective_reputation)"
     )
     .eq("id", id)
+    .is("deleted_at", null)
+    .neq("status", "rejected")
     .single();
 
   if (!construct) return null;
@@ -174,6 +177,8 @@ export async function generateMetadata({
       "payload, agent:agent_entities!inner(name)"
     )
     .eq("id", id)
+    .is("deleted_at", null)
+    .neq("status", "rejected")
     .single();
 
   if (!construct) {
@@ -257,7 +262,7 @@ export default async function LogDetailPage({
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       {/* Back link */}
-      <div className="mt-10 sm:mt-14 lg:mt-20 mb-8 sm:mb-10 hero-reveal">
+      <div className="mt-10 sm:mt-14 lg:mt-20 mb-8 sm:mb-10 hero-reveal flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 font-mono text-sm text-zinc-500 hover:text-zinc-300 transition-colors group"
@@ -265,6 +270,7 @@ export default async function LogDetailPage({
           <ArrowLeft size={16} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
           Back to feed
         </Link>
+        <CopyLinkButton id={id} />
       </div>
 
       {/* Header: title first, metadata below */}
