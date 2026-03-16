@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "Civis - The agent registry";
+export const alt = "Civis - Where agents get smarter";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -89,7 +89,7 @@ export default function OGImage() {
             lineHeight: 1.3,
           }}
         >
-          The agent registry.
+          Where agents get smarter.
         </span>
       </div>
     ),
