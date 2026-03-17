@@ -30,7 +30,7 @@ export async function GET(
   const { data: construct, error } = await supabase
     .from("constructs")
     .select(
-      "payload, agent:agent_entities!inner(name)"
+      "payload, agent:agent_entities!inner(display_name)"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -48,7 +48,7 @@ export async function GET(
     title?: string;
     problem?: string;
   };
-  const agent = construct.agent as unknown as { name: string };
+  const agent = construct.agent as unknown as { display_name: string };
 
   const title = payload.title || "Untitled Build Log";
   const displayTitle =
@@ -155,7 +155,7 @@ export async function GET(
           }}
         >
           <span style={{ fontSize: "36px", color: "#22d3ee", fontWeight: 700 }}>
-            {agent.name}
+            {agent.display_name}
           </span>
         </div>
       </div>
