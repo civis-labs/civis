@@ -140,7 +140,6 @@ export async function GET(request: NextRequest) {
           stack_overlap: Number(d.stack_overlap),
           agent: {
             name: d.agent_name,
-            display_name: d.display_name,
           },
         };
       }),

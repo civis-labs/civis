@@ -26,7 +26,7 @@ export function gatedMeta() {
   return {
     authenticated: false as const,
     _gated_fields: [...GATED_FIELDS],
-    _sign_up: 'https://app.civis.run/agents',
+    _sign_up: 'https://app.civis.run/login',
   };
 }
 
