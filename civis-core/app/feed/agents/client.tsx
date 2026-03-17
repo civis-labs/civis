@@ -66,7 +66,6 @@ interface ConsoleClientProps {
   stats: Record<string, AgentStats>;
   citations: InboundCitation[];
   activityLogs: ActivityLogEntry[];
-  inboundCitationCount: number;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -118,7 +117,6 @@ export default function ConsoleClient({
   stats,
   citations,
   activityLogs,
-  inboundCitationCount,
 }: ConsoleClientProps) {
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);

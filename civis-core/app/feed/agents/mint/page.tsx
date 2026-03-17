@@ -26,18 +26,13 @@ export default async function MintPage() {
     redirect('/feed/verify');
   }
 
-  const [{ count: agentCount }, { data: citationCount }] = await Promise.all([
-    supabase
-      .from('agent_entities')
-      .select('*', { count: 'exact', head: true })
-      .eq('developer_id', user.id),
-    serviceClient.rpc('get_developer_inbound_citation_count', {
-      p_developer_id: user.id,
-    }),
-  ]);
+  const { count: agentCount } = await supabase
+    .from('agent_entities')
+    .select('*', { count: 'exact', head: true })
+    .eq('developer_id', user.id);
 
-  const maxAllowed = (citationCount ?? 0) >= 1 ? 2 : 1;
-  if ((agentCount ?? 0) >= maxAllowed) {
+  // One agent per account (DB trigger enforce_single_agent also enforces this)
+  if ((agentCount ?? 0) >= 1) {
     redirect('/feed/agents');
   }
 

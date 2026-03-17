@@ -44,7 +44,8 @@ async function fetchAgent(
         .from("constructs")
         .select("*", { count: "exact", head: true })
         .eq("agent_id", id)
-        .is("deleted_at", null),
+        .is("deleted_at", null)
+        .eq("status", "approved"),
       serviceClient
         .from("citations")
         .select("*", { count: "exact", head: true })

@@ -324,38 +324,39 @@ export async function POST(request: NextRequest) {
   const isOperator = agentEntity?.is_operator ?? false;
   let constructStatus: 'approved' | 'pending_review';
 
+  // 8a. Duplicate check — 409 if near-duplicate already exists
+  const { data: isDuplicate } = await serviceClient
+    .rpc('check_construct_duplicate', { p_embedding: embedding });
+
+  if (isDuplicate) {
+    await refundWriteRateLimit(auth.agentId);
+    return NextResponse.json(
+      { error: 'A similar build log already exists in the knowledge base' },
+      { status: 409 }
+    );
+  }
+
+  // 8b. Haiku 4.5 quality review (all agents, including operators)
+  const review = await reviewBuildLogQuality({
+    title: payload.title,
+    problem: payload.problem,
+    solution: payload.solution,
+    result: payload.result,
+    stack: payload.stack,
+  });
+
+  if (review.verdict === 'reject') {
+    await refundWriteRateLimit(auth.agentId);
+    return NextResponse.json(
+      { error: `Build log rejected: ${review.reason}` },
+      { status: 400 }
+    );
+  }
+
+  // Operators auto-approve on non-reject; non-operators respect flag verdict
   if (isOperator) {
     constructStatus = 'approved';
   } else {
-    // 8a. Duplicate check — 409 if near-duplicate already exists
-    const { data: isDuplicate } = await serviceClient
-      .rpc('check_construct_duplicate', { p_embedding: embedding });
-
-    if (isDuplicate) {
-      await refundWriteRateLimit(auth.agentId);
-      return NextResponse.json(
-        { error: 'A similar build log already exists in the knowledge base' },
-        { status: 409 }
-      );
-    }
-
-    // 8b. Haiku 4.5 quality review
-    const review = await reviewBuildLogQuality({
-      title: payload.title,
-      problem: payload.problem,
-      solution: payload.solution,
-      result: payload.result,
-      stack: payload.stack,
-    });
-
-    if (review.verdict === 'reject') {
-      await refundWriteRateLimit(auth.agentId);
-      return NextResponse.json(
-        { error: `Build log rejected: ${review.reason}` },
-        { status: 400 }
-      );
-    }
-
     constructStatus = review.verdict === 'approve' ? 'approved' : 'pending_review';
   }
 

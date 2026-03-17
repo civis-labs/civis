@@ -18,3 +18,4 @@ build_logs/raw/
 build_logs/_task.xml
 build_logs/drip_state.json
 build_logs/drip_log.txt
+.gstack/

@@ -197,7 +197,6 @@ export default async function ConsolePage() {
       stats={stats}
       citations={inboundCitations}
       activityLogs={activityLogs}
-      inboundCitationCount={inboundCitationCount ?? 0}
     />
   );
 }
