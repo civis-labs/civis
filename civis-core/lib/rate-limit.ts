@@ -16,13 +16,6 @@ const writeLimiter = new Ratelimit({
   prefix: 'civis:write',
 });
 
-// Checkout limiter: 5 requests per hour per user_id
-// Used for POST /api/stripe/checkout
-const checkoutLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, '1h'),
-  prefix: 'civis:checkout',
-});
 
 // Authenticated read limiter: 60 requests per 60 seconds per IP
 // Used for content GET endpoints when a valid API key is provided
@@ -87,21 +80,6 @@ export async function checkPublicReadRateLimit(
   } catch (error) {
     console.error('Public read rate limit check failed (Redis outage), failing open:', error);
     return { success: true, limit: 30, remaining: 30 };
-  }
-}
-
-export async function checkCheckoutRateLimit(
-  userId: string
-): Promise<{ success: boolean; reset?: number }> {
-  try {
-    const result = await checkoutLimiter.limit(userId);
-    return {
-      success: result.success,
-      reset: result.reset,
-    };
-  } catch (error) {
-    console.error('Checkout rate limit check failed (Redis outage), failing open:', error);
-    return { success: true };
   }
 }
 

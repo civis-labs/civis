@@ -2,7 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
-import { computeGitHubSignals } from '@/lib/github-signals';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -44,36 +43,19 @@ export async function GET(request: NextRequest) {
   }
 
   const session = data.session;
-  const providerToken = session.provider_token;
+  const userId = session.user.id;
 
-  if (!providerToken) {
-    await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/login?error=no_provider_token`);
-  }
-
-  // ==========================================================
-  // SYBIL FILTER #1: Fetch GitHub profile for signal scoring
-  // ==========================================================
-  const ghResponse = await fetch('https://api.github.com/user', {
-    headers: {
-      Authorization: `Bearer ${providerToken}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  });
-
-  if (!ghResponse.ok) {
-    await supabase.auth.signOut();
-    return NextResponse.redirect(`${origin}/login?error=github_api_failed`);
-  }
-
-  const ghUser = await ghResponse.json();
+  // Extract provider info from Supabase session (works for all providers)
+  const provider = session.user.app_metadata?.provider || 'email';
+  const providerId =
+    provider === 'email'
+      ? session.user.email || userId
+      : session.user.identities?.[0]?.id || userId;
 
   // ==========================================================
-  // SYBIL FILTER #2: Check blacklisted identities
+  // BLACKLIST CHECK
   // ==========================================================
   const serviceClient = createSupabaseServiceClient();
-  const provider = 'github';
-  const providerId = String(ghUser.id);
 
   const { data: blacklisted } = await serviceClient
     .from('blacklisted_identities')
@@ -88,41 +70,29 @@ export async function GET(request: NextRequest) {
   }
 
   // ==========================================================
-  // DEVELOPER RECORD: Create on first login, skip on subsequent
+  // DEVELOPER RECORD: Create on first login, update on return
   // ==========================================================
-  const userId = session.user.id;
-
   const { data: existingDev } = await serviceClient
     .from('developers')
-    .select('id, trust_tier')
+    .select('id')
     .eq('id', userId)
     .single();
 
   if (existingDev) {
-    // Update last_login_at for returning user
     await serviceClient.from('developers').update({ last_login_at: new Date().toISOString() }).eq('id', userId);
-
-    // Returning user — route based on trust tier
-    if (existingDev.trust_tier === 'unverified') {
-      return NextResponse.redirect(`${origin}/verify`);
-    }
     return NextResponse.redirect(`${origin}/agents`);
   }
 
   // ==========================================================
-  // NEW USER: Compute signal score and create developer record
+  // NEW USER: Create developer record (always standard tier)
   // ==========================================================
-  const signals = computeGitHubSignals(ghUser);
-  const trustTier = signals.passed ? 'standard' : 'unverified';
-
   const { error: insertError } = await serviceClient
     .from('developers')
     .insert({
       id: userId,
       provider,
       provider_id: providerId,
-      trust_tier: trustTier,
-      provider_signals: signals,
+      trust_tier: 'standard',
     });
 
   if (insertError) {
@@ -130,14 +100,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
-  // Update last_login_at for new user
   await serviceClient.from('developers').update({ last_login_at: new Date().toISOString() }).eq('id', userId);
-
-  // Route based on signal score — DO NOT sign out on failure
-  // (session must stay alive for /verify page + Stripe checkout)
-  if (!signals.passed) {
-    return NextResponse.redirect(`${origin}/verify`);
-  }
 
   return NextResponse.redirect(`${origin}/agents`);
 }
