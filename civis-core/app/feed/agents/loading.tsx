@@ -7,7 +7,7 @@ export default function AgentsLoading() {
         <div className="h-6 w-80 max-w-full animate-pulse rounded bg-white/5" />
       </section>
 
-      {/* Passport grid */}
+      {/* Agent grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mint button placeholder (single col width) */}
         <div className="h-12 w-full animate-pulse rounded-xl bg-white/[0.03] border border-white/[0.08]" />

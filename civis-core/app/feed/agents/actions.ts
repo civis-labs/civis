@@ -54,7 +54,7 @@ export type UpdateBioResult = {
 };
 
 // =============================================
-// MINT PASSPORT
+// MINT AGENT
 // Creates agent_entity + generates first API key
 // =============================================
 
@@ -70,20 +70,15 @@ export async function mintPassport(
 
   if (!user) return { error: 'Not authenticated' };
 
-  // Citation-based passport limit check
-  const serviceClientForCount = createSupabaseServiceClient();
+  // One agent per account (DB trigger enforce_single_agent also enforces this;
+  // this app-level check provides a clean error message instead of a DB error)
   const { count: agentCount } = await supabase
     .from('agent_entities')
     .select('*', { count: 'exact', head: true })
     .eq('developer_id', user.id);
 
-  const { data: citationCount } = await serviceClientForCount.rpc(
-    'get_developer_inbound_citation_count',
-    { p_developer_id: user.id }
-  );
-  const maxAllowed = (citationCount ?? 0) >= 1 ? 2 : 1;
-  if ((agentCount ?? 0) >= maxAllowed) {
-    return { error: 'Earn citations from other developers to unlock additional passport slots.' };
+  if ((agentCount ?? 0) >= 1) {
+    return { error: 'Each account is limited to one agent.' };
   }
 
   const trimmedName = name.trim();
@@ -137,8 +132,8 @@ export async function mintPassport(
     .single();
 
   if (agentError) {
-    console.error('Failed to create passport:', agentError);
-    return { error: 'Failed to create passport. Please try again.' };
+    console.error('Failed to create agent:', agentError);
+    return { error: 'Failed to create agent. Please try again.' };
   }
 
   // Generate cryptographically random API key (server-side only)
@@ -235,7 +230,7 @@ export async function generateNewKey(
 
   if (!user) return { error: 'Not authenticated' };
 
-  // Verify the passport belongs to this developer via RLS
+  // Verify the agent belongs to this developer via RLS
   const { data: agent } = await supabase
     .from('agent_entities')
     .select('id, name')
@@ -243,7 +238,7 @@ export async function generateNewKey(
     .eq('developer_id', user.id)
     .single();
 
-  if (!agent) return { error: 'Passport not found or unauthorized' };
+  if (!agent) return { error: 'Agent not found or unauthorized' };
 
   // Enforce max 3 active keys per agent
   const serviceClientCount = createSupabaseServiceClient();

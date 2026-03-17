@@ -16,7 +16,7 @@ import { storeNewKeyData } from './new-key/client';
 // Types
 // =============================================
 
-interface Passport {
+interface Agent {
   id: string;
   name: string;
   bio: string | null;
@@ -61,7 +61,7 @@ interface ActivityLogEntry {
 }
 
 interface ConsoleClientProps {
-  passports: Passport[];
+  agents: Agent[];
   credentials: Credential[];
   stats: Record<string, AgentStats>;
   citations: InboundCitation[];
@@ -84,7 +84,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
 };
 
-// Per-card accent colors. Max 2 passports, so 2 distinct accents.
+// Per-card accent colors.
 const CARD_ACCENTS = [
   {
     // Cyan (primary)
@@ -113,7 +113,7 @@ const CARD_ACCENTS = [
 // =============================================
 
 export default function ConsoleClient({
-  passports,
+  agents,
   credentials,
   stats,
   citations,
@@ -147,9 +147,8 @@ export default function ConsoleClient({
     });
   };
 
-  const maxAllowed = inboundCitationCount >= 1 ? 2 : 1;
-  const canMint = passports.length < maxAllowed;
-  const isSingle = passports.length <= 1;
+  const canMint = agents.length === 0;
+  const isSingle = agents.length <= 1;
 
   return (
     <div className={`mx-auto px-4 py-8 sm:px-6 ${isSingle ? 'max-w-xl' : 'max-w-7xl'}`}>
@@ -170,7 +169,7 @@ export default function ConsoleClient({
       )}
 
       {/* Empty state */}
-      {passports.length === 0 && (
+      {agents.length === 0 && (
         <section className="mb-10 max-w-xl">
           <div className="relative group">
             <div className="absolute -inset-[2px] bg-gradient-to-r from-cyan-500/40 via-emerald-500/40 to-cyan-500/40 rounded-2xl blur-[30px] opacity-40 mesh-breathe pointer-events-none -z-10" />
@@ -197,57 +196,51 @@ export default function ConsoleClient({
       )}
 
       {/* Mint button */}
-      {passports.length > 0 && (
+      {agents.length > 0 && (
         <div className={`group/mint relative mb-6 ${isSingle ? '' : 'lg:w-[calc(50%-12px)]'}`}>
           {canMint ? (
             <Link
               href="/agents/mint"
               className="rounded-xl border border-dashed border-white/[0.25] bg-black/40 px-6 py-3.5 w-full text-sm font-mono font-bold text-zinc-300 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-950/10 hover:shadow-[0_0_20px_rgba(34,211,238,0.08)] transition-all duration-300 flex items-center justify-center gap-2"
             >
-              + Mint Another Agent Passport
+              + Register Another Agent
             </Link>
           ) : (
             <div className="rounded-xl border border-dashed border-white/[0.18] bg-black/20 px-6 py-3.5 w-full text-sm font-mono font-bold text-zinc-400 flex items-center justify-center gap-2 cursor-not-allowed">
-              + Mint Another Agent Passport
-            </div>
-          )}
-          {!canMint && inboundCitationCount === 0 && (
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 scale-0 rounded-lg bg-black border border-white/10 px-4 py-2 text-xs font-bold text-white shadow-xl opacity-0 transition-transform group-hover/mint:scale-100 group-hover/mint:opacity-100 pointer-events-none whitespace-nowrap z-10">
-              Receive a citation from another agent to unlock more slots
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white/10" />
+              One agent per account
             </div>
           )}
         </div>
       )}
 
-      {/* Passport Grid */}
-      {passports.length > 0 && (
+      {/* Agent Grid */}
+      {agents.length > 0 && (
         <section className={`grid gap-6 items-start ${isSingle ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
-          {passports.map((passport, index) => {
+          {agents.map((agent, index) => {
             const creds = credentials.filter(
-              (c) => c.agent_id === passport.id
+              (c) => c.agent_id === agent.id
             );
-            const agentStats = stats[passport.id] || {
+            const agentStats = stats[agent.id] || {
               construct_count: 0,
               citations_received: 0,
               citations_given: 0,
             };
             const agentCitations = citations.filter(
-              (c) => c.target_agent_id === passport.id
+              (c) => c.target_agent_id === agent.id
             );
             const agentLogs = activityLogs
-              .filter((l) => l.agent_id === passport.id)
+              .filter((l) => l.agent_id === agent.id)
               .slice(0, 5);
             return (
-              <PassportCard
-                key={passport.id}
-                passport={passport}
+              <AgentCard
+                key={agent.id}
+                agent={agent}
                 credentials={creds}
                 stats={agentStats}
                 citations={agentCitations}
                 activityLogs={agentLogs}
                 onRevoke={handleRevoke}
-                onGenerateKey={(tag: string | null) => handleGenerateKey(passport.id, tag)}
+                onGenerateKey={(tag: string | null) => handleGenerateKey(agent.id, tag)}
                 isPending={isPending}
                 accent={CARD_ACCENTS[index % CARD_ACCENTS.length]}
               />
@@ -260,11 +253,11 @@ export default function ConsoleClient({
 }
 
 // =============================================
-// Passport Card
+// Agent Card
 // =============================================
 
-function PassportCard({
-  passport,
+function AgentCard({
+  agent,
   credentials,
   stats,
   citations,
@@ -274,7 +267,7 @@ function PassportCard({
   isPending,
   accent,
 }: {
-  passport: Passport;
+  agent: Agent;
   credentials: Credential[];
   stats: AgentStats;
   citations: InboundCitation[];
@@ -289,14 +282,14 @@ function PassportCard({
   const [showTagInput, setShowTagInput] = useState(false);
   const [tagValue, setTagValue] = useState('');
   const [editingBio, setEditingBio] = useState(false);
-  const [bioValue, setBioValue] = useState(passport.bio || '');
+  const [bioValue, setBioValue] = useState(agent.bio || '');
   const [bioError, setBioError] = useState<string | null>(null);
   const [bioPending, startBioTransition] = useTransition();
 
   const handleBioSave = () => {
     setBioError(null);
     startBioTransition(async () => {
-      const result = await updateBio(passport.id, bioValue || null);
+      const result = await updateBio(agent.id, bioValue || null);
       if (result.error) {
         setBioError(result.error);
       } else {
@@ -306,14 +299,14 @@ function PassportCard({
   };
 
   const handleBioCancel = () => {
-    setBioValue(passport.bio || '');
+    setBioValue(agent.bio || '');
     setBioError(null);
     setEditingBio(false);
   };
 
-  const statusInfo = statusConfig[passport.status] || statusConfig.active;
+  const statusInfo = statusConfig[agent.status] || statusConfig.active;
   const rep =
-    passport.effective_reputation ?? passport.base_reputation ?? 0;
+    agent.effective_reputation ?? agent.base_reputation ?? 0;
   const activeCredentials = credentials.filter((c) => !c.is_revoked);
 
   const tabs = [
@@ -340,12 +333,12 @@ function PassportCard({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
                 <Link
-                  href={`/agent/${passport.id}`}
+                  href={`/agent/${agent.id}`}
                   className="text-3xl sm:text-4xl font-mono font-extrabold text-white hover:text-cyan-400 transition-colors tracking-tight truncate"
                 >
-                  {passport.name}
+                  {agent.name}
                 </Link>
-                {passport.status !== 'active' && (
+                {agent.status !== 'active' && (
                   <span
                     className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-bold border ${statusInfo.className}`}
                   >
@@ -388,10 +381,10 @@ function PassportCard({
                       <span className="font-mono text-[10px] text-zinc-600 ml-auto">{bioValue.length}/500</span>
                     </div>
                   </div>
-                ) : passport.bio ? (
+                ) : agent.bio ? (
                   <div className="group/bio flex items-start gap-2">
                     <p className="text-base font-sans text-zinc-400 leading-relaxed italic">
-                      {passport.bio}
+                      {agent.bio}
                     </p>
                     <button
                       onClick={() => setEditingBio(true)}
@@ -572,7 +565,7 @@ function PassportCard({
                     </Link>
                   ))}
                   <Link
-                    href={`/agent/${passport.id}`}
+                    href={`/agent/${agent.id}`}
                     className="inline-flex items-center gap-1.5 mt-1 font-mono text-xs font-bold text-cyan-400 hover:text-white transition-colors"
                   >
                     View public profile &rarr;

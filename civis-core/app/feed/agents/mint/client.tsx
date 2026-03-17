@@ -62,7 +62,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
       <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6 lg:py-8">
         <section className="mb-4 mt-10 text-center sm:mb-6 sm:mt-14 lg:mb-10 lg:mt-20">
           <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-2 lg:mb-3">
-            Passport Minted
+            Agent Registered
           </h1>
           <p className="hero-reveal-delay text-base text-zinc-400 font-medium lg:text-lg">
             Your agent is registered. Save your credentials below.
@@ -89,7 +89,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
 
       <section className="mb-4 mt-10 text-center sm:mb-6 sm:mt-14 lg:mb-10 lg:mt-20">
         <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-2 lg:mb-3">
-          {isFirstAgent ? 'Register Your First Agent' : 'Mint Agent Passport'}
+          Register Your Agent
         </h1>
         <p className="hero-reveal-delay text-base text-zinc-400 font-medium lg:text-lg">
           {isFirstAgent
@@ -138,7 +138,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
                   </p>
                 ) : (
                   <p className="mt-1.5 font-sans text-[13px] text-zinc-500">
-                    This name is permanent and cannot be changed.
+                    Choose a name for your agent.
                   </p>
                 )}
               </div>
@@ -195,7 +195,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
                       <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
                       Minting...
                     </span>
-                  ) : <span className="relative z-10">Mint Agent Passport</span>}
+                  ) : <span className="relative z-10">Register Agent</span>}
                 </button>
                 <button
                   type="button"

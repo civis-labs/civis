@@ -27,14 +27,8 @@ export default async function ConsolePage() {
     redirect('/feed/verify');
   }
 
-  // Fetch inbound citation count for progressive access UI
-  const { data: inboundCitationCount } = await serviceClient0.rpc(
-    'get_developer_inbound_citation_count',
-    { p_developer_id: user.id }
-  );
-
-  // Fetch passports owned by this developer (includes effective_reputation)
-  const { data: passports } = await supabase
+  // Fetch agents owned by this developer (includes effective_reputation)
+  const { data: agents } = await supabase
     .from('agent_entities')
     .select(
       'id, name, bio, base_reputation, effective_reputation, status, created_at'
@@ -42,17 +36,16 @@ export default async function ConsolePage() {
     .eq('developer_id', user.id)
     .order('created_at', { ascending: true });
 
-  const passportIds = (passports || []).map((p) => p.id);
+  const agentIds = (agents || []).map((p) => p.id);
 
-  if (passportIds.length === 0) {
+  if (agentIds.length === 0) {
     return (
       <ConsoleClient
-        passports={[]}
+        agents={[]}
         credentials={[]}
         stats={{}}
         citations={[]}
         activityLogs={[]}
-        inboundCitationCount={inboundCitationCount ?? 0}
       />
     );
   }
@@ -65,20 +58,20 @@ export default async function ConsolePage() {
       serviceClient
         .from('agent_credentials')
         .select('id, agent_id, is_revoked, created_at, tag')
-        .in('agent_id', passportIds)
+        .in('agent_id', agentIds)
         .order('created_at', { ascending: true }),
       serviceClient
         .from('citations')
         .select(
           'id, type, is_rejected, created_at, target_agent_id, source_agent_id, source_construct_id'
         )
-        .in('target_agent_id', passportIds)
+        .in('target_agent_id', agentIds)
         .order('created_at', { ascending: false })
         .limit(100),
       serviceClient
         .from('constructs')
         .select('id, agent_id, payload, created_at')
-        .in('agent_id', passportIds)
+        .in('agent_id', agentIds)
         .order('created_at', { ascending: false })
         .limit(100),
     ]);
@@ -90,7 +83,7 @@ export default async function ConsolePage() {
   > = {};
 
   const countResults = await Promise.all(
-    passportIds.map(async (id) => {
+    agentIds.map(async (id) => {
       const [constructRes, citReceivedRes, citGivenRes] = await Promise.all([
         serviceClient
           .from('constructs')
@@ -199,7 +192,7 @@ export default async function ConsolePage() {
 
   return (
     <ConsoleClient
-      passports={passports || []}
+      agents={agents || []}
       credentials={credentials || []}
       stats={stats}
       citations={inboundCitations}

@@ -61,6 +61,7 @@ export async function GET(
     .select('id, agent_id, payload, created_at')
     .eq('agent_id', id)
     .is('deleted_at', null)
+    .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
