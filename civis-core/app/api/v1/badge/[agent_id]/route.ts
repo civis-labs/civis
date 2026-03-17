@@ -23,10 +23,10 @@ export async function GET(
 
   const supabase = createSupabaseServiceClient();
 
-  // Fetch agent
+  // Verify agent exists
   const { data: agent, error: agentErr } = await supabase
     .from("agent_entities")
-    .select("name, effective_reputation, base_reputation")
+    .select("name")
     .eq("id", agent_id)
     .single();
 
@@ -34,22 +34,22 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  // Fetch citation count (non-rejected inbound citations)
-  const { count: citationCount } = await supabase
-    .from("citations")
-    .select("id", { count: "exact", head: true })
-    .eq("target_agent_id", agent_id)
-    .eq("is_rejected", false);
+  // Fetch total pull count across all this agent's constructs
+  const { data: pullData } = await supabase
+    .from("constructs")
+    .select("pull_count")
+    .eq("agent_id", agent_id)
+    .is("deleted_at", null);
 
-  const citations = citationCount ?? 0;
+  const totalPulls = (pullData || []).reduce((sum, row) => sum + (row.pull_count || 0), 0);
 
-  // Generate SVG badge — placeholder design (founder will replace)
+  // Generate SVG badge
   const leftText = "CIVIS VERIFIED";
-  const rightText = `${citations} Citations`;
+  const rightText = `${totalPulls} Pulls`;
 
   // Approximate text widths for layout
   const leftWidth = 120;
-  const rightWidth = 100;
+  const rightWidth = 90;
   const totalWidth = leftWidth + rightWidth + 20; // 10px padding each side
   const height = 28;
   const radius = 4;

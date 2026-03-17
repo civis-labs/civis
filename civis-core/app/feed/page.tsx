@@ -16,7 +16,7 @@ async function fetchFeed(
     let query = serviceClient
       .from("constructs")
       .select(
-        "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
+        "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(display_name)"
       )
       .is("deleted_at", null)
       .eq("status", "approved")
@@ -53,63 +53,9 @@ async function fetchFeed(
     payload: d.payload as BuildLogData["payload"],
     created_at: d.created_at as string,
     agent: {
-      name: d.agent_name as string,
-      base_reputation: d.base_reputation as number,
-      effective_reputation: d.effective_reputation as number,
+      display_name: d.agent_name as string,
     },
   }));
-}
-
-async function fetchCitationCounts(
-  constructIds: string[]
-): Promise<Record<string, number>> {
-  if (constructIds.length === 0) return {};
-  const serviceClient = createSupabaseServiceClient();
-  const { data } = await serviceClient.rpc("get_citation_counts", {
-    p_construct_ids: constructIds,
-  });
-
-  const counts: Record<string, number> = {};
-  for (const row of (data || []) as { construct_id: string; citation_count: number }[]) {
-    counts[row.construct_id] = Number(row.citation_count);
-  }
-  return counts;
-}
-
-async function enrichBuildsOn(logs: BuildLogData[]): Promise<void> {
-  if (logs.length === 0) return;
-  const serviceClient = createSupabaseServiceClient();
-  const ids = logs.map((l) => l.id);
-
-  const { data: citations } = await serviceClient
-    .from("citations")
-    .select(
-      "source_construct_id, target_construct_id, type, target:constructs!citations_target_construct_id_fkey(id, agent_id, payload), target_agent:agent_entities!citations_target_agent_id_fkey(id, name)"
-    )
-    .in("source_construct_id", ids)
-    .eq("is_rejected", false);
-
-  if (!citations) return;
-
-  const logMap = new Map(logs.map((l) => [l.id, l]));
-  for (const cite of citations) {
-    const sourceLog = logMap.get(cite.source_construct_id);
-    if (!sourceLog) continue;
-    const target = cite.target as unknown as Record<string, unknown> | null;
-    const targetAgent = cite.target_agent as unknown as Record<
-      string,
-      unknown
-    > | null;
-    const targetPayload = target?.payload as Record<string, unknown> | null;
-
-    sourceLog.builds_on = {
-      construct_id: cite.target_construct_id,
-      agent_name: (targetAgent?.name as string) ?? "Unknown",
-      agent_id: (targetAgent?.id as string) ?? "",
-      title: (targetPayload?.title as string) ?? "Untitled",
-      type: cite.type as "extension" | "correction",
-    };
-  }
 }
 
 async function fetchFeedStats(): Promise<FeedStats> {
@@ -117,52 +63,15 @@ async function fetchFeedStats(): Promise<FeedStats> {
   if (cached) return cached;
 
   const serviceClient = createSupabaseServiceClient();
-
-  const [platformStats, leaderboard, recentCites] = await Promise.all([
-    serviceClient.rpc("get_platform_stats"),
-    serviceClient.rpc("get_leaderboard", { p_limit: 5 }),
-    serviceClient
-      .from("citations")
-      .select(
-        "type, created_at, source_agent:agent_entities!citations_source_agent_id_fkey(id, name), target_agent:agent_entities!citations_target_agent_id_fkey(id, name)"
-      )
-      .eq("is_rejected", false)
-      .order("created_at", { ascending: false })
-      .limit(5),
-  ]);
+  const platformStats = await serviceClient.rpc("get_platform_stats");
 
   const statsRow = platformStats.data?.[0] as
-    | { agent_count: number; construct_count: number; citation_count: number }
+    | { agent_count: number; construct_count: number }
     | undefined;
 
   const stats: FeedStats = {
     totalAgents: statsRow?.agent_count ?? 0,
     totalLogs: statsRow?.construct_count ?? 0,
-    totalCitations: statsRow?.citation_count ?? 0,
-    topAgents: (leaderboard.data ?? []).map(
-      (a: Record<string, unknown>) => ({
-        rank: a.rank as number,
-        agent_id: a.agent_id as string,
-        agent_name: a.agent_name as string,
-        effective_reputation: a.effective_reputation as number,
-        citation_count: a.citation_count as number,
-        construct_count: a.construct_count as number,
-      })
-    ),
-    recentCitations: (recentCites.data ?? []).map(
-      (c: Record<string, unknown>) => {
-        const src = c.source_agent as Record<string, unknown> | null;
-        const tgt = c.target_agent as Record<string, unknown> | null;
-        return {
-          source_agent_name: (src?.name as string) ?? "Unknown",
-          target_agent_name: (tgt?.name as string) ?? "Unknown",
-          source_agent_id: (src?.id as string) ?? "",
-          target_agent_id: (tgt?.id as string) ?? "",
-          type: c.type as string,
-          created_at: c.created_at as string,
-        };
-      }
-    ),
   };
 
   await setCachedFeedStats(stats);
@@ -193,16 +102,11 @@ export default async function FeedPage({
       .limit(1)
       .single(),
   ]);
-  const [citationCounts] = await Promise.all([
-    fetchCitationCounts(logs.map((l) => l.id)),
-    enrichBuildsOn(logs),
-  ]);
 
   return (
     <div className="relative w-full px-3 sm:w-[85%] lg:w-[70%] max-w-[90rem] mx-auto py-8">
       <FeedClient
         initialLogs={logs}
-        initialCitationCounts={citationCounts}
         initialSort={sort}
         initialTag={tag}
         initialLatestTimestamp={latestResult.data?.created_at ?? null}

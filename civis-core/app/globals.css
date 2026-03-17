@@ -285,40 +285,6 @@ body::after {
   }
 }
 
-/* Leaderboard: fade-in-up for table rows */
-@keyframes leaderFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.leader-fade-in {
-  animation: leaderFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Leaderboard: podium card reveal */
-@keyframes podiumReveal {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.podium-reveal {
-  animation: podiumReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 /* Explore page: category-tinted tag pills */
 .explore-tag {
   background: rgba(var(--tag-rgb), 0.12);

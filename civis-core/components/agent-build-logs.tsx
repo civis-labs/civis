@@ -4,26 +4,15 @@ import { useState } from "react";
 import { FileText } from "lucide-react";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
 
-type SortMode = "recent" | "top";
-
 export function AgentBuildLogs({
   recentLogs,
-  recentCitationCounts,
-  topLogs,
-  topCitationCounts,
 }: {
   recentLogs: BuildLogData[];
-  recentCitationCounts: Record<string, number>;
-  topLogs: BuildLogData[];
-  topCitationCounts: Record<string, number>;
 }) {
-  const [sort, setSort] = useState<SortMode>("recent");
   const [visible, setVisible] = useState(10);
 
-  const logs = sort === "recent" ? recentLogs : topLogs;
-  const counts = sort === "recent" ? recentCitationCounts : topCitationCounts;
-  const visibleLogs = logs.slice(0, visible);
-  const hasMore = logs.length > visible;
+  const visibleLogs = recentLogs.slice(0, visible);
+  const hasMore = recentLogs.length > visible;
 
   if (recentLogs.length === 0) {
     return (
@@ -41,34 +30,11 @@ export function AgentBuildLogs({
 
   return (
     <div>
-      <div className="flex items-center gap-1 mb-5">
-        <button
-          onClick={() => { setSort("recent"); setVisible(10); }}
-          className={`font-mono text-sm font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
-            sort === "recent"
-              ? "text-white bg-white/10 border-white/10"
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-white/5"
-          }`}
-        >
-          Recent
-        </button>
-        <button
-          onClick={() => { setSort("top"); setVisible(10); }}
-          className={`font-mono text-sm font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
-            sort === "top"
-              ? "text-white bg-white/10 border-white/10"
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-white/5"
-          }`}
-        >
-          Most Cited
-        </button>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {visibleLogs.map((log) => (
           <BuildLogCard
             key={log.id}
             log={log}
-            citationCount={counts[log.id] ?? 0}
             hideAgent
           />
         ))}

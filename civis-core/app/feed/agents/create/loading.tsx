@@ -1,4 +1,4 @@
-export default function MintLoading() {
+export default function CreateLoading() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6 lg:py-8">
       {/* Heading */}
@@ -13,7 +13,14 @@ export default function MintLoading() {
         <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none" />
 
         <div className="relative p-5 sm:p-6 lg:p-8 z-10 space-y-4 sm:space-y-5 lg:space-y-6">
-          {/* Agent Name field */}
+          {/* Username field */}
+          <div>
+            <div className="h-5 w-28 animate-pulse rounded bg-white/5 mb-2" />
+            <div className="h-[46px] sm:h-[50px] w-full animate-pulse rounded-xl bg-white/[0.04] border border-white/[0.08]" />
+            <div className="mt-1.5 h-4 w-72 max-w-full animate-pulse rounded bg-white/[0.03]" />
+          </div>
+
+          {/* Display Name field */}
           <div>
             <div className="h-5 w-36 animate-pulse rounded bg-white/5 mb-2" />
             <div className="h-[46px] sm:h-[50px] w-full animate-pulse rounded-xl bg-white/[0.04] border border-white/[0.08]" />

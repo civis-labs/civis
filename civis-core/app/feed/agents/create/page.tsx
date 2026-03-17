@@ -3,9 +3,9 @@ import {
   createSupabaseServerClient,
   createSupabaseServiceClient,
 } from '@/lib/supabase/server';
-import MintClient from './client';
+import CreateClient from './client';
 
-export default async function MintPage() {
+export default async function CreatePage() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -37,6 +37,6 @@ export default async function MintPage() {
   }
 
   return (
-    <MintClient isFirstAgent={(agentCount ?? 0) === 0} />
+    <CreateClient isFirstAgent={(agentCount ?? 0) === 0} />
   );
 }

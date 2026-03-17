@@ -5,7 +5,6 @@ const REQUIRED = [
   "OPENAI_API_KEY",
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
-  "CRON_SECRET",
 ] as const;
 
 const OPTIONAL = [

@@ -8,19 +8,14 @@ import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { sanitizeDeep } from '@/lib/sanitize';
 import { normalizeStack } from '@/lib/stack-normalize';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
-import { generateConstructEmbedding, cosineSimilarity } from '@/lib/embeddings';
+import { generateConstructEmbedding } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
 import { invalidateFeedCache } from '@/lib/feed-cache';
 import { reviewBuildLogQuality } from '@/lib/quality-review';
 
 // =============================================
-// Zod Schema (Task 2.5)
+// Zod Schema
 // =============================================
-
-const citationSchema = z.object({
-  target_uuid: z.string().uuid(),
-  type: z.enum(['extension', 'correction']),
-});
 
 const constructSchema = z.object({
   type: z.literal('build_log'),
@@ -38,7 +33,7 @@ const constructSchema = z.object({
       lang: z.string().trim().min(1).max(30),
       body: z.string().min(1).max(3000),
     }).optional(),
-    citations: z.array(citationSchema).max(3).default([]),
+    source_url: z.string().url().max(500).refine((u) => u.startsWith('https://'), 'source_url must use https').optional(),
     environment: z.object({
       model: z.string().trim().max(50).optional(),
       runtime: z.string().trim().max(50).optional(),
@@ -51,160 +46,7 @@ const constructSchema = z.object({
 });
 
 // =============================================
-// Citation Validation (Phase 2 + Phase 3 Semantic Check)
-// =============================================
-
-type CitationValidationResult =
-  | { status: 'accepted'; id: string; targetAgentId: string; type: 'extension' | 'correction' }
-  | { status: 'rejected'; id: string; reason: string };
-
-/**
- * Validates citations WITHOUT inserting them.
- * Checks: exists, self-citation, 24h directed limit, semantic similarity.
- * Returns validation results with metadata needed for later insertion.
- */
-async function validateCitations(
-  citations: { target_uuid: string; type: 'extension' | 'correction' }[],
-  sourceAgentId: string,
-  sourceEmbedding: number[],
-  serviceClient: ReturnType<typeof createSupabaseServiceClient>
-): Promise<CitationValidationResult[]> {
-  const results: CitationValidationResult[] = [];
-
-  for (const citation of citations) {
-    // 1. Exists check: verify target construct exists
-    const { data: targetConstruct } = await serviceClient
-      .from('constructs')
-      .select('id, agent_id, embedding')
-      .eq('id', citation.target_uuid)
-      .single();
-
-    if (!targetConstruct) {
-      results.push({
-        status: 'rejected',
-        id: citation.target_uuid,
-        reason: 'target_not_found',
-      });
-      continue;
-    }
-
-    // 2. Self-citation check: resolve both agents' developer_id
-    const { data: sourceAgent } = await serviceClient
-      .from('agent_entities')
-      .select('developer_id')
-      .eq('id', sourceAgentId)
-      .single();
-
-    const { data: targetAgent } = await serviceClient
-      .from('agent_entities')
-      .select('developer_id')
-      .eq('id', targetConstruct.agent_id)
-      .single();
-
-    if (sourceAgent && targetAgent && sourceAgent.developer_id === targetAgent.developer_id) {
-      results.push({
-        status: 'rejected',
-        id: citation.target_uuid,
-        reason: 'rejected_self_citation',
-      });
-      continue;
-    }
-
-    // 3. 24-hour directed limit: check for existing citation between these agents in last 24h
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: recentCitations } = await serviceClient
-      .from('citations')
-      .select('id')
-      .eq('source_agent_id', sourceAgentId)
-      .eq('target_agent_id', targetConstruct.agent_id)
-      .gte('created_at', twentyFourHoursAgo)
-      .limit(1);
-
-    if (recentCitations && recentCitations.length > 0) {
-      results.push({
-        status: 'rejected',
-        id: citation.target_uuid,
-        reason: 'rejected_24h_loop_limit',
-      });
-      continue;
-    }
-
-    // 4. Semantic similarity check (Phase 3)
-    if (targetConstruct.embedding) {
-      // pgvector may return embedding as a string — parse if needed
-      const targetEmbedding: number[] = typeof targetConstruct.embedding === 'string'
-        ? JSON.parse(targetConstruct.embedding)
-        : targetConstruct.embedding;
-      const similarity = cosineSimilarity(sourceEmbedding, targetEmbedding);
-      if (similarity < 0.50) {
-        results.push({
-          status: 'rejected',
-          id: citation.target_uuid,
-          reason: 'rejected_low_similarity',
-        });
-        continue;
-      }
-    }
-    // If target has no embedding (old data), skip semantic check and accept
-
-    // All checks passed
-    results.push({
-      status: 'accepted',
-      id: citation.target_uuid,
-      targetAgentId: targetConstruct.agent_id,
-      type: citation.type,
-    });
-  }
-
-  return results;
-}
-
-/**
- * Inserts accepted citations into the citations table.
- * Called AFTER the construct has been inserted so source_construct_id exists.
- */
-async function insertAcceptedCitations(
-  validationResults: CitationValidationResult[],
-  sourceAgentId: string,
-  sourceConstructId: string,
-  serviceClient: ReturnType<typeof createSupabaseServiceClient>
-): Promise<CitationValidationResult[]> {
-  const finalResults: CitationValidationResult[] = [];
-
-  for (const result of validationResults) {
-    if (result.status === 'rejected') {
-      finalResults.push(result);
-      continue;
-    }
-
-    const { error: insertError } = await serviceClient
-      .from('citations')
-      .insert({
-        source_construct_id: sourceConstructId,
-        target_construct_id: result.id,
-        source_agent_id: sourceAgentId,
-        target_agent_id: result.targetAgentId,
-        type: result.type,
-      });
-
-    if (insertError) {
-      finalResults.push({
-        status: 'rejected',
-        id: result.id,
-        reason: 'insert_failed',
-      });
-      continue;
-    }
-
-    finalResults.push({ status: 'accepted', id: result.id, targetAgentId: result.targetAgentId, type: result.type });
-  }
-
-  return finalResults;
-}
-
-// =============================================
-// POST /v1/constructs (Phase 2 + Phase 3)
+// POST /v1/constructs
 // =============================================
 
 export async function POST(request: NextRequest) {
@@ -279,22 +121,7 @@ export async function POST(request: NextRequest) {
 
   const { payload } = parseResult.data;
 
-  // 6b. Citation gating — first log must have no citations
-  if (payload.citations.length > 0) {
-    const serviceClientForCount = createSupabaseServiceClient();
-    const { data: constructCount } = await serviceClientForCount.rpc(
-      'get_developer_construct_count',
-      { p_developer_id: auth.developerId }
-    );
-    if ((constructCount ?? 0) === 0) {
-      return NextResponse.json(
-        { error: 'Citations are unlocked after posting your first build log.' },
-        { status: 403 }
-      );
-    }
-  }
-
-  // 7. Generate embedding (Phase 3)
+  // 7. Generate embedding
   let embedding: number[];
   try {
     embedding = await generateConstructEmbedding({
@@ -360,15 +187,7 @@ export async function POST(request: NextRequest) {
     constructStatus = review.verdict === 'approve' ? 'approved' : 'pending_review';
   }
 
-  // 9. Validate citations with semantic check (Phase 3)
-  const citationValidation = await validateCitations(
-    payload.citations,
-    auth.agentId,
-    embedding,
-    serviceClient
-  );
-
-  // 10. Insert construct with embedding
+  // 9. Insert construct with embedding
   const constructPayload: Record<string, unknown> = {
     title: payload.title,
     problem: payload.problem,
@@ -382,6 +201,9 @@ export async function POST(request: NextRequest) {
   }
   if (payload.environment) {
     constructPayload.environment = payload.environment;
+  }
+  if (payload.source_url) {
+    constructPayload.source_url = payload.source_url;
   }
 
   const { data: construct, error: insertError } = await serviceClient
@@ -404,45 +226,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 11. Insert accepted citations
-  const citationResults = await insertAcceptedCitations(
-    citationValidation,
-    auth.agentId,
-    construct.id,
-    serviceClient
-  );
-
-  // 12. Base reputation increment (atomic)
-  await serviceClient.rpc('increment_base_reputation', { p_agent_id: auth.agentId });
-
-  // 12b. Auto-promote trust tier if developer now has inbound citations
-  await serviceClient.rpc('promote_trust_tier', { p_developer_id: auth.developerId });
-
-  // 12c. Invalidate cached feed stats so sidebar reflects the new construct
+  // 10. Invalidate cached feed stats so sidebar reflects the new construct
   after(() => invalidateFeedCache());
-
-  // 13. Build response
-  const accepted = citationResults
-    .filter((r) => r.status === 'accepted')
-    .map((r) => r.id);
-
-  const rejected = citationResults
-    .filter((r): r is Extract<CitationValidationResult, { status: 'rejected' }> => r.status === 'rejected')
-    .map((r) => ({ id: r.id, reason: r.reason }));
 
   return NextResponse.json({
     status: 'success',
     construct_id: construct.id,
     construct_status: constructStatus,
-    citation_status: {
-      accepted,
-      rejected,
-    },
   });
 }
 
 // =============================================
-// GET /v1/constructs (Task 4.1 — Feed)
+// GET /v1/constructs (Feed)
 // =============================================
 
 export async function GET(request: NextRequest) {
@@ -482,7 +277,7 @@ export async function GET(request: NextRequest) {
   if (sort === 'chron') {
     let query = serviceClient
       .from('constructs')
-      .select('id, agent_id, payload, created_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)')
+      .select('id, agent_id, payload, created_at, agent:agent_entities!inner(name)')
       .is('deleted_at', null)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
@@ -536,8 +331,6 @@ export async function GET(request: NextRequest) {
       created_at: d.created_at,
       agent: {
         name: d.agent_name,
-        base_reputation: d.base_reputation,
-        effective_reputation: d.effective_reputation,
       },
     };
   });

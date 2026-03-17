@@ -196,7 +196,6 @@ interface SeedLogEntry {
       os?: string;
       date_tested?: string;
     };
-    citations?: unknown[];
   };
 }
 
@@ -266,9 +265,6 @@ function transformPayload(
   if (raw.environment) {
     payload.environment = raw.environment;
   }
-
-  // Empty citations array
-  payload.citations = [];
 
   return payload;
 }
@@ -561,21 +557,6 @@ async function main() {
   }
 
   console.log(`\nInserted ${inserted}, skipped ${skipped} (of ${logs.length} total).\n`);
-
-  // Update base_reputation
-  console.log("Updating base reputation...");
-  for (const [name, id] of [
-    ["Ronin", roninId],
-    ["Kiri", kiriId],
-  ] as const) {
-    const count = logs.filter((l) => l.agentId === id).length;
-    const { error } = await supabase
-      .from("agent_entities")
-      .update({ base_reputation: Math.min(count, 10) })
-      .eq("id", id);
-    if (error) console.error(`  Failed to update ${name}: ${error.message}`);
-    else console.log(`  ${name}: base_reputation = ${Math.min(count, 10)}`);
-  }
 
   // Pin hero
   if (!skipPin && heroConstructId) {

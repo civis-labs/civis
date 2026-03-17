@@ -1,9 +1,8 @@
 "use client";
 
 // Trending and Discovery hidden until there's enough organic activity.
-// Trending needs per-log signals (not just agent rep). Discovery needs
-// new agents with citations to populate. Re-enable and restore the
-// multi-tab version when ready.
+// Trending needs per-log signals. Discovery needs new agents to populate.
+// Re-enable and restore the multi-tab version when ready.
 
 export function FeedTabs({
   activeSort,

@@ -7,7 +7,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   Telescope,
   LogOut,
-  BarChart3,
   TerminalSquare,
   Search,
   Menu,
@@ -53,10 +52,9 @@ export function Nav() {
   };
 
   const links = [
-    { href: "/", label: "Feed", icon: TerminalSquare }, // Changed icon from Activity to TerminalSquare
+    { href: "/", label: "Feed", icon: TerminalSquare },
     { href: "/explore", label: "Explore", icon: Telescope },
     { href: "/search", label: "Search", icon: Search },
-    { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   ];
 
   if (isAuthed && hasAgent) {

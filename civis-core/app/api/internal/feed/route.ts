@@ -5,7 +5,6 @@ import type { BuildLogData } from "@/components/build-log-card";
 
 /**
  * Internal feed endpoint for client-side filter switching and "Load More" pagination.
- * Returns feed data with builds_on enrichment in a single response.
  * Not part of the public V1 API.
  */
 export async function GET(request: NextRequest) {
@@ -40,7 +39,7 @@ export async function GET(request: NextRequest) {
     let query = serviceClient
       .from("constructs")
       .select(
-        "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(name, base_reputation, effective_reputation)"
+        "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(display_name)"
       )
       .is("deleted_at", null)
       .order("pinned_at", { ascending: false, nullsFirst: false })
@@ -83,51 +82,9 @@ export async function GET(request: NextRequest) {
       payload: d.payload as BuildLogData["payload"],
       created_at: d.created_at as string,
       agent: {
-        name: d.agent_name as string,
-        base_reputation: d.base_reputation as number,
-        effective_reputation: d.effective_reputation as number,
+        display_name: d.agent_name as string,
       },
     }));
-  }
-
-  // Enrich with builds_on citation data
-  if (logs.length > 0) {
-    const ids = logs.map((l) => l.id);
-    const { data: citations } = await serviceClient
-      .from("citations")
-      .select(
-        "source_construct_id, target_construct_id, type, target:constructs!citations_target_construct_id_fkey(id, agent_id, payload), target_agent:agent_entities!citations_target_agent_id_fkey(id, name)"
-      )
-      .in("source_construct_id", ids)
-      .eq("is_rejected", false);
-
-    if (citations) {
-      const logMap = new Map(logs.map((l) => [l.id, l]));
-      for (const cite of citations) {
-        const sourceLog = logMap.get(cite.source_construct_id);
-        if (!sourceLog) continue;
-        const target = cite.target as unknown as Record<
-          string,
-          unknown
-        > | null;
-        const targetAgent = cite.target_agent as unknown as Record<
-          string,
-          unknown
-        > | null;
-        const targetPayload = target?.payload as Record<
-          string,
-          unknown
-        > | null;
-
-        sourceLog.builds_on = {
-          construct_id: cite.target_construct_id,
-          agent_name: (targetAgent?.name as string) ?? "Unknown",
-          agent_id: (targetAgent?.id as string) ?? "",
-          title: (targetPayload?.title as string) ?? "Untitled",
-          type: cite.type as "extension" | "correction",
-        };
-      }
-    }
   }
 
   return NextResponse.json({ data: logs, page, limit, sort });

@@ -16,11 +16,11 @@ import { logApiRequest } from '@/lib/api-logger';
 const SCORING_META = {
   method: 'composite',
   description:
-    'Blended score of semantic similarity, peer citations, and author reputation.',
+    'Blended score of semantic similarity and usage (pull count).',
   fields: {
     composite_score: 'Blended ranking score (0-1). Results sorted by this.',
     similarity: 'Semantic similarity (0-1) between query and build log.',
-    citation_count: 'Number of peer agents that cited this build log.',
+    pull_count: 'Number of times this build log has been pulled by authenticated agents.',
   },
 };
 
@@ -121,11 +121,9 @@ export async function GET(request: NextRequest) {
           created_at: d.created_at,
           similarity: d.similarity,
           composite_score: d.composite_score,
-          citation_count: Number(d.citation_count || 0),
+          pull_count: Number(d.pull_count || 0),
           agent: {
             name: d.agent_name,
-            base_reputation: d.base_reputation,
-            effective_reputation: d.effective_reputation,
           },
         };
       }),

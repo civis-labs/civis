@@ -80,11 +80,9 @@ export async function GET(request: NextRequest) {
     created_at: d.created_at,
     similarity: d.similarity,
     composite_score: d.composite_score,
-    citation_count: Number(d.citation_count || 0),
+    pull_count: Number(d.pull_count || 0),
     agent: {
-      name: d.agent_name,
-      base_reputation: d.base_reputation,
-      effective_reputation: d.effective_reputation,
+      display_name: d.agent_name as string,
     },
   }));
 

@@ -27,7 +27,7 @@ function validateTag(tag: string | null): { cleanTag: string | null; error?: str
 // Types
 // =============================================
 
-export type MintResult = {
+export type CreateAgentResult = {
   apiKey?: string;
   agentName?: string;
   tag?: string;
@@ -45,24 +45,40 @@ export type RevokeResult = {
   error?: string;
 };
 
-export type RejectCitationResult = {
-  error?: string;
-};
-
 export type UpdateBioResult = {
   error?: string;
 };
 
+export type UpdateDisplayNameResult = {
+  error?: string;
+};
+
+export type UpdateUsernameResult = {
+  error?: string;
+};
+
+const USERNAME_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+
+function validateUsername(username: string): { clean: string; error?: string } {
+  const trimmed = username.trim().toLowerCase();
+  if (!trimmed) return { clean: '', error: 'Username is required' };
+  if (trimmed.length < 2) return { clean: trimmed, error: 'Username must be at least 2 characters' };
+  if (trimmed.length > 30) return { clean: trimmed, error: 'Username must be 30 characters or less' };
+  if (!USERNAME_RE.test(trimmed)) return { clean: trimmed, error: 'Username can only contain lowercase letters, numbers, and hyphens (no leading or trailing hyphens)' };
+  return { clean: trimmed };
+}
+
 // =============================================
-// MINT AGENT
+// CREATE AGENT
 // Creates agent_entity + generates first API key
 // =============================================
 
-export async function mintPassport(
-  name: string,
+export async function createAgent(
+  username: string,
+  displayName: string,
   bio: string | null,
   tag: string | null = null
-): Promise<MintResult> {
+): Promise<CreateAgentResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -81,42 +97,46 @@ export async function mintPassport(
     return { error: 'Each account is limited to one agent.' };
   }
 
-  const trimmedName = name.trim();
-  if (!trimmedName) return { error: 'Agent name is required' };
-  if (trimmedName.length > 100)
-    return { error: 'Agent name must be 100 characters or less' };
-
-  // Sanitize name and bio to strip HTML
-  const cleanName = sanitizeString(trimmedName);
-  if (!cleanName) return { error: 'Agent name is required' };
-  const cleanBio = bio ? sanitizeString(bio.trim()) : null;
-
-  if (profanityMatcher.hasMatch(cleanName)) {
-    return { error: 'Agent name contains inappropriate language.' };
+  // Validate username
+  const { clean: cleanUsername, error: usernameError } = validateUsername(username);
+  if (usernameError) return { error: usernameError };
+  if (profanityMatcher.hasMatch(cleanUsername)) {
+    return { error: 'Username contains inappropriate language.' };
   }
 
+  // Validate display name
+  const trimmedDisplayName = displayName.trim();
+  if (!trimmedDisplayName) return { error: 'Display name is required' };
+  if (trimmedDisplayName.length > 100) return { error: 'Display name must be 100 characters or less' };
+  const cleanDisplayName = sanitizeString(trimmedDisplayName);
+  if (!cleanDisplayName) return { error: 'Display name is required' };
+  if (profanityMatcher.hasMatch(cleanDisplayName)) {
+    return { error: 'Display name contains inappropriate language.' };
+  }
+
+  // Validate bio
+  const cleanBio = bio ? sanitizeString(bio.trim()) : null;
   if (cleanBio && cleanBio.length > 500) {
     return { error: 'Bio must be 500 characters or less' };
   }
-
   if (cleanBio && profanityMatcher.hasMatch(cleanBio)) {
-    return { error: 'Agent bio contains inappropriate language.' };
+    return { error: 'Bio contains inappropriate language.' };
   }
 
   // Validate optional tag early (before creating agent entity)
   const { cleanTag, error: tagError } = validateTag(tag);
   if (tagError) return { error: tagError };
 
-  // Check for duplicate name under the same developer
-  const { data: existing } = await supabase
+  // Check username availability (service client to bypass RLS — username is globally unique)
+  const serviceClientCheck = createSupabaseServiceClient();
+  const { data: existingUsername } = await serviceClientCheck
     .from('agent_entities')
     .select('id')
-    .eq('developer_id', user.id)
-    .eq('name', cleanName)
+    .eq('username', cleanUsername)
     .limit(1);
 
-  if (existing && existing.length > 0) {
-    return { error: 'You already have an agent with that name.' };
+  if (existingUsername && existingUsername.length > 0) {
+    return { error: 'Username is already taken.' };
   }
 
   // Insert agent entity
@@ -125,13 +145,18 @@ export async function mintPassport(
     .from('agent_entities')
     .insert({
       developer_id: user.id,
-      name: cleanName,
+      username: cleanUsername,
+      display_name: cleanDisplayName,
+      name: cleanDisplayName,
       bio: cleanBio || null,
     })
-    .select('id, name')
+    .select('id, display_name')
     .single();
 
   if (agentError) {
+    if (agentError.code === '23505' && agentError.message?.includes('username')) {
+      return { error: 'Username is already taken.' };
+    }
     console.error('Failed to create agent:', agentError);
     return { error: 'Failed to create agent. Please try again.' };
   }
@@ -159,7 +184,7 @@ export async function mintPassport(
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.name, tag: cleanTag || undefined };
+  return { apiKey: rawKey, agentName: agent.display_name, tag: cleanTag || undefined };
 }
 
 // =============================================
@@ -233,7 +258,7 @@ export async function generateNewKey(
   // Verify the agent belongs to this developer via RLS
   const { data: agent } = await supabase
     .from('agent_entities')
-    .select('id, name')
+    .select('id, display_name')
     .eq('id', agentId)
     .eq('developer_id', user.id)
     .single();
@@ -280,7 +305,7 @@ export async function generateNewKey(
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.name, tag: cleanTag || undefined };
+  return { apiKey: rawKey, agentName: agent.display_name, tag: cleanTag || undefined };
 }
 
 // =============================================
@@ -337,14 +362,14 @@ export async function updateBio(
 }
 
 // =============================================
-// REJECT CITATION
-// Session-based auth (not API key) — verifies
-// ownership via developer_id on the target agent
+// UPDATE DISPLAY NAME
+// Inline display name editing from the developer console
 // =============================================
 
-export async function rejectCitation(
-  citationId: number
-): Promise<RejectCitationResult> {
+export async function updateDisplayName(
+  agentId: string,
+  displayName: string | null
+): Promise<UpdateDisplayNameResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -352,47 +377,84 @@ export async function rejectCitation(
 
   if (!user) return { error: 'Not authenticated' };
 
-  const serviceClient = createSupabaseServiceClient();
-
-  // 1. Fetch citation (to get target_agent_id for ownership check)
-  const { data: citation } = await serviceClient
-    .from('citations')
-    .select('id, target_agent_id, type, is_rejected')
-    .eq('id', citationId)
-    .single();
-
-  if (!citation) return { error: 'Citation not found' };
-  if (citation.type !== 'extension')
-    return { error: 'Only extension citations can be rejected' };
-
-  // Verify the target agent belongs to this developer via RLS
   const { data: agent } = await supabase
     .from('agent_entities')
     .select('id')
-    .eq('id', citation.target_agent_id)
+    .eq('id', agentId)
     .eq('developer_id', user.id)
     .single();
 
-  if (!agent) return { error: 'Unauthorized' };
+  if (!agent) return { error: 'Agent not found or unauthorized' };
 
-  // 2. Atomic conditional update (prevents double-rejection race)
-  const { data: updated, error: updateError } = await serviceClient
-    .from('citations')
-    .update({ is_rejected: true })
-    .eq('id', citationId)
-    .eq('is_rejected', false)
+  const trimmed = displayName ? displayName.trim() : null;
+  if (!trimmed) return { error: 'Display name is required' };
+
+  const cleanDisplayName = sanitizeString(trimmed);
+  if (!cleanDisplayName) return { error: 'Display name is required' };
+  if (cleanDisplayName.length > 100) return { error: 'Display name must be 100 characters or less' };
+  if (profanityMatcher.hasMatch(cleanDisplayName)) {
+    return { error: 'Display name contains inappropriate language.' };
+  }
+
+  const { error: updateError } = await supabase
+    .from('agent_entities')
+    .update({ display_name: cleanDisplayName, name: cleanDisplayName })
+    .eq('id', agentId)
+    .eq('developer_id', user.id);
+
+  if (updateError) {
+    console.error('Failed to update display name:', updateError);
+    return { error: 'Failed to update display name. Please try again.' };
+  }
+
+  revalidatePath('/agents');
+  return {};
+}
+
+// =============================================
+// UPDATE USERNAME
+// Inline username editing from the developer console
+// =============================================
+
+export async function updateUsername(
+  agentId: string,
+  username: string
+): Promise<UpdateUsernameResult> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: agent } = await supabase
+    .from('agent_entities')
     .select('id')
-    .maybeSingle();
+    .eq('id', agentId)
+    .eq('developer_id', user.id)
+    .single();
 
-  if (updateError) return { error: 'Failed to reject citation' };
-  if (!updated) return { error: 'Citation is already rejected' };
+  if (!agent) return { error: 'Agent not found or unauthorized' };
 
-  // 3. Insert audit row (only runs if update succeeded)
-  await serviceClient.from('citation_rejections').insert({
-    citation_id: citationId,
-    agent_id: citation.target_agent_id,
-    reason: 'Rejected via developer console',
-  });
+  const { clean: cleanUsername, error: usernameError } = validateUsername(username);
+  if (usernameError) return { error: usernameError };
+  if (profanityMatcher.hasMatch(cleanUsername)) {
+    return { error: 'Username contains inappropriate language.' };
+  }
+
+  const { error: updateError } = await supabase
+    .from('agent_entities')
+    .update({ username: cleanUsername })
+    .eq('id', agentId)
+    .eq('developer_id', user.id);
+
+  if (updateError) {
+    if (updateError.code === '23505') {
+      return { error: 'Username is already taken.' };
+    }
+    console.error('Failed to update username:', updateError);
+    return { error: 'Failed to update username. Please try again.' };
+  }
 
   revalidatePath('/agents');
   return {};

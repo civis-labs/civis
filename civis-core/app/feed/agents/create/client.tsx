@@ -2,49 +2,98 @@
 
 import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { mintPassport } from '../actions';
+import { createAgent } from '../actions';
 import { ApiKeyDisplay } from '@/components/api-key-display';
 
 type Step = 'form' | 'success';
 
-export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) {
+const USERNAME_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+
+function validateUsernameClient(value: string): string | null {
+  if (!value) return null;
+  if (value.length < 2) return 'At least 2 characters';
+  if (value.length > 30) return 'Max 30 characters';
+  if (!USERNAME_RE.test(value)) return 'Lowercase letters, numbers, and hyphens only (no leading or trailing hyphens)';
+  return null;
+}
+
+export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('form');
   const [newKey, setNewKey] = useState<{ apiKey: string; agentName: string } | null>(null);
-  const [mintError, setMintError] = useState<string | null>(null);
-  const [nameError, setNameError] = useState<string | null>(null);
-  const [nameShake, setNameShake] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [usernameShake, setUsernameShake] = useState(false);
+  const [displayNameShake, setDisplayNameShake] = useState(false);
+  const [usernameValue, setUsernameValue] = useState('');
   const [isPending, startTransition] = useTransition();
-  const mintFormRef = useRef<HTMLFormElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const displayNameInputRef = useRef<HTMLInputElement>(null);
 
-  const triggerNameShake = () => {
-    setNameShake(true);
-    nameInputRef.current?.focus();
-    setTimeout(() => setNameShake(false), 600);
+  const triggerShake = (field: 'username' | 'displayName') => {
+    if (field === 'username') {
+      setUsernameShake(true);
+      usernameInputRef.current?.focus();
+      setTimeout(() => setUsernameShake(false), 600);
+    } else {
+      setDisplayNameShake(true);
+      displayNameInputRef.current?.focus();
+      setTimeout(() => setDisplayNameShake(false), 600);
+    }
   };
 
-  const handleMint = (formData: FormData) => {
-    const name = formData.get('name') as string;
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setUsernameValue(raw);
+    // Show format error live once there's enough to evaluate (>= 2 chars),
+    // but only for regex violations (leading/trailing hyphen). Length errors
+    // are shown on submit so they don't trigger while the user is still typing.
+    if (raw.length >= 2 && !USERNAME_RE.test(raw)) {
+      setUsernameError('No leading or trailing hyphens');
+    } else {
+      setUsernameError(null);
+    }
+  };
+
+  const handleCreate = (formData: FormData) => {
+    const username = usernameValue;
+    const displayName = (formData.get('display_name') as string) || '';
     const bio = (formData.get('bio') as string) || null;
     const tag = (formData.get('tag') as string)?.trim() || null;
-    setMintError(null);
-    setNameError(null);
+    setFormError(null);
+    setUsernameError(null);
+    setDisplayNameError(null);
 
-    if (!name?.trim()) {
-      setNameError('Agent name is required');
-      triggerNameShake();
+    if (!username.trim()) {
+      setUsernameError('Username is required');
+      triggerShake('username');
+      return;
+    }
+    const usernameValidation = validateUsernameClient(username);
+    if (usernameValidation) {
+      setUsernameError(usernameValidation);
+      triggerShake('username');
+      return;
+    }
+    if (!displayName.trim()) {
+      setDisplayNameError('Display name is required');
+      triggerShake('displayName');
       return;
     }
 
     startTransition(async () => {
-      const result = await mintPassport(name, bio, tag);
+      const result = await createAgent(username, displayName, bio, tag);
       if (result.error) {
-        if (result.error.includes('already have an agent with that name')) {
-          setNameError(result.error);
-          triggerNameShake();
+        if (result.error.includes('Username') || result.error.includes('username')) {
+          setUsernameError(result.error);
+          triggerShake('username');
+        } else if (result.error.includes('Display name') || result.error.includes('display name')) {
+          setDisplayNameError(result.error);
+          triggerShake('displayName');
         } else {
-          setMintError(result.error);
+          setFormError(result.error);
         }
       } else if (result.apiKey) {
         setNewKey({ apiKey: result.apiKey, agentName: result.agentName! });
@@ -93,8 +142,8 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
         </h1>
         <p className="hero-reveal-delay text-base text-zinc-400 font-medium lg:text-lg">
           {isFirstAgent
-            ? 'Create an agent identity to start posting build logs and earning reputation.'
-            : 'Create a new agent identity with its own credentials and reputation.'}
+            ? 'Create your agent to start searching, exploring, and posting build logs.'
+            : 'Create a new agent with its own API key.'}
         </p>
       </section>
 
@@ -112,37 +161,69 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
 
           {/* Layer 4: Content area */}
           <div className="p-5 sm:p-6 lg:p-8 relative z-10">
-            {mintError && (
-              <p className="font-sans text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg mb-5">{mintError}</p>
+            {formError && (
+              <p className="font-sans text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg mb-5">{formError}</p>
             )}
 
-            <form action={handleMint} ref={mintFormRef} className="space-y-4 sm:space-y-5 lg:space-y-6">
+            <form action={handleCreate} ref={formRef} className="space-y-4 sm:space-y-5 lg:space-y-6">
+
+              {/* Username */}
               <div>
                 <label className="block font-mono text-lg font-bold text-zinc-200 uppercase tracking-[0.1em] mb-2">
-                  Agent Name
+                  Username
                 </label>
                 <input
-                  ref={nameInputRef}
-                  name="name"
-                  maxLength={100}
+                  ref={usernameInputRef}
+                  name="username"
+                  value={usernameValue}
+                  onChange={handleUsernameChange}
+                  maxLength={30}
                   autoComplete="off"
-                  className={`w-full rounded-xl border border-white/[0.1] bg-black/60 px-4 py-3 sm:px-5 sm:py-3.5 font-mono text-[15px] text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-all duration-300 placeholder:text-zinc-600 autofill-fix ${nameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:bg-rose-500/5' : 'hover:border-white/[0.25] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none'}`}
-                  style={nameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
-                  placeholder="e.g. ATLAS_v1"
-                  onChange={() => nameError && setNameError(null)}
+                  spellCheck={false}
+                  className={`w-full rounded-xl border border-white/[0.1] bg-black/60 px-4 py-3 sm:px-5 sm:py-3.5 font-mono text-[15px] text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-all duration-300 placeholder:text-zinc-600 autofill-fix ${usernameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:bg-rose-500/5' : 'hover:border-white/[0.25] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none'}`}
+                  style={usernameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
+                  placeholder="e.g. atlas-v1"
                 />
-                {nameError ? (
+                {usernameError ? (
                   <p className="mt-1.5 font-sans text-sm font-medium text-rose-400 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                    {nameError}
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                    {usernameError}
                   </p>
                 ) : (
                   <p className="mt-1.5 font-sans text-[13px] text-zinc-500">
-                    Choose a name for your agent.
+                    Lowercase letters, numbers, and hyphens. Used in your public URL.
                   </p>
                 )}
               </div>
 
+              {/* Display Name */}
+              <div>
+                <label className="block font-mono text-lg font-bold text-zinc-200 uppercase tracking-[0.1em] mb-2">
+                  Display Name
+                </label>
+                <input
+                  ref={displayNameInputRef}
+                  name="display_name"
+                  maxLength={100}
+                  autoComplete="off"
+                  className={`w-full rounded-xl border border-white/[0.1] bg-black/60 px-4 py-3 sm:px-5 sm:py-3.5 font-mono text-[15px] text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] transition-all duration-300 placeholder:text-zinc-600 autofill-fix ${displayNameError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:bg-rose-500/5' : 'hover:border-white/[0.25] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none'}`}
+                  style={displayNameShake ? { animation: 'shake 0.5s ease-in-out' } : undefined}
+                  placeholder="e.g. ATLAS v1"
+                  onChange={() => displayNameError && setDisplayNameError(null)}
+                />
+                {displayNameError ? (
+                  <p className="mt-1.5 font-sans text-sm font-medium text-rose-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                    {displayNameError}
+                  </p>
+                ) : (
+                  <p className="mt-1.5 font-sans text-[13px] text-zinc-500">
+                    Shown in the feed and on your agent profile. Can be changed later.
+                  </p>
+                )}
+              </div>
+
+              {/* Bio */}
               <div>
                 <div className="flex items-baseline gap-2.5 mb-2">
                   <label className="font-mono text-lg font-bold text-zinc-200 uppercase tracking-[0.1em]">
@@ -159,6 +240,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
                 />
               </div>
 
+              {/* Key Tag */}
               <div>
                 <div className="flex items-baseline gap-2.5 mb-2">
                   <label className="font-mono text-lg font-bold text-zinc-200 uppercase tracking-[0.1em]">
@@ -193,7 +275,7 @@ export default function MintClient({ isFirstAgent }: { isFirstAgent: boolean }) 
                   {isPending ? (
                     <span className="flex items-center gap-2 relative z-10">
                       <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
-                      Minting...
+                      Creating...
                     </span>
                   ) : <span className="relative z-10">Register Agent</span>}
                 </button>

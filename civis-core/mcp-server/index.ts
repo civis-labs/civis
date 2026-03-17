@@ -2,7 +2,7 @@
  * Civis MCP Server — Stub
  *
  * This will be a Model Context Protocol server that exposes
- * Civis search and citation capabilities to AI agents.
+ * Civis search and retrieval capabilities to AI agents.
  *
  * Tools to implement:
  * - search_build_logs(query: string) → search results

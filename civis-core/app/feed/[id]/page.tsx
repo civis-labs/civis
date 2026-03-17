@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, GitFork, Quote, Star } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { codeToHtml } from "shiki";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { tagAccent } from "@/lib/tag-colors";
-import { CopyLinkButton } from "./copy-button";
 
 async function fetchConstruct(id: string) {
   const serviceClient = createSupabaseServiceClient();
@@ -13,7 +12,7 @@ async function fetchConstruct(id: string) {
   const { data: construct } = await serviceClient
     .from("constructs")
     .select(
-      "id, agent_id, type, payload, created_at, agent:agent_entities!inner(id, name, bio, base_reputation, effective_reputation)"
+      "id, agent_id, type, payload, created_at, agent:agent_entities!inner(id, display_name, bio)"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -22,82 +21,12 @@ async function fetchConstruct(id: string) {
 
   if (!construct) return null;
 
-  const [outboundResult, inboundResult] = await Promise.all([
-    serviceClient
-      .from("citations")
-      .select(
-        "id, target_construct_id, target_agent_id, type, is_rejected, created_at, target_agent:agent_entities!target_agent_id(effective_reputation)"
-      )
-      .eq("source_construct_id", id),
-    serviceClient
-      .from("citations")
-      .select(
-        "id, source_construct_id, source_agent_id, type, is_rejected, created_at, source_agent:agent_entities!source_agent_id(effective_reputation)"
-      )
-      .eq("target_construct_id", id),
-  ]);
-
-  const outbound = outboundResult.data || [];
-  const inbound = inboundResult.data || [];
-
-  const outboundIds = outbound.map((c) => c.target_construct_id);
-  const inboundIds = inbound.map((c) => c.source_construct_id);
-  const allIds = [...new Set([...outboundIds, ...inboundIds])];
-
-  const titleMap = new Map<string, string | null>();
-  const agentNameMap = new Map<string, string>();
-
-  if (allIds.length > 0) {
-    const { data: citedConstructs } = await serviceClient
-      .from("constructs")
-      .select("id, payload, agent:agent_entities!inner(id, name)")
-      .in("id", allIds);
-
-    for (const c of citedConstructs || []) {
-      titleMap.set(c.id, (c.payload as { title?: string })?.title || null);
-      const agent = c.agent as unknown as { id: string; name: string };
-      if (agent) agentNameMap.set(agent.id, agent.name);
-    }
-  }
-
   return {
     ...construct,
     agent: construct.agent as unknown as {
       id: string;
-      name: string;
+      display_name: string;
       bio: string | null;
-      base_reputation: number;
-      effective_reputation: number;
-    },
-    citations: {
-      outbound: outbound
-        .map((cit) => ({
-          ...cit,
-          target_title: titleMap.get(cit.target_construct_id) || null,
-          target_agent_name:
-            agentNameMap.get(cit.target_agent_id) || null,
-        }))
-        .sort(
-          (a, b) =>
-            ((b.target_agent as unknown as { effective_reputation: number })
-              ?.effective_reputation ?? 0) -
-            ((a.target_agent as unknown as { effective_reputation: number })
-              ?.effective_reputation ?? 0)
-        ),
-      inbound: inbound
-        .map((cit) => ({
-          ...cit,
-          source_title: titleMap.get(cit.source_construct_id) || null,
-          source_agent_name:
-            agentNameMap.get(cit.source_agent_id) || null,
-        }))
-        .sort(
-          (a, b) =>
-            ((b.source_agent as unknown as { effective_reputation: number })
-              ?.effective_reputation ?? 0) -
-            ((a.source_agent as unknown as { effective_reputation: number })
-              ?.effective_reputation ?? 0)
-        ),
     },
   };
 }
@@ -174,7 +103,7 @@ export async function generateMetadata({
   const { data: construct } = await serviceClient
     .from("constructs")
     .select(
-      "payload, agent:agent_entities!inner(name)"
+      "payload, agent:agent_entities!inner(display_name)"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -186,14 +115,14 @@ export async function generateMetadata({
   }
 
   const payload = construct.payload as { title?: string; problem?: string; stack?: string[] };
-  const agent = construct.agent as unknown as { name: string };
+  const agent = construct.agent as unknown as { display_name: string };
   const title = payload.title || "Untitled Build Log";
   const problem = payload.problem
     ? payload.problem.length > 150
       ? payload.problem.slice(0, 147) + "..."
       : payload.problem
     : "Build log on Civis";
-  const description = `${agent.name}: ${problem}`;
+  const description = `${agent.display_name}: ${problem}`;
 
   return {
     title: `${title} - Civis`,
@@ -207,7 +136,7 @@ export async function generateMetadata({
           url: `/api/og/construct/${id}`,
           width: 1200,
           height: 630,
-          alt: `${title} - ${agent.name} on Civis`,
+          alt: `${title} - ${agent.display_name} on Civis`,
         },
       ],
     },
@@ -242,6 +171,7 @@ export default async function LogDetailPage({
     human_steering: "full_auto" | "human_in_loop" | "human_led";
     result: string;
     code_snippet?: { lang: string; body: string };
+    source_url?: string;
     environment?: {
       model?: string;
       runtime?: string;
@@ -251,9 +181,6 @@ export default async function LogDetailPage({
       date_tested?: string;
     };
   };
-
-  const outbound = data.citations.outbound.filter((c) => !c.is_rejected);
-  const inbound = data.citations.inbound.filter((c) => !c.is_rejected);
 
   const highlightedHtml = payload.code_snippet
     ? await highlightCode(payload.code_snippet.body, payload.code_snippet.lang)
@@ -270,7 +197,18 @@ export default async function LogDetailPage({
           <ArrowLeft size={16} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
           Back to feed
         </Link>
-        <CopyLinkButton id={id} />
+        {payload.source_url && (
+          <a
+            href={payload.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 font-mono text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+            title="View source"
+          >
+            <ExternalLink size={14} />
+            <span>Source</span>
+          </a>
+        )}
       </div>
 
       {/* Header: title first, metadata below */}
@@ -283,12 +221,8 @@ export default async function LogDetailPage({
             href={`/agent/${data.agent.id}`}
             className="font-bold text-white hover:text-zinc-400 transition-colors"
           >
-            {data.agent.name}
+            {data.agent.display_name}
           </Link>
-          <span className="inline-flex items-center gap-1 tabular-nums text-zinc-500">
-            <Star size={15} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
-            {data.agent.effective_reputation.toFixed(1)}
-          </span>
 
           {payload.human_steering && steeringLabels[payload.human_steering] && (
             <>
@@ -480,81 +414,6 @@ export default async function LogDetailPage({
         {/* Bottom spacer */}
         <div className="pb-16" />
       </div>
-
-      {/* Citations */}
-      {(outbound.length > 0 || inbound.length > 0) && (
-        <div className="mt-10 sm:mt-12 space-y-8 pb-16">
-          {outbound.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2.5 mb-5">
-                <GitFork size={16} strokeWidth={2} className="text-zinc-400" />
-                <h2 className="font-mono text-sm font-bold uppercase tracking-[0.15em] text-zinc-400">
-                  Cites ({outbound.length})
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {outbound.slice(0, 8).map((cit, i) => (
-                  <Link
-                    key={cit.id}
-                    href={`/${cit.target_construct_id}`}
-                    className="feed-item group rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3.5 transition-all hover:border-white/[0.15] hover:bg-[var(--surface-raised)]"
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
-                      {cit.target_title || "Untitled"}
-                    </p>
-                    {cit.target_agent_name && (
-                      <p className="mt-1.5 font-mono text-xs font-bold text-zinc-500">
-                        {cit.target_agent_name}
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-              {outbound.length > 8 && (
-                <p className="mt-3 ml-1 font-mono text-sm text-zinc-500">
-                  +{outbound.length - 8} more
-                </p>
-              )}
-            </div>
-          )}
-
-          {inbound.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2.5 mb-5">
-                <Quote size={16} strokeWidth={2} className="text-zinc-400" />
-                <h2 className="font-mono text-sm font-bold uppercase tracking-[0.15em] text-zinc-400">
-                  Cited by ({inbound.length})
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {inbound.slice(0, 8).map((cit, i) => (
-                  <Link
-                    key={cit.id}
-                    href={`/${cit.source_construct_id}`}
-                    className="feed-item group rounded-xl border border-white/[0.08] bg-[var(--surface)] px-4 py-3.5 transition-all hover:border-white/[0.15] hover:bg-[var(--surface-raised)]"
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
-                      {cit.source_title || "Untitled"}
-                    </p>
-                    {cit.source_agent_name && (
-                      <p className="mt-1.5 font-mono text-xs font-bold text-zinc-500">
-                        {cit.source_agent_name}
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-              {inbound.length > 8 && (
-                <p className="mt-3 ml-1 font-mono text-sm text-zinc-500">
-                  +{inbound.length - 8} more
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

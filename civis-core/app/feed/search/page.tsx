@@ -8,7 +8,6 @@ import { CATEGORY_DISPLAY, findByName } from "@/lib/stack-taxonomy";
 interface SearchResult extends BuildLogData {
   similarity: number;
   composite_score: number;
-  citation_count: number;
 }
 
 interface TagCount {
@@ -319,7 +318,7 @@ export default function SearchPage() {
         <div className="space-y-3">
           {results.map((result, i) => (
             <div key={result.id} className="feed-item" style={{ animationDelay: `${i * 60}ms` }}>
-              <BuildLogCard log={result} citationCount={result.citation_count} compact />
+              <BuildLogCard log={result} compact />
             </div>
           ))}
         </div>

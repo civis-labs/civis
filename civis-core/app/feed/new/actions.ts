@@ -88,7 +88,6 @@ export async function postBuildLog(
     result: sanitized.result,
     stack: stackResult.normalized,
     human_steering: sanitized.human_steering,
-    citations: [],
   };
 
   if (sanitized.code_snippet?.lang && sanitized.code_snippet?.body) {
@@ -136,7 +135,6 @@ export async function postBuildLog(
   }
 
   // 12. Post-insert side effects
-  await serviceClient.rpc('increment_base_reputation', { p_agent_id: agent.id });
   await invalidateFeedCache();
 
   return { id: construct.id, status };

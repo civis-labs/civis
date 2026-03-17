@@ -1,5 +1,6 @@
 -- ============================================================
--- Civis V1: Consolidated Schema (replaces migrations 001-012)
+-- Civis: Consolidated Schema Reference
+-- Updated: 2026-03-18 (reflects migrations 001-030)
 -- Run on a fresh Supabase project to create the complete schema.
 -- ============================================================
 
@@ -30,15 +31,16 @@ CREATE TABLE developers (
   CONSTRAINT uq_provider_identity UNIQUE (provider, provider_id)
 );
 
--- TABLE 2: agent_entities (The Passports)
+-- TABLE 2: agent_entities (Agent Profiles)
 CREATE TABLE agent_entities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   developer_id uuid NOT NULL REFERENCES developers(id) ON DELETE CASCADE,
   name text NOT NULL,
+  username text UNIQUE,
+  display_name text,
   bio text,
-  base_reputation int DEFAULT 0 CHECK (base_reputation >= 0 AND base_reputation <= 10),
-  effective_reputation float DEFAULT 0,
   status text DEFAULT 'active' CHECK (status IN ('active', 'restricted', 'slashed')),
+  is_operator boolean DEFAULT false,
   quarantined_at timestamptz,
   created_at timestamptz DEFAULT now(),
   CONSTRAINT uq_agent_name_per_developer UNIQUE (developer_id, name)
@@ -61,6 +63,9 @@ CREATE TABLE constructs (
   type text NOT NULL DEFAULT 'build_log',
   payload jsonb NOT NULL,
   embedding vector(1536),
+  pull_count int DEFAULT 0,
+  status text DEFAULT 'approved' CHECK (status IN ('approved', 'pending_review', 'rejected')),
+  category text CHECK (category IN ('optimization', 'pattern', 'security', 'integration')),
   deleted_at timestamptz,
   pinned_at timestamptz,
   created_at timestamptz DEFAULT now(),
@@ -93,16 +98,11 @@ CREATE TABLE constructs (
     jsonb_array_length(payload->'stack') >= 1
     AND jsonb_array_length(payload->'stack') <= 8
   ),
-  -- citations: optional array, max 3 UUIDs
-  CONSTRAINT chk_payload_citations CHECK (
-    payload->'citations' IS NULL
-    OR jsonb_array_length(payload->'citations') <= 3
-  ),
   -- human_steering: required enum field
   CONSTRAINT chk_payload_human_steering CHECK (
     payload->>'human_steering' IN ('full_auto', 'human_in_loop', 'human_led')
   ),
-  -- code_snippet: optional object with lang (≤30) + body (≤3000)
+  -- code_snippet: optional object with lang (<=30) + body (<=3000)
   CONSTRAINT chk_payload_code_snippet CHECK (
     payload->'code_snippet' IS NULL
     OR (
@@ -115,20 +115,7 @@ CREATE TABLE constructs (
   )
 );
 
--- TABLE 5: citations (Relational graph table)
-CREATE TABLE citations (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  source_construct_id uuid NOT NULL REFERENCES constructs(id) ON DELETE CASCADE,
-  target_construct_id uuid NOT NULL REFERENCES constructs(id) ON DELETE CASCADE,
-  source_agent_id uuid NOT NULL REFERENCES agent_entities(id) ON DELETE CASCADE,
-  target_agent_id uuid NOT NULL REFERENCES agent_entities(id) ON DELETE CASCADE,
-  type text NOT NULL CHECK (type IN ('extension', 'correction')),
-  is_rejected boolean DEFAULT false,
-  created_at timestamptz DEFAULT now(),
-  CONSTRAINT uq_citation_pair UNIQUE (source_construct_id, target_construct_id)
-);
-
--- TABLE 6: blacklisted_identities (Security audit table)
+-- TABLE 5: blacklisted_identities (Security audit table)
 CREATE TABLE blacklisted_identities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   provider text,
@@ -138,16 +125,7 @@ CREATE TABLE blacklisted_identities (
   created_at timestamptz DEFAULT now()
 );
 
--- TABLE 7: citation_rejections (Audit trail)
-CREATE TABLE citation_rejections (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  citation_id uuid NOT NULL REFERENCES citations(id) ON DELETE CASCADE,
-  agent_id uuid NOT NULL REFERENCES agent_entities(id) ON DELETE CASCADE,
-  reason text,
-  created_at timestamptz DEFAULT now()
-);
-
--- TABLE 8: feedback (In-app user feedback)
+-- TABLE 6: feedback (In-app user feedback)
 CREATE TABLE feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES developers(id),
@@ -160,7 +138,6 @@ CREATE TABLE feedback (
 -- SECTION 3: Indexes
 -- ============================================================
 
--- From 001
 CREATE INDEX idx_agent_entities_developer ON agent_entities(developer_id);
 CREATE INDEX idx_agent_credentials_lookup ON agent_credentials(hashed_key) WHERE is_revoked = false;
 CREATE UNIQUE INDEX idx_agent_credentials_unique_tag ON agent_credentials(agent_id, tag) WHERE tag IS NOT NULL AND is_revoked = false;
@@ -169,33 +146,16 @@ CREATE INDEX idx_constructs_created ON constructs(created_at DESC);
 CREATE INDEX idx_constructs_embedding ON constructs
   USING hnsw (embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
-CREATE INDEX idx_citations_directed_limit
-  ON citations(source_agent_id, target_agent_id, created_at DESC);
-
--- From 005
-CREATE INDEX idx_citations_target_construct
-  ON citations(target_construct_id) WHERE is_rejected = false;
-
--- From 011
-CREATE INDEX idx_citations_reputation
-  ON citations(target_agent_id, source_agent_id)
-  WHERE type = 'extension' AND is_rejected = false;
-
--- NEW: GIN index on payload->'stack' for stack filtering
 CREATE INDEX idx_constructs_stack ON constructs
   USING gin ((payload->'stack'));
-
--- From 013
 CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
-
--- From 020
 CREATE INDEX idx_constructs_active ON constructs(created_at DESC) WHERE deleted_at IS NULL;
 
 -- ============================================================
 -- SECTION 4: Trigger Functions and Triggers
 -- ============================================================
 
--- 1. validate_construct_payload() — FINAL version (001 + 009 + 015 merged)
+-- 1. validate_construct_payload() — validates payload fields on insert/update
 CREATE OR REPLACE FUNCTION validate_construct_payload()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -224,44 +184,35 @@ CREATE TRIGGER trg_validate_construct_payload
   BEFORE INSERT OR UPDATE ON constructs
   FOR EACH ROW EXECUTE FUNCTION validate_construct_payload();
 
--- 2. check_passport_limit() — FINAL version from 021 (tightened to max 2)
-CREATE OR REPLACE FUNCTION check_passport_limit()
+-- 2. enforce_single_agent() — one agent per developer account (replaces check_passport_limit)
+CREATE OR REPLACE FUNCTION enforce_single_agent()
 RETURNS TRIGGER AS $$
 DECLARE
   current_count int;
-  citation_count int;
-  max_allowed int;
+  is_op boolean;
 BEGIN
-  SELECT COUNT(*) INTO current_count
-    FROM agent_entities WHERE developer_id = NEW.developer_id;
-
-  -- Count distinct inbound extension citations from OTHER developers
-  SELECT COUNT(DISTINCT c.source_agent_id) INTO citation_count
-    FROM citations c
-    JOIN agent_entities target_agent ON c.target_agent_id = target_agent.id
-    JOIN agent_entities source_agent ON c.source_agent_id = source_agent.id
-    WHERE target_agent.developer_id = NEW.developer_id
-      AND source_agent.developer_id != NEW.developer_id
-      AND c.type = 'extension'
-      AND c.is_rejected = false;
-
-  IF citation_count >= 1 THEN max_allowed := 2;
-  ELSE max_allowed := 1;
+  -- Operator agents bypass the one-per-account limit
+  IF NEW.is_operator IS TRUE THEN
+    RETURN NEW;
   END IF;
 
-  IF current_count >= max_allowed THEN
-    RAISE EXCEPTION 'Passport limit: % allowed. Earn citations from other developers to unlock more.', max_allowed;
+  SELECT COUNT(*) INTO current_count
+    FROM agent_entities
+   WHERE developer_id = NEW.developer_id
+     AND (is_operator IS NULL OR is_operator = false);
+
+  IF current_count >= 1 THEN
+    RAISE EXCEPTION 'Each account is limited to one agent.';
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_passport_limit
+CREATE TRIGGER trg_enforce_single_agent
   BEFORE INSERT ON agent_entities
-  FOR EACH ROW EXECUTE FUNCTION check_passport_limit();
+  FOR EACH ROW EXECUTE FUNCTION enforce_single_agent();
 
--- 3. enforce_max_active_keys() — from 019
--- Enforces max 3 active (non-revoked) API keys per agent at the database level.
+-- 3. enforce_max_active_keys() — max 3 active API keys per agent
 CREATE OR REPLACE FUNCTION enforce_max_active_keys()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -280,37 +231,11 @@ CREATE TRIGGER trg_max_active_keys
   BEFORE INSERT ON agent_credentials
   FOR EACH ROW EXECUTE FUNCTION enforce_max_active_keys();
 
--- 4. check_correction_citation_cap() — NEW
--- Limits correction-type citations to 3 per source agent per 24 hours
-CREATE OR REPLACE FUNCTION check_correction_citation_cap()
-RETURNS TRIGGER AS $$
-DECLARE
-  recent_count int;
-BEGIN
-  IF NEW.type = 'correction' THEN
-    SELECT COUNT(*) INTO recent_count
-      FROM citations
-      WHERE source_agent_id = NEW.source_agent_id
-        AND type = 'correction'
-        AND created_at > (now() - interval '24 hours');
-
-    IF recent_count >= 3 THEN
-      RAISE EXCEPTION 'Correction citation cap: maximum 3 corrections per agent per 24 hours';
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_correction_citation_cap
-  BEFORE INSERT ON citations
-  FOR EACH ROW EXECUTE FUNCTION check_correction_citation_cap();
-
 -- ============================================================
--- SECTION 5: RPC Functions (12 functions, FINAL versions)
+-- SECTION 5: RPC Functions
 -- ============================================================
 
--- 1. search_constructs — from 012 with lateral join optimization
+-- 1. search_constructs — composite score of similarity + pull_count
 CREATE OR REPLACE FUNCTION search_constructs(
   query_embedding vector(1536),
   match_count int DEFAULT 10,
@@ -324,59 +249,39 @@ RETURNS TABLE (
   similarity float,
   composite_score float,
   agent_name text,
-  effective_reputation float,
-  base_reputation int,
-  citation_count bigint
+  pull_count int
 )
 AS $$
   WITH candidates AS (
-    -- Phase 1: Over-fetch from HNSW index (3x candidate pool)
-    SELECT c.id, c.agent_id, c.payload, c.created_at,
+    SELECT c.id, c.agent_id, c.payload, c.created_at, c.pull_count,
            1 - (c.embedding <=> query_embedding) AS similarity,
-           a.name AS agent_name,
-           a.effective_reputation,
-           a.base_reputation
+           a.name AS agent_name
     FROM constructs c
     JOIN agent_entities a ON a.id = c.agent_id
     WHERE c.embedding IS NOT NULL
       AND c.deleted_at IS NULL
+      AND c.status = 'approved'
       AND (stack_filter IS NULL
            OR c.payload->'stack' @> to_jsonb(stack_filter))
     ORDER BY c.embedding <=> query_embedding
     LIMIT match_count * 3
   ),
-  with_citations AS (
-    -- Phase 2: Attach citation counts via LATERAL join
-    SELECT cand.*,
-           COALESCE(cc.cnt, 0) AS citation_count
-    FROM candidates cand
-    LEFT JOIN LATERAL (
-      SELECT COUNT(*) AS cnt
-      FROM citations
-      WHERE target_construct_id = cand.id
-        AND is_rejected = false
-    ) cc ON true
-  ),
   scored AS (
-    -- Phase 3: Composite score = 70% similarity + 15% citations + 15% reputation
-    SELECT wc.*,
-           (0.70 * wc.similarity
-            + 0.15 * (LEAST(wc.citation_count, 20)::float / 20.0)
-            + 0.15 * (LEAST(wc.effective_reputation, 20.0) / 20.0)
+    SELECT cand.*,
+           (0.85 * cand.similarity
+            + 0.15 * (LEAST(cand.pull_count, 50)::float / 50.0)
            ) AS composite_score
-    FROM with_citations wc
+    FROM candidates cand
   )
-  -- Phase 4: Re-rank by composite score, return top N
   SELECT s.id, s.agent_id, s.payload, s.created_at,
          s.similarity, s.composite_score,
-         s.agent_name, s.effective_reputation, s.base_reputation,
-         s.citation_count
+         s.agent_name, s.pull_count
   FROM scored s
   ORDER BY s.composite_score DESC
   LIMIT match_count;
 $$ LANGUAGE sql;
 
--- 2. get_trending_feed — from 008 with deleted_at filter
+-- 2. get_trending_feed — sorted by pull_count
 CREATE OR REPLACE FUNCTION get_trending_feed(
   p_limit int DEFAULT 20,
   p_offset int DEFAULT 0,
@@ -388,23 +293,22 @@ RETURNS TABLE (
   payload jsonb,
   created_at timestamptz,
   agent_name text,
-  effective_reputation float,
-  base_reputation int
+  pull_count int
 )
 AS $$
   SELECT c.id, c.agent_id, c.payload, c.created_at,
          a.name AS agent_name,
-         a.effective_reputation,
-         a.base_reputation
+         c.pull_count
   FROM constructs c
   JOIN agent_entities a ON a.id = c.agent_id
   WHERE c.deleted_at IS NULL
+    AND c.status = 'approved'
     AND (p_tag IS NULL OR c.payload->'stack' @> to_jsonb(ARRAY[p_tag]::text[]))
-  ORDER BY (c.pinned_at IS NOT NULL) DESC, a.effective_reputation DESC, c.created_at DESC
+  ORDER BY (c.pinned_at IS NOT NULL) DESC, c.pull_count DESC, c.created_at DESC
   LIMIT p_limit OFFSET p_offset;
-$$ LANGUAGE sql;
+$$ LANGUAGE sql STABLE;
 
--- 3. get_discovery_feed — from 008 with deleted_at filter
+-- 3. get_discovery_feed — new agents with few constructs
 CREATE OR REPLACE FUNCTION get_discovery_feed(
   p_limit int DEFAULT 20,
   p_offset int DEFAULT 0,
@@ -416,157 +320,39 @@ RETURNS TABLE (
   payload jsonb,
   created_at timestamptz,
   agent_name text,
-  effective_reputation float,
-  base_reputation int
+  pull_count int
 )
 AS $$
+  WITH agent_construct_counts AS (
+    SELECT agent_id, COUNT(*) AS cnt
+    FROM constructs
+    WHERE deleted_at IS NULL
+    GROUP BY agent_id
+    HAVING COUNT(*) < 5
+  )
   SELECT c.id, c.agent_id, c.payload, c.created_at,
          a.name AS agent_name,
-         a.effective_reputation,
-         a.base_reputation
+         c.pull_count
   FROM constructs c
   JOIN agent_entities a ON a.id = c.agent_id
+  JOIN agent_construct_counts acc ON acc.agent_id = c.agent_id
   WHERE c.deleted_at IS NULL
-    AND (SELECT COUNT(*) FROM constructs c2 WHERE c2.agent_id = c.agent_id AND c2.deleted_at IS NULL) < 5
-    AND EXISTS (SELECT 1 FROM citations cit WHERE cit.source_agent_id = c.agent_id)
+    AND c.status = 'approved'
     AND (p_tag IS NULL OR c.payload->'stack' @> to_jsonb(ARRAY[p_tag]::text[]))
   ORDER BY c.created_at DESC
   LIMIT p_limit OFFSET p_offset;
-$$ LANGUAGE sql;
+$$ LANGUAGE sql STABLE;
 
--- 4. get_leaderboard — from 003 (uses effective_reputation)
-CREATE OR REPLACE FUNCTION get_leaderboard(p_limit int DEFAULT 50)
-RETURNS TABLE (
-  rank bigint,
-  agent_id uuid,
-  agent_name text,
-  effective_reputation float,
-  base_reputation int,
-  citation_count bigint,
-  construct_count bigint
-)
+-- 4. get_platform_stats — agents and constructs only
+CREATE OR REPLACE FUNCTION get_platform_stats()
+RETURNS TABLE (agent_count bigint, construct_count bigint)
 AS $$
   SELECT
-    ROW_NUMBER() OVER (ORDER BY a.effective_reputation DESC, a.created_at ASC) AS rank,
-    a.id AS agent_id,
-    a.name AS agent_name,
-    a.effective_reputation,
-    a.base_reputation,
-    (SELECT COUNT(*) FROM citations WHERE target_agent_id = a.id AND is_rejected = false) AS citation_count,
-    (SELECT COUNT(*) FROM constructs WHERE agent_id = a.id AND deleted_at IS NULL) AS construct_count
-  FROM agent_entities a
-  WHERE a.status = 'active'
-  ORDER BY a.effective_reputation DESC, a.created_at ASC
-  LIMIT p_limit;
-$$ LANGUAGE sql;
+    (SELECT COUNT(*) FROM agent_entities WHERE status = 'active') AS agent_count,
+    (SELECT COUNT(*) FROM constructs WHERE deleted_at IS NULL) AS construct_count;
+$$ LANGUAGE sql STABLE;
 
--- 5. refresh_effective_reputation — from 011 with quarantine exclusion
-CREATE OR REPLACE FUNCTION refresh_effective_reputation()
-RETURNS void AS $$
-BEGIN
-  WITH
-  -- Count non-rejected extension citations per (target, source) pair
-  -- Exclude citations from quarantined agents
-  source_counts AS (
-    SELECT c.target_agent_id, c.source_agent_id, COUNT(*) AS cnt
-    FROM citations c
-    JOIN agent_entities sa ON sa.id = c.source_agent_id
-    WHERE c.type = 'extension'
-      AND c.is_rejected = false
-      AND sa.quarantined_at IS NULL
-    GROUP BY c.target_agent_id, c.source_agent_id
-  ),
-  -- Total inbound non-rejected extension citations per target
-  total_counts AS (
-    SELECT target_agent_id, SUM(cnt) AS total
-    FROM source_counts
-    GROUP BY target_agent_id
-  ),
-  -- Total distinct outbound citation targets per source (for dilution)
-  outbound_counts AS (
-    SELECT source_agent_id, COUNT(DISTINCT target_agent_id) AS outbound
-    FROM citations
-    WHERE type = 'extension' AND is_rejected = false
-    GROUP BY source_agent_id
-  ),
-  -- Calculate individual citation values
-  citation_values AS (
-    SELECT
-      c.target_agent_id,
-      -- Sigmoid of source agent's reputation (shifted center, steeper slope, 0.15 floor)
-      GREATEST(
-        0.15,
-        (1.0 / (1.0 + exp(-0.07 * (GREATEST(sa.effective_reputation, sa.base_reputation::float) - 30))))
-      )
-      -- 90-day decay: citations older than 90 days contribute half value
-      * CASE WHEN c.created_at < (now() - interval '90 days') THEN 0.5 ELSE 1.0 END
-      -- Cartel dampening: if one source contributes > 30% of inbound, dampen to 1%
-      -- Only applies when target has >= 5 total citations (Small-N fix)
-      * CASE
-          WHEN tc.total >= 5 AND (sc.cnt::float / tc.total::float) > 0.30
-          THEN 0.01
-          ELSE 1.0
-        END
-      -- Outbound dilution: first 10 citation targets carry full weight,
-      -- beyond that power dilutes as 10/outbound_count
-      * CASE
-          WHEN COALESCE(oc.outbound, 1) <= 10 THEN 1.0
-          ELSE 10.0 / oc.outbound::float
-        END
-      AS value
-    FROM citations c
-    JOIN agent_entities sa ON sa.id = c.source_agent_id
-    JOIN source_counts sc ON sc.target_agent_id = c.target_agent_id
-                          AND sc.source_agent_id = c.source_agent_id
-    JOIN total_counts tc ON tc.target_agent_id = c.target_agent_id
-    LEFT JOIN outbound_counts oc ON oc.source_agent_id = c.source_agent_id
-    WHERE c.type = 'extension'
-      AND c.is_rejected = false
-      AND sa.quarantined_at IS NULL
-  ),
-  -- Sum citation values per target agent
-  agent_scores AS (
-    SELECT target_agent_id, SUM(value) AS total_score
-    FROM citation_values
-    GROUP BY target_agent_id
-  ),
-  -- Build final scores: base_reputation + citation_score for all active agents
-  final_scores AS (
-    SELECT
-      ae.id,
-      ae.base_reputation::float + COALESCE(ags.total_score, 0) AS new_effective_rep
-    FROM agent_entities ae
-    LEFT JOIN agent_scores ags ON ags.target_agent_id = ae.id
-    WHERE ae.status = 'active'
-  )
-  -- Write effective_reputation
-  UPDATE agent_entities a
-  SET effective_reputation = fs.new_effective_rep
-  FROM final_scores fs
-  WHERE a.id = fs.id;
-END;
-$$ LANGUAGE plpgsql;
-
--- 6. increment_base_reputation — from 004
-CREATE OR REPLACE FUNCTION increment_base_reputation(p_agent_id uuid)
-RETURNS void AS $$
-  UPDATE agent_entities
-  SET base_reputation = LEAST(base_reputation + 1, 10)
-  WHERE id = p_agent_id AND base_reputation < 10;
-$$ LANGUAGE sql;
-
--- 7. get_citation_counts — from 005
-CREATE OR REPLACE FUNCTION get_citation_counts(p_construct_ids uuid[])
-RETURNS TABLE (construct_id uuid, citation_count bigint)
-AS $$
-  SELECT target_construct_id AS construct_id, COUNT(*) AS citation_count
-  FROM citations
-  WHERE target_construct_id = ANY(p_construct_ids)
-    AND is_rejected = false
-  GROUP BY target_construct_id;
-$$ LANGUAGE sql;
-
--- 8. get_tag_counts — from 008 with deleted_at filter
+-- 5. get_tag_counts — tag frequency across all constructs
 CREATE OR REPLACE FUNCTION get_tag_counts()
 RETURNS TABLE (
   tag text,
@@ -581,7 +367,7 @@ AS $$
   ORDER BY count DESC, tag ASC;
 $$ LANGUAGE sql STABLE;
 
--- 9. get_developer_construct_count — from 010
+-- 6. get_developer_construct_count — count constructs for a developer
 CREATE OR REPLACE FUNCTION get_developer_construct_count(p_developer_id uuid)
 RETURNS int AS $$
 BEGIN
@@ -595,41 +381,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- 10. get_developer_inbound_citation_count — from 010
-CREATE OR REPLACE FUNCTION get_developer_inbound_citation_count(p_developer_id uuid)
-RETURNS int AS $$
-BEGIN
-  RETURN (
-    SELECT COUNT(DISTINCT c.source_agent_id)::int
-    FROM citations c
-    JOIN agent_entities target_agent ON c.target_agent_id = target_agent.id
-    JOIN agent_entities source_agent ON c.source_agent_id = source_agent.id
-    WHERE target_agent.developer_id = p_developer_id
-      AND source_agent.developer_id != p_developer_id
-      AND c.type = 'extension'
-      AND c.is_rejected = false
-  );
-END;
-$$ LANGUAGE plpgsql STABLE;
-
--- 11. promote_trust_tier — from 010
-CREATE OR REPLACE FUNCTION promote_trust_tier(p_developer_id uuid)
-RETURNS void AS $$
-DECLARE
-  citation_count int;
-BEGIN
-  SELECT get_developer_inbound_citation_count(p_developer_id) INTO citation_count;
-
-  IF citation_count >= 1 THEN
-    UPDATE developers
-    SET trust_tier = 'established'
-    WHERE id = p_developer_id
-      AND trust_tier != 'established';
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
-
--- 12. check_card_fingerprint — from 010
+-- 7. check_card_fingerprint — Sybil dedup via card fingerprint
 CREATE OR REPLACE FUNCTION check_card_fingerprint(p_fingerprint text, p_developer_id uuid)
 RETURNS boolean AS $$
 BEGIN
@@ -641,6 +393,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
+-- 8. increment_pull_count — atomic pull count increment with dedup handled by caller
+CREATE OR REPLACE FUNCTION increment_pull_count(p_construct_id uuid)
+RETURNS void AS $$
+  UPDATE constructs SET pull_count = pull_count + 1 WHERE id = p_construct_id;
+$$ LANGUAGE sql;
+
+-- 9. check_construct_duplicate — returns true if near-duplicate exists
+CREATE OR REPLACE FUNCTION check_construct_duplicate(p_embedding vector(1536))
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM constructs
+    WHERE embedding IS NOT NULL
+      AND deleted_at IS NULL
+      AND 1 - (embedding <=> p_embedding) > 0.90
+  );
+$$ LANGUAGE sql STABLE;
+
 -- ============================================================
 -- SECTION 6: Row Level Security
 -- ============================================================
@@ -650,9 +419,7 @@ ALTER TABLE developers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_entities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE constructs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE citations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blacklisted_identities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE citation_rejections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 
 -- developers: auth.uid() = id
@@ -682,14 +449,7 @@ CREATE POLICY agent_entities_delete ON agent_entities
 CREATE POLICY constructs_select ON constructs
   FOR SELECT USING (true);
 
--- citations: SELECT open to all. INSERT/UPDATE via service role only.
-CREATE POLICY citations_select ON citations
-  FOR SELECT USING (true);
-
 -- blacklisted_identities: Service role only.
--- (RLS enabled with no permissive policies = only service role can access)
-
--- citation_rejections: Service role only.
 -- (RLS enabled with no permissive policies = only service role can access)
 
 -- feedback: Service role only (API route uses service client).

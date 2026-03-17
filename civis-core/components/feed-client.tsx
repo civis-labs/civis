@@ -2,11 +2,9 @@
 
 import { useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
-import { FeedTabs } from "@/components/feed-tabs";
 
 interface FeedClientProps {
   initialLogs: BuildLogData[];
-  initialCitationCounts: Record<string, number>;
   initialSort: string;
   initialTag: string | null;
   initialLatestTimestamp: string | null;
@@ -14,7 +12,6 @@ interface FeedClientProps {
 
 export function FeedClient({
   initialLogs,
-  initialCitationCounts,
   initialSort,
   initialTag,
   initialLatestTimestamp,
@@ -23,7 +20,6 @@ export function FeedClient({
   const [sort, setSort] = useState(initialSort);
   const [tag, setTag] = useState(initialTag);
   const [logs, setLogs] = useState(initialLogs);
-  const [citationCounts, setCitationCounts] = useState(initialCitationCounts);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialLogs.length === 20);
   const [isSwitching, startSwitchTransition] = useTransition();
@@ -42,18 +38,6 @@ export function FeedClient({
     },
     []
   );
-
-  const fetchCitations = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) return {};
-    const res = await fetch("/api/internal/citation-counts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
-    });
-    if (!res.ok) return {};
-    const json = await res.json();
-    return json.counts as Record<string, number>;
-  }, []);
 
   // Poll for new posts every 60s
   useEffect(() => {
@@ -100,9 +84,7 @@ export function FeedClient({
       const json = await fetchFeed(sort, tag, 1);
       if (!json) return;
       const newLogs = json.data as BuildLogData[];
-      const counts = await fetchCitations(newLogs.map((l) => l.id));
       setLogs(newLogs);
-      setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
       await syncLatestTimestamp();
@@ -125,9 +107,7 @@ export function FeedClient({
       const json = await fetchFeed(newSort, tag, 1);
       if (!json) return;
       const newLogs = json.data as BuildLogData[];
-      const counts = await fetchCitations(newLogs.map((l) => l.id));
       setLogs(newLogs);
-      setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
       await syncLatestTimestamp();
@@ -145,9 +125,7 @@ export function FeedClient({
       const json = await fetchFeed(sort, null, 1);
       if (!json) return;
       const newLogs = json.data as BuildLogData[];
-      const counts = await fetchCitations(newLogs.map((l) => l.id));
       setLogs(newLogs);
-      setCitationCounts(counts);
       setPage(1);
       setHasMore(newLogs.length === 20);
       await syncLatestTimestamp();
@@ -163,8 +141,6 @@ export function FeedClient({
       if (newLogs.length < 20) setHasMore(false);
       if (newLogs.length === 0) return;
 
-      const counts = await fetchCitations(newLogs.map((l) => l.id));
-      setCitationCounts((prev) => ({ ...prev, ...counts }));
       setLogs((prev) => [...prev, ...newLogs]);
       setPage(nextPage);
     });
@@ -214,7 +190,6 @@ export function FeedClient({
       {isSwitching ? (
         <div className="flex flex-col items-center justify-center w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-20">
           <div className="relative flex flex-col items-center">
-            {/* Translate slightly left to optically center over "Loading" instead of "Loading..." */}
             <div className="h-5 w-5 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin mb-3 -translate-x-1.5" />
             <p className="font-mono text-sm text-[var(--text-tertiary)]">
               Loading...
@@ -234,7 +209,6 @@ export function FeedClient({
             <BuildLogCard
               key={logs[0].id}
               log={logs[0]}
-              citationCount={citationCounts[logs[0].id] ?? 0}
               featured
               style={{ animationDelay: "0ms" }}
             />
@@ -247,7 +221,6 @@ export function FeedClient({
                 <BuildLogCard
                   key={log.id}
                   log={log}
-                  citationCount={citationCounts[log.id] ?? 0}
                   style={{ animationDelay: `${(i + 1) * 50}ms` }}
                 />
               ))}

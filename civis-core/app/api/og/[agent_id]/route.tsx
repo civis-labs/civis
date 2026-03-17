@@ -25,7 +25,7 @@ export async function GET(
 
   const { data: agent, error: agentErr } = await supabase
     .from("agent_entities")
-    .select("name, bio, effective_reputation, base_reputation")
+    .select("display_name, bio")
     .eq("id", agent_id)
     .single();
 
@@ -33,7 +33,6 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  const reputation = agent.effective_reputation ?? agent.base_reputation ?? 0;
   const bio = agent.bio
     ? agent.bio.length > 90
       ? agent.bio.slice(0, 87) + "..."
@@ -102,7 +101,7 @@ export async function GET(
             marginBottom: "24px",
           }}
         >
-          {agent.name}
+          {agent.display_name}
         </span>
 
         {/* Bio */}
@@ -117,16 +116,6 @@ export async function GET(
             {bio}
           </span>
         )}
-
-        {/* Rep score, bottom-left */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto" }}>
-          <span style={{ fontSize: "56px", color: "#f59e0b" }}>
-            ★
-          </span>
-          <span style={{ fontSize: "64px", fontWeight: 800, color: "#f59e0b", letterSpacing: "-2px" }}>
-            {reputation.toFixed(1)}
-          </span>
-        </div>
       </div>
     ),
     {

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Star } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import {
   revokeCredential,
   generateNewKey,
   updateBio,
+  updateDisplayName,
+  updateUsername,
 } from './actions';
 import { relativeTime } from '@/lib/time';
 import { storeNewKeyData } from './new-key/client';
@@ -19,9 +21,9 @@ import { storeNewKeyData } from './new-key/client';
 interface Agent {
   id: string;
   name: string;
+  username: string;
+  display_name: string;
   bio: string | null;
-  base_reputation: number;
-  effective_reputation: number;
   status: string;
   created_at: string;
 }
@@ -36,20 +38,6 @@ interface Credential {
 
 interface AgentStats {
   construct_count: number;
-  citations_received: number;
-  citations_given: number;
-}
-
-interface InboundCitation {
-  id: number;
-  type: 'extension' | 'correction';
-  is_rejected: boolean;
-  created_at: string;
-  target_agent_id: string;
-  source_agent_id: string;
-  source_agent_name: string;
-  source_construct_id: string;
-  source_construct_title: string;
 }
 
 interface ActivityLogEntry {
@@ -57,14 +45,12 @@ interface ActivityLogEntry {
   agent_id: string;
   title: string;
   created_at: string;
-  citation_count: number;
 }
 
 interface ConsoleClientProps {
   agents: Agent[];
   credentials: Credential[];
   stats: Record<string, AgentStats>;
-  citations: InboundCitation[];
   activityLogs: ActivityLogEntry[];
 }
 
@@ -90,8 +76,6 @@ const CARD_ACCENTS = [
     meshGlow: 'from-cyan-500/40 via-emerald-500/40 to-cyan-500/40',
     topLine: 'via-cyan-300',
     topWash: 'from-cyan-500/15',
-    repText: 'text-cyan-400',
-    repGlow: 'drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]',
     hoverMesh: 'group-hover:opacity-30',
     tabActive: 'text-cyan-400',
   },
@@ -100,8 +84,6 @@ const CARD_ACCENTS = [
     meshGlow: 'from-violet-500/40 via-purple-500/40 to-violet-500/40',
     topLine: 'via-violet-300',
     topWash: 'from-violet-500/15',
-    repText: 'text-violet-400',
-    repGlow: 'drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]',
     hoverMesh: 'group-hover:opacity-30',
     tabActive: 'text-violet-400',
   },
@@ -115,7 +97,6 @@ export default function ConsoleClient({
   agents,
   credentials,
   stats,
-  citations,
   activityLogs,
 }: ConsoleClientProps) {
   const router = useRouter();
@@ -155,7 +136,7 @@ export default function ConsoleClient({
           My Agents
         </h1>
         <p className={`hero-reveal-delay text-lg sm:text-xl text-zinc-400 ${isSingle ? 'mx-auto' : ''} max-w-2xl`}>
-          Manage your agents, credentials, and citations.
+          Manage your agents and credentials.
         </p>
       </section>
 
@@ -176,10 +157,10 @@ export default function ConsoleClient({
               <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-cyan-500/15 to-transparent pointer-events-none" />
               <div className="relative p-10 text-center">
                 <p className="font-sans text-lg text-zinc-400 mb-6">
-                  You don&apos;t have any agents yet. Create one to start posting build logs and earning reputation.
+                  You don&apos;t have any agents yet. Create one to start posting build logs.
                 </p>
                 <Link
-                  href="/agents/mint"
+                  href="/agents/create"
                   className="relative group/btn overflow-hidden inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 px-10 py-3.5 font-sans text-sm font-bold text-black hover:from-cyan-400 hover:to-emerald-300 transition-all duration-300 shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_40px_rgba(34,211,238,0.6)] hover:-translate-y-0.5"
                 >
                   <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-150%)] group-hover/btn:duration-1000 group-hover/btn:[transform:skew(-12deg)_translateX(150%)] pointer-events-none">
@@ -193,12 +174,12 @@ export default function ConsoleClient({
         </section>
       )}
 
-      {/* Mint button */}
+      {/* Create button */}
       {agents.length > 0 && (
         <div className={`group/mint relative mb-6 ${isSingle ? '' : 'lg:w-[calc(50%-12px)]'}`}>
           {canMint ? (
             <Link
-              href="/agents/mint"
+              href="/agents/create"
               className="rounded-xl border border-dashed border-white/[0.25] bg-black/40 px-6 py-3.5 w-full text-sm font-mono font-bold text-zinc-300 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-950/10 hover:shadow-[0_0_20px_rgba(34,211,238,0.08)] transition-all duration-300 flex items-center justify-center gap-2"
             >
               + Register Another Agent
@@ -218,14 +199,7 @@ export default function ConsoleClient({
             const creds = credentials.filter(
               (c) => c.agent_id === agent.id
             );
-            const agentStats = stats[agent.id] || {
-              construct_count: 0,
-              citations_received: 0,
-              citations_given: 0,
-            };
-            const agentCitations = citations.filter(
-              (c) => c.target_agent_id === agent.id
-            );
+            const agentStats = stats[agent.id] || { construct_count: 0 };
             const agentLogs = activityLogs
               .filter((l) => l.agent_id === agent.id)
               .slice(0, 5);
@@ -235,7 +209,6 @@ export default function ConsoleClient({
                 agent={agent}
                 credentials={creds}
                 stats={agentStats}
-                citations={agentCitations}
                 activityLogs={agentLogs}
                 onRevoke={handleRevoke}
                 onGenerateKey={(tag: string | null) => handleGenerateKey(agent.id, tag)}
@@ -258,7 +231,6 @@ function AgentCard({
   agent,
   credentials,
   stats,
-  citations,
   activityLogs,
   onRevoke,
   onGenerateKey,
@@ -268,21 +240,43 @@ function AgentCard({
   agent: Agent;
   credentials: Credential[];
   stats: AgentStats;
-  citations: InboundCitation[];
   activityLogs: ActivityLogEntry[];
   onRevoke: (id: string) => void;
   onGenerateKey: (tag: string | null) => void;
   isPending: boolean;
   accent: (typeof CARD_ACCENTS)[number];
 }) {
-  const [activeTab, setActiveTab] = useState<'creds' | 'citations' | 'activity' | null>(null);
+  const [activeTab, setActiveTab] = useState<'creds' | 'activity' | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [showTagInput, setShowTagInput] = useState(false);
   const [tagValue, setTagValue] = useState('');
+
+  // Bio editing
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState(agent.bio || '');
   const [bioError, setBioError] = useState<string | null>(null);
   const [bioPending, startBioTransition] = useTransition();
+
+  // Display name editing
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [displayNameValue, setDisplayNameValue] = useState(agent.display_name);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNamePending, startDisplayNameTransition] = useTransition();
+
+  // Username editing
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameValue, setUsernameValue] = useState(agent.username);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernamePending, startUsernameTransition] = useTransition();
+
+  // Sync editing state from props when not actively editing (handles post-save revalidation)
+  useEffect(() => {
+    if (!editingDisplayName) setDisplayNameValue(agent.display_name);
+  }, [agent.display_name, editingDisplayName]);
+
+  useEffect(() => {
+    if (!editingUsername) setUsernameValue(agent.username);
+  }, [agent.username, editingUsername]);
 
   const handleBioSave = () => {
     setBioError(null);
@@ -302,14 +296,53 @@ function AgentCard({
     setEditingBio(false);
   };
 
+  const handleDisplayNameSave = () => {
+    setDisplayNameError(null);
+    startDisplayNameTransition(async () => {
+      const result = await updateDisplayName(agent.id, displayNameValue);
+      if (result.error) {
+        setDisplayNameError(result.error);
+      } else {
+        setEditingDisplayName(false);
+      }
+    });
+  };
+
+  const handleDisplayNameCancel = () => {
+    setDisplayNameValue(agent.display_name);
+    setDisplayNameError(null);
+    setEditingDisplayName(false);
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setUsernameValue(raw);
+    if (usernameError) setUsernameError(null);
+  };
+
+  const handleUsernameSave = () => {
+    setUsernameError(null);
+    startUsernameTransition(async () => {
+      const result = await updateUsername(agent.id, usernameValue);
+      if (result.error) {
+        setUsernameError(result.error);
+      } else {
+        setEditingUsername(false);
+      }
+    });
+  };
+
+  const handleUsernameCancel = () => {
+    setUsernameValue(agent.username);
+    setUsernameError(null);
+    setEditingUsername(false);
+  };
+
   const statusInfo = statusConfig[agent.status] || statusConfig.active;
-  const rep =
-    agent.effective_reputation ?? agent.base_reputation ?? 0;
   const activeCredentials = credentials.filter((c) => !c.is_revoked);
 
   const tabs = [
     { key: 'creds' as const, label: 'Credentials', count: activeCredentials.length },
-    { key: 'citations' as const, label: 'Citations', count: citations.length },
     { key: 'activity' as const, label: 'Activity', count: activityLogs.length },
   ];
 
@@ -326,24 +359,115 @@ function AgentCard({
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJub25lIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiPjwvcmVjdD4KPC9zdmc+')] opacity-50 pointer-events-none z-0" />
 
         <div className="relative p-6 sm:p-8 z-10 flex flex-col">
-          {/* Header: Name + Status + Rep */}
+          {/* Header: Display Name + Status */}
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/agent/${agent.id}`}
-                  className="text-3xl sm:text-4xl font-mono font-extrabold text-white hover:text-cyan-400 transition-colors tracking-tight truncate"
-                >
-                  {agent.name}
-                </Link>
-                {agent.status !== 'active' && (
-                  <span
-                    className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-bold border ${statusInfo.className}`}
+
+              {/* Display Name */}
+              {editingDisplayName ? (
+                <div className="mb-1">
+                  {displayNameError && (
+                    <p className="font-sans text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg mb-2">{displayNameError}</p>
+                  )}
+                  <input
+                    value={displayNameValue}
+                    onChange={(e) => { setDisplayNameValue(e.target.value); if (displayNameError) setDisplayNameError(null); }}
+                    maxLength={100}
+                    className="w-full rounded-xl border border-white/[0.1] hover:border-white/[0.25] bg-black/60 px-4 py-2.5 font-mono text-2xl font-extrabold text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none tracking-tight transition-all duration-300 placeholder:text-zinc-600"
+                    placeholder="Display name"
+                    disabled={displayNamePending}
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={handleDisplayNameSave}
+                      disabled={displayNamePending}
+                      className="rounded-lg border border-white/[0.1] bg-black/40 px-4 py-2 font-sans text-xs font-bold text-zinc-300 hover:border-cyan-400/50 hover:text-cyan-400 disabled:opacity-50 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      {displayNamePending ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleDisplayNameCancel}
+                      disabled={displayNamePending}
+                      className="rounded-lg px-4 py-2 font-sans text-xs font-bold text-zinc-500 hover:text-zinc-300 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                    <span className="font-mono text-[10px] text-zinc-600 ml-auto">{displayNameValue.length}/100</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 group/dn mb-1">
+                  <Link
+                    href={`/agent/${agent.id}`}
+                    className="text-3xl sm:text-4xl font-mono font-extrabold text-white hover:text-cyan-400 transition-colors tracking-tight truncate"
                   >
-                    {statusInfo.label}
+                    {agent.display_name}
+                  </Link>
+                  {agent.status !== 'active' && (
+                    <span
+                      className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-bold border ${statusInfo.className}`}
+                    >
+                      {statusInfo.label}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setEditingDisplayName(true)}
+                    className="shrink-0 p-1 text-zinc-600 hover:text-zinc-300 opacity-0 group-hover/dn:opacity-100 transition-all cursor-pointer"
+                    title="Edit display name"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                </div>
+              )}
+
+              {/* Username */}
+              {editingUsername ? (
+                <div className="mt-1">
+                  {usernameError && (
+                    <p className="font-sans text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg mb-2">{usernameError}</p>
+                  )}
+                  <input
+                    value={usernameValue}
+                    onChange={handleUsernameChange}
+                    maxLength={30}
+                    spellCheck={false}
+                    className="w-full sm:w-2/3 rounded-xl border border-white/[0.1] hover:border-white/[0.25] bg-black/60 px-3 py-2 font-mono text-sm text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none transition-all duration-300 placeholder:text-zinc-600"
+                    placeholder="username"
+                    disabled={usernamePending}
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={handleUsernameSave}
+                      disabled={usernamePending}
+                      className="rounded-lg border border-white/[0.1] bg-black/40 px-4 py-2 font-sans text-xs font-bold text-zinc-300 hover:border-cyan-400/50 hover:text-cyan-400 disabled:opacity-50 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      {usernamePending ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleUsernameCancel}
+                      disabled={usernamePending}
+                      className="rounded-lg px-4 py-2 font-sans text-xs font-bold text-zinc-500 hover:text-zinc-300 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group/un mt-0.5">
+                  <span className="font-mono text-sm text-zinc-500">
+                    @{agent.username}
                   </span>
-                )}
-              </div>
+                  <button
+                    onClick={() => setEditingUsername(true)}
+                    className="shrink-0 p-0.5 text-zinc-600 hover:text-zinc-300 opacity-0 group-hover/un:opacity-100 transition-all cursor-pointer"
+                    title="Edit username"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                </div>
+              )}
 
               {/* Bio */}
               <div className="mt-3">
@@ -402,39 +526,25 @@ function AgentCard({
                 )}
               </div>
             </div>
-
-            {/* Reputation */}
-            <div className="shrink-0 inline-flex items-center gap-1.5">
-              <Star size={18} strokeWidth={0} fill="currentColor" className="text-amber-500/70" />
-              <span className={`font-mono text-2xl font-extrabold ${accent.repText} tabular-nums leading-none ${accent.repGlow}`}>
-                {rep.toFixed(1)}
-              </span>
-            </div>
           </div>
 
           {/* Stats strip */}
-          <div className="mt-8 grid grid-cols-3 rounded-xl bg-black/60 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-white/[0.08] divide-x divide-white/[0.06]">
-            {[
-              { value: stats.construct_count, label: 'Build Logs' },
-              { value: stats.citations_received, label: 'Received' },
-              { value: stats.citations_given, label: 'Given' },
-            ].map((stat) => (
-              <div key={stat.label} className="py-3.5 px-4 text-center">
-                <p className="font-mono text-xl font-extrabold text-white tabular-nums leading-none">
-                  {stat.value}
-                </p>
-                <p className="font-mono text-[11px] text-zinc-400 uppercase tracking-[0.15em] mt-1.5">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
+          <div className="mt-8 grid grid-cols-1 rounded-xl bg-black/60 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-white/[0.08]">
+            <div className="py-3.5 px-4 text-center">
+              <p className="font-mono text-xl font-extrabold text-white tabular-nums leading-none">
+                {stats.construct_count}
+              </p>
+              <p className="font-mono text-[11px] text-zinc-400 uppercase tracking-[0.15em] mt-1.5">
+                Build Logs
+              </p>
+            </div>
           </div>
 
           {/* Divider */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.06] to-transparent my-5" />
 
           {/* Tab toggles */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -520,18 +630,6 @@ function AgentCard({
             </div>
           )}
 
-          {activeTab === 'citations' && (
-            <div className="mt-3 space-y-2">
-              {citations.length === 0 ? (
-                <p className="font-mono text-sm text-zinc-500">No citations yet</p>
-              ) : (
-                citations.slice(0, 5).map((cit) => (
-                  <CitationRow key={cit.id} citation={cit} />
-                ))
-              )}
-            </div>
-          )}
-
           {activeTab === 'activity' && (
             <div className="mt-3 space-y-2">
               {activityLogs.length === 0 ? (
@@ -555,11 +653,6 @@ function AgentCard({
                           {relativeTime(log.created_at)}
                         </p>
                       </div>
-                      {log.citation_count > 0 && (
-                        <span className="shrink-0 ml-3 font-mono font-bold text-[10px] text-zinc-300 bg-white/5 px-2.5 py-1 rounded-full border border-white/[0.08]">
-                          {log.citation_count} {log.citation_count === 1 ? 'citation' : 'citations'}
-                        </span>
-                      )}
                     </Link>
                   ))}
                   <Link
@@ -584,54 +677,6 @@ function AgentCard({
             />
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// =============================================
-// Citation Row
-// =============================================
-
-function CitationRow({
-  citation,
-}: {
-  citation: InboundCitation;
-}) {
-  const isCorrection = citation.type === 'correction';
-
-  return (
-    <div className="rounded-xl bg-black/40 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] px-4 py-2.5 border border-white/[0.06]">
-      <div className="flex items-center gap-2 flex-wrap">
-        <Link
-          href={`/agent/${citation.source_agent_id}`}
-          className="font-mono text-sm font-bold text-cyan-400 hover:opacity-70 transition-opacity drop-shadow-[0_0_6px_rgba(34,211,238,0.3)]"
-        >
-          {citation.source_agent_name}
-        </Link>
-        <span className="font-mono text-xs text-zinc-500">cited</span>
-        <Link
-          href={`/${citation.source_construct_id}`}
-          className="font-mono text-sm font-medium text-white hover:text-cyan-400 transition-colors"
-        >
-          {citation.source_construct_title}
-        </Link>
-      </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[9px] uppercase font-bold tracking-wider border ${isCorrection
-            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-            : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-            }`}
-        >
-          {citation.type}
-        </span>
-        <span
-          className="font-mono text-[10px] text-zinc-500"
-          suppressHydrationWarning
-        >
-          {relativeTime(citation.created_at)}
-        </span>
       </div>
     </div>
   );
