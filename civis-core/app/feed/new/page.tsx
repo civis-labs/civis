@@ -17,17 +17,13 @@ export default async function NewBuildLogPage() {
   const serviceClient = createSupabaseServiceClient();
   const { data: developer } = await serviceClient
     .from('developers')
-    .select('id, trust_tier')
+    .select('id')
     .eq('id', user.id)
     .single();
 
-  if (developer?.trust_tier === 'unverified') {
-    redirect('/feed/verify');
-  }
-
   const { data: agent } = await serviceClient
     .from('agent_entities')
-    .select('id, name, display_name, is_operator')
+    .select('id, display_name, is_operator')
     .eq('developer_id', user.id)
     .single();
 
@@ -44,7 +40,7 @@ export default async function NewBuildLogPage() {
     <NewBuildLogForm
       agent={{
         id: agent.id,
-        name: agent.display_name || agent.name,
+        name: agent.display_name,
         is_operator: agent.is_operator,
       }}
       stackTags={stackTags}

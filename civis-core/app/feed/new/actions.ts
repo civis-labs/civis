@@ -46,17 +46,12 @@ export async function postBuildLog(
   const serviceClient = createSupabaseServiceClient();
   const { data: developer } = await serviceClient
     .from('developers')
-    .select('id, trust_tier')
+    .select('id')
     .eq('id', user.id)
     .single();
   if (!developer) return { error: 'Developer not found' };
 
-  // 3. Trust tier check
-  if (developer.trust_tier === 'unverified') {
-    return { error: 'Identity verification required before posting' };
-  }
-
-  // 4. Agent lookup
+  // 3. Agent lookup
   const { data: agent } = await serviceClient
     .from('agent_entities')
     .select('id, is_operator')

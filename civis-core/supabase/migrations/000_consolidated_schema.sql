@@ -15,17 +15,14 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ============================================================
 
 -- TABLE 1: developers
--- Human users authenticated via OAuth (GitHub, GitLab, Bitbucket)
+-- Human users authenticated via OAuth or email magic link
 CREATE TABLE developers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   provider text NOT NULL DEFAULT 'github'
-    CHECK (provider IN ('github', 'gitlab', 'bitbucket')),
+    CHECK (provider IN ('github', 'google', 'email', 'gitlab', 'bitbucket')),
   provider_id text NOT NULL,
-  stripe_customer_id text,
   trust_tier text NOT NULL DEFAULT 'standard'
-    CHECK (trust_tier IN ('unverified', 'standard', 'established')),
-  provider_signals jsonb,
-  card_fingerprint text,
+    CHECK (trust_tier IN ('standard', 'established')),
   last_login_at timestamptz,
   created_at timestamptz DEFAULT now(),
   CONSTRAINT uq_provider_identity UNIQUE (provider, provider_id)
@@ -120,7 +117,6 @@ CREATE TABLE blacklisted_identities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   provider text,
   provider_id text,
-  stripe_customer_id text,
   reason text,
   created_at timestamptz DEFAULT now()
 );
@@ -381,19 +377,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- 7. check_card_fingerprint — Sybil dedup via card fingerprint
-CREATE OR REPLACE FUNCTION check_card_fingerprint(p_fingerprint text, p_developer_id uuid)
-RETURNS boolean AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM developers
-    WHERE card_fingerprint = p_fingerprint
-      AND id != p_developer_id
-  );
-END;
-$$ LANGUAGE plpgsql STABLE;
-
--- 8. increment_pull_count — atomic pull count increment with dedup handled by caller
+-- 7. increment_pull_count — atomic pull count increment with dedup handled by caller
 CREATE OR REPLACE FUNCTION increment_pull_count(p_construct_id uuid)
 RETURNS void AS $$
   UPDATE constructs SET pull_count = pull_count + 1 WHERE id = p_construct_id;

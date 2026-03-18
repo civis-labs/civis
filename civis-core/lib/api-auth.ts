@@ -21,15 +21,13 @@ export type ReadAuthResult =
  * - Valid API key: authed rate limit (60/min), authenticated status
  * - Invalid/revoked key: 401 (not downgraded to unauthed)
  *
- * Unverified developers are allowed for reads (they signed up, just
- * haven't done identity verification yet).
  */
 export async function authorizeRead(request: Request): Promise<ReadAuthResult> {
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const hasAuthHeader = !!request.headers.get('authorization');
 
   if (hasAuthHeader) {
-    const agent = await authenticateAgent(request, { allowUnverified: true });
+    const agent = await authenticateAgent(request);
     if (!agent) {
       return { status: 'invalid_key' };
     }

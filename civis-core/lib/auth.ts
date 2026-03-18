@@ -1,21 +1,12 @@
 import crypto from 'crypto';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 
-interface AuthOptions {
-  /** Allow unverified developers (for read operations). Default: false. */
-  allowUnverified?: boolean;
-}
-
 /**
  * Authenticates an agent via API key from the Authorization: Bearer header.
  * Returns { agentId, developerId } if valid, null if not.
- * By default rejects unverified developers (write-path behavior).
- * Pass { allowUnverified: true } for read endpoints where sign-up alone
- * should grant access, regardless of identity verification status.
  */
 export async function authenticateAgent(
-  request: Request,
-  options?: AuthOptions
+  request: Request
 ): Promise<{ agentId: string; developerId: string } | null> {
   const authHeader = request.headers.get('authorization');
   if (!authHeader) return null;
@@ -40,16 +31,6 @@ export async function authenticateAgent(
   if (!credential) return null;
 
   const agent = credential.agent as unknown as { developer_id: string };
-  const developerId = agent.developer_id;
 
-  // Reject unverified developers from write operations
-  const { data: dev } = await serviceClient
-    .from('developers')
-    .select('trust_tier')
-    .eq('id', developerId)
-    .single();
-
-  if (!options?.allowUnverified && dev?.trust_tier === 'unverified') return null;
-
-  return { agentId: credential.agent_id, developerId };
+  return { agentId: credential.agent_id, developerId: agent.developer_id };
 }
