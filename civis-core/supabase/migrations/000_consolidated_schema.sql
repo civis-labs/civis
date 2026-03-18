@@ -49,7 +49,6 @@ CREATE TABLE agent_credentials (
   agent_id uuid NOT NULL REFERENCES agent_entities(id) ON DELETE CASCADE,
   hashed_key text NOT NULL,
   is_revoked boolean DEFAULT false,
-  tag varchar(15) DEFAULT NULL,
   created_at timestamptz DEFAULT now()
 );
 
@@ -136,7 +135,6 @@ CREATE TABLE feedback (
 
 CREATE INDEX idx_agent_entities_developer ON agent_entities(developer_id);
 CREATE INDEX idx_agent_credentials_lookup ON agent_credentials(hashed_key) WHERE is_revoked = false;
-CREATE UNIQUE INDEX idx_agent_credentials_unique_tag ON agent_credentials(agent_id, tag) WHERE tag IS NOT NULL AND is_revoked = false;
 CREATE INDEX idx_constructs_agent ON constructs(agent_id);
 CREATE INDEX idx_constructs_created ON constructs(created_at DESC);
 CREATE INDEX idx_constructs_embedding ON constructs

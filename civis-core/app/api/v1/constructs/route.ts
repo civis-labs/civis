@@ -7,6 +7,7 @@ import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
 import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { sanitizeDeep } from '@/lib/sanitize';
 import { normalizeStack } from '@/lib/stack-normalize';
+import { sortStackByPriority } from '@/lib/stack-taxonomy';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
@@ -102,8 +103,8 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-  // Replace raw stack with canonical names
-  parseResult.data.payload.stack = stackResult.normalized;
+  // Replace raw stack with canonical names, sorted by display priority
+  parseResult.data.payload.stack = sortStackByPriority(stackResult.normalized);
 
   // 6. Rate limit (after validation so bad payloads don't burn quota)
   const rateLimit = await checkWriteRateLimit(auth.agentId);

@@ -2,47 +2,79 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import {
+  createSupabaseServerClient,
+  createSupabaseServiceClient,
+} from "@/lib/supabase/server";
 import { type BuildLogData } from "@/components/build-log-card";
 import { tagAccent } from "@/lib/tag-colors";
 import { AgentBuildLogs } from "@/components/agent-build-logs";
+import { OwnerHeader, CredentialSection } from "./owner-controls";
 
 interface AgentData {
   id: string;
   display_name: string;
+  username: string | null;
   bio: string | null;
   status: string;
   created_at: string;
+  developer_id: string;
 }
 
 interface AgentStats {
   total_constructs: number;
+  total_pulls: number;
 }
 
+interface Credential {
+  id: string;
+  agent_id: string;
+  is_revoked: boolean;
+  created_at: string;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function fetchAgent(
-  id: string
+  idOrUsername: string
 ): Promise<{ agent: AgentData; stats: AgentStats } | null> {
   const serviceClient = createSupabaseServiceClient();
 
-  const { data: agent } = await serviceClient
+  const isUuid = UUID_RE.test(idOrUsername);
+  const query = serviceClient
     .from("agent_entities")
-    .select("id, display_name, bio, status, created_at")
-    .eq("id", id)
-    .single();
+    .select("id, display_name, username, bio, status, created_at, developer_id");
+
+  const { data: agent } = isUuid
+    ? await query.eq("id", idOrUsername).single()
+    : await query.eq("username", idOrUsername.toLowerCase()).single();
 
   if (!agent) return null;
 
-  const constructResult = await serviceClient
-    .from("constructs")
-    .select("*", { count: "exact", head: true })
-    .eq("agent_id", id)
-    .is("deleted_at", null)
-    .eq("status", "approved");
+  const [constructResult, pullResult] = await Promise.all([
+    serviceClient
+      .from("constructs")
+      .select("*", { count: "exact", head: true })
+      .eq("agent_id", agent.id)
+      .is("deleted_at", null)
+      .eq("status", "approved"),
+    serviceClient
+      .from("constructs")
+      .select("pull_count")
+      .eq("agent_id", agent.id)
+      .is("deleted_at", null),
+  ]);
+
+  const totalPulls = (pullResult.data || []).reduce(
+    (sum, c) => sum + ((c.pull_count as number) || 0),
+    0
+  );
 
   return {
     agent: agent as AgentData,
     stats: {
       total_constructs: constructResult.count || 0,
+      total_pulls: totalPulls,
     },
   };
 }
@@ -70,14 +102,26 @@ async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
   }));
 }
 
+async function fetchCredentials(agentId: string): Promise<Credential[]> {
+  const serviceClient = createSupabaseServiceClient();
+
+  const { data } = await serviceClient
+    .from("agent_credentials")
+    .select("id, agent_id, is_revoked, created_at")
+    .eq("agent_id", agentId)
+    .order("created_at", { ascending: true });
+
+  return (data || []) as Credential[];
+}
+
 // Dynamic OG metadata
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const result = await fetchAgent(id);
+  const { id: idOrUsername } = await params;
+  const result = await fetchAgent(idOrUsername);
 
   if (!result) {
     return { title: "Agent Not Found - Civis" };
@@ -87,6 +131,7 @@ export async function generateMetadata({
   const description = [
     agent.bio || "AI Agent on Civis",
     `${stats.total_constructs} build logs`,
+    `${stats.total_pulls} pulls`,
   ].join(" · ");
 
   return {
@@ -98,7 +143,7 @@ export async function generateMetadata({
       type: "profile",
       images: [
         {
-          url: `/api/og/${id}`,
+          url: `/api/og/${agent.id}`,
           width: 1200,
           height: 630,
           alt: `${agent.display_name} - Civis Agent Profile`,
@@ -109,9 +154,15 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${agent.display_name} on Civis`,
       description,
-      images: [`/api/og/${id}`],
+      images: [`/api/og/${agent.id}`],
     },
   };
+}
+
+function formatCount(n: number): string {
+  if (n < 1000) return String(n);
+  const k = n / 1000;
+  return k % 1 === 0 ? `${k}k` : `${k.toFixed(1)}k`;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -134,17 +185,27 @@ export default async function AgentProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: idOrUsername } = await params;
 
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(id)) notFound();
-
-  const result = await fetchAgent(id);
+  const result = await fetchAgent(idOrUsername);
   if (!result) notFound();
 
   const { agent, stats } = result;
-  const recentLogs = await fetchRecentLogs(id);
+  const recentLogs = await fetchRecentLogs(agent.id);
+
+  // Check ownership
+  let isOwner = false;
+  let credentials: Credential[] = [];
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && user.id === agent.developer_id) {
+      isOwner = true;
+      credentials = await fetchCredentials(agent.id);
+    }
+  } catch {
+    // Not authenticated, public view
+  }
 
   const statusInfo = statusConfig[agent.status] || statusConfig.active;
 
@@ -155,7 +216,7 @@ export default async function AgentProfilePage({
     timeZone: "UTC",
   });
 
-  // Aggregate top technologies from all fetched logs (no extra query)
+  // Aggregate top technologies from all fetched logs
   const tagCounts = new Map<string, number>();
   for (const log of recentLogs) {
     const stack = Array.isArray(log.payload?.stack) ? log.payload.stack : [];
@@ -180,83 +241,97 @@ export default async function AgentProfilePage({
         </Link>
       </div>
 
-      {/* Page Header: Agent Name + Bio */}
+      {/* Profile Header */}
       <section className="mb-8 sm:mb-10">
-        <div className="flex flex-wrap items-center gap-3 mb-2">
-          <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2">
-            {agent.display_name}
-          </h1>
-          {agent.status !== "active" && (
-            <span
-              className={`hero-reveal inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}
-            >
-              {statusInfo.label}
-            </span>
-          )}
-        </div>
-        {agent.bio && (
-          <p className="hero-reveal-delay text-lg sm:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+        {isOwner ? (
+          <OwnerHeader agent={agent} statusInfo={statusInfo} />
+        ) : (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-2">
+              <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-1">
+                {agent.display_name}
+              </h1>
+              {agent.username && (
+                <span className="hero-reveal font-mono text-base sm:text-lg text-cyan-400">@{agent.username}</span>
+              )}
+              {agent.status !== "active" && (
+                <span className={`hero-reveal inline-flex items-center rounded-full px-3 py-1 font-mono text-xs uppercase tracking-wider font-bold border ${statusInfo.className}`}>
+                  {statusInfo.label}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+
+        {!isOwner && agent.bio && (
+          <p className="hero-reveal-delay text-base sm:text-lg text-zinc-400 max-w-2xl leading-relaxed">
             {agent.bio}
           </p>
         )}
-      </section>
 
-      {/* Agent Stats Card */}
-      <div className="hero-reveal-delay mb-10 sm:mb-12 relative rounded-xl bg-[#111111] ring-1 ring-white/10 shadow-lg shadow-black/50 overflow-hidden ledger-card max-w-3xl">
-        {/* Cyan top accent */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent z-10" />
-        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-cyan-500/[0.03] to-transparent pointer-events-none" />
+        <div className="mt-5" />
 
-        <div className="relative p-5 sm:p-6">
-          {/* Registered date */}
-          <p className="font-mono text-sm text-zinc-500 mb-6">
-            Registered {memberSince}
-          </p>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-8 sm:gap-10">
-            <div className="flex flex-col gap-1.5 min-w-[72px]">
-              <p className="font-mono text-3xl font-bold text-white tabular-nums">
-                {stats.total_constructs}
-              </p>
-              <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.15em]">
-                Build Logs
-              </p>
+        {/* Stats panel */}
+        <div className="rounded-xl border border-white/10 bg-[var(--surface-raised)] px-6 py-5 sm:px-8 sm:py-6 max-w-2xl">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            {/* Pulls */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[2.5rem] font-extrabold text-white tabular-nums leading-none">{formatCount(stats.total_pulls)}</span>
+              <span className="font-mono text-sm text-zinc-500 uppercase tracking-[0.15em] font-bold">pulls</span>
             </div>
+
+            <span className="h-8 w-px bg-white/[0.06]" />
+
+            {/* Build logs count */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[2.5rem] font-extrabold text-white tabular-nums leading-none">{formatCount(stats.total_constructs)}</span>
+              <span className="font-mono text-sm text-zinc-500 uppercase tracking-[0.15em] font-bold">build logs</span>
+            </div>
+
+            {/* Registered date, pushed right */}
+            <p className="font-mono text-sm text-zinc-500 ml-auto">
+              Registered {memberSince}
+            </p>
           </div>
 
-          {/* Top technologies */}
-          {topTags.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-3">
-              <p className="font-mono text-sm text-zinc-400 uppercase tracking-[0.15em] shrink-0">Stack:</p>
-              <div className="flex items-center gap-2">
-                {topTags.map(([tag]) => {
-                  const rgb = tagAccent(tag);
-                  return (
-                    <Link
-                      key={tag}
-                      href={`/?tag=${encodeURIComponent(tag)}`}
-                      className="rounded-full px-3 py-1 font-mono text-sm transition-all explore-tag"
-                      style={{
-                        "--tag-rgb": rgb,
-                        color: `rgba(${rgb}, 0.85)`,
-                      } as React.CSSProperties}
-                    >
-                      {tag}
-                    </Link>
-                  );
-                })}
-              </div>
+          {/* Stack tags + credential */}
+          {(topTags.length > 0 || isOwner) && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-3 pt-3 border-t border-white/[0.06]">
+              {topTags.length > 0 && topTags.map(([tag]) => {
+                const rgb = tagAccent(tag);
+                return (
+                  <Link
+                    key={tag}
+                    href={`/?tag=${encodeURIComponent(tag)}`}
+                    className="rounded-full px-2.5 py-0.5 font-mono text-sm transition-all explore-tag"
+                    style={{
+                      "--tag-rgb": rgb,
+                      color: `rgba(${rgb}, 0.85)`,
+                    } as React.CSSProperties}
+                  >
+                    {tag}
+                  </Link>
+                );
+              })}
+              {isOwner && (
+                <div className="ml-auto">
+                  <CredentialSection agentId={agent.id} credentials={credentials} />
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       {/* Build Logs */}
       <div className="pb-16">
-        <h2 className="font-mono text-lg sm:text-xl font-bold uppercase tracking-[0.15em] text-white mb-5">
-          Build Logs
-        </h2>
+        <div className="flex items-baseline gap-3 mb-6">
+          <h2 className="font-mono text-base font-bold uppercase tracking-[0.2em] text-zinc-400">
+            Build Logs
+          </h2>
+          <span className="font-mono text-sm text-zinc-600 tabular-nums">{stats.total_constructs}</span>
+          <div className="flex-1 h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
+        </div>
         <AgentBuildLogs recentLogs={recentLogs} />
       </div>
     </div>

@@ -12,13 +12,16 @@ export default async function CreatePage() {
     redirect('/feed/login');
   }
 
-  const { count: agentCount } = await supabase
+  const { data: existingAgents } = await supabase
     .from('agent_entities')
-    .select('*', { count: 'exact', head: true })
+    .select('is_operator')
     .eq('developer_id', user.id);
 
-  // One agent per account (DB trigger enforce_single_agent also enforces this)
-  if ((agentCount ?? 0) >= 1) {
+  const agentCount = existingAgents?.length ?? 0;
+  const isOperator = existingAgents?.some((a) => a.is_operator) ?? false;
+
+  // One agent per account unless operator (DB trigger enforce_single_agent also enforces this)
+  if (agentCount >= 1 && !isOperator) {
     redirect('/feed/agents');
   }
 

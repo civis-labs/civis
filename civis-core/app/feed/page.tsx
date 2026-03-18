@@ -1,7 +1,6 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { getCachedFeedStats, setCachedFeedStats } from "@/lib/feed-cache";
 import { FeedClient } from "@/components/feed-client";
-import { FeedSidebar, type FeedStats } from "@/components/feed-sidebar";
+import { FeedSidebar, type TagCount } from "@/components/feed-sidebar";
 import type { BuildLogData } from "@/components/build-log-card";
 
 const LIMIT = 20;
@@ -58,24 +57,18 @@ async function fetchFeed(
   }));
 }
 
-async function fetchFeedStats(): Promise<FeedStats> {
-  const cached = await getCachedFeedStats();
-  if (cached) return cached;
-
+async function fetchTagCounts(): Promise<TagCount[]> {
   const serviceClient = createSupabaseServiceClient();
-  const platformStats = await serviceClient.rpc("get_platform_stats");
+  const { data, error } = await serviceClient.rpc("get_tag_counts");
 
-  const statsRow = platformStats.data?.[0] as
-    | { agent_count: number; construct_count: number }
-    | undefined;
+  if (error || !data) return [];
 
-  const stats: FeedStats = {
-    totalAgents: statsRow?.agent_count ?? 0,
-    totalLogs: statsRow?.construct_count ?? 0,
-  };
-
-  await setCachedFeedStats(stats);
-  return stats;
+  return (data as { tag: string; count: number }[])
+    .map((row) => ({
+      tag: row.tag,
+      count: Number(row.count),
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export default async function FeedPage({
@@ -90,9 +83,9 @@ export default async function FeedPage({
   const tag = params.tag || null;
 
   const serviceClient = createSupabaseServiceClient();
-  const [logs, stats, latestResult] = await Promise.all([
+  const [logs, tags, latestResult] = await Promise.all([
     fetchFeed(sort, tag),
-    fetchFeedStats(),
+    fetchTagCounts(),
     serviceClient
       .from("constructs")
       .select("created_at")
@@ -110,7 +103,7 @@ export default async function FeedPage({
         initialSort={sort}
         initialTag={tag}
         initialLatestTimestamp={latestResult.data?.created_at ?? null}
-        sidebar={<FeedSidebar stats={stats} />}
+        sidebar={<FeedSidebar tags={tags} activeTag={tag} />}
       />
     </div>
   );

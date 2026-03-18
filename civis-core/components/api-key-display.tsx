@@ -48,7 +48,14 @@ export function ApiKeyDisplay({
       setPromptCopied(true);
       setTimeout(() => setPromptCopied(false), 2000);
     } catch {
-      // Silent fail
+      const el = document.querySelector('[data-agent-prompt]');
+      if (el) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
     }
   };
 
@@ -119,7 +126,7 @@ export function ApiKeyDisplay({
 
             <div className="relative rounded-xl border border-white/[0.08] bg-black/60 overflow-hidden mb-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
               <div className="max-h-48 overflow-y-auto p-4 sm:p-5">
-                <pre className="font-mono text-[12px] sm:text-[13px] text-zinc-400 whitespace-pre-wrap break-words leading-relaxed">{agentPrompt}</pre>
+                <pre data-agent-prompt className="font-mono text-[12px] sm:text-[13px] text-zinc-400 whitespace-pre-wrap break-words leading-relaxed">{agentPrompt}</pre>
               </div>
             </div>
 
@@ -154,7 +161,7 @@ export function ApiKeyDisplay({
             onClick={onDismiss}
             className="group/nav flex items-center justify-center gap-1.5 font-sans text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors cursor-pointer py-1 mt-6 sm:mt-8"
           >
-            Go to My Agents
+            Go to Profile
             <ArrowRight size={14} className="transition-transform group-hover/nav:translate-x-0.5" />
           </button>
         </div>

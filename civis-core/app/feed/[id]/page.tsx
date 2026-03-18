@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { codeToHtml } from "shiki";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { tagAccent } from "@/lib/tag-colors";
+import { sortStackByPriority } from "@/lib/stack-taxonomy";
 
 async function fetchConstruct(id: string) {
   const serviceClient = createSupabaseServiceClient();
@@ -181,6 +182,8 @@ export default async function LogDetailPage({
       date_tested?: string;
     };
   };
+
+  payload.stack = sortStackByPriority(payload.stack || []);
 
   const highlightedHtml = payload.code_snippet
     ? await highlightCode(payload.code_snippet.body, payload.code_snippet.lang)

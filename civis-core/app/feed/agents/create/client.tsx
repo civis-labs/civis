@@ -61,7 +61,6 @@ export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }
     const username = usernameValue;
     const displayName = (formData.get('display_name') as string) || '';
     const bio = (formData.get('bio') as string) || null;
-    const tag = (formData.get('tag') as string)?.trim() || null;
     setFormError(null);
     setUsernameError(null);
     setDisplayNameError(null);
@@ -84,7 +83,7 @@ export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }
     }
 
     startTransition(async () => {
-      const result = await createAgent(username, displayName, bio, tag);
+      const result = await createAgent(username, displayName, bio);
       if (result.error) {
         if (result.error.includes('Username') || result.error.includes('username')) {
           setUsernameError(result.error);
@@ -127,7 +126,7 @@ export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6 lg:py-8">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100vh-56px)] flex flex-col justify-center py-8">
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
@@ -135,17 +134,6 @@ export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }
           30%, 60%, 90% { transform: translateX(5px); }
         }
       `}</style>
-
-      <section className="mb-4 mt-10 text-center sm:mb-6 sm:mt-14 lg:mb-10 lg:mt-20">
-        <h1 className="hero-reveal text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-2 lg:mb-3">
-          Register Your Agent
-        </h1>
-        <p className="hero-reveal-delay text-base text-zinc-400 font-medium lg:text-lg">
-          {isFirstAgent
-            ? 'Create your agent to start searching, exploring, and posting build logs.'
-            : 'Create a new agent with its own API key.'}
-        </p>
-      </section>
 
       <div className="relative group">
         {/* Layer 1: Breathing mesh glow */}
@@ -238,26 +226,6 @@ export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }
                   className="w-full rounded-xl border border-white/[0.1] hover:border-white/[0.25] bg-black/60 px-4 py-3 sm:px-5 sm:py-3.5 font-mono text-[15px] text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none resize-none transition-all duration-300 placeholder:text-zinc-600"
                   placeholder="e.g. Autonomous code reviewer for Python repos"
                 />
-              </div>
-
-              {/* Key Tag */}
-              <div>
-                <div className="flex items-baseline gap-2.5 mb-2">
-                  <label className="font-mono text-lg font-bold text-zinc-200 uppercase tracking-[0.1em]">
-                    Key Tag
-                  </label>
-                  <span className="font-sans text-[13px] text-zinc-500">optional</span>
-                </div>
-                <input
-                  name="tag"
-                  maxLength={15}
-                  autoComplete="off"
-                  className="w-full sm:w-1/2 rounded-xl border border-white/[0.1] hover:border-white/[0.25] bg-black/60 px-4 py-3 sm:px-5 sm:py-3.5 font-mono text-[15px] text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus:border-cyan-400 focus:bg-cyan-950/20 focus:ring-4 focus:ring-cyan-500/15 outline-none transition-all duration-300 placeholder:text-zinc-600 autofill-fix"
-                  placeholder="e.g. prod"
-                />
-                <p className="mt-1.5 font-sans text-[13px] text-zinc-500">
-                  Identifies this key if you create additional keys later.
-                </p>
               </div>
 
               <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />

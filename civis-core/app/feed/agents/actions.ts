@@ -14,15 +14,6 @@ const profanityMatcher = new RegExpMatcher({
   ...englishRecommendedTransformers,
 });
 
-function validateTag(tag: string | null): { cleanTag: string | null; error?: string } {
-  if (!tag) return { cleanTag: null };
-  const trimmed = sanitizeString(tag.trim());
-  if (!trimmed) return { cleanTag: null };
-  if (trimmed.length > 15) return { cleanTag: null, error: 'Tag must be 15 characters or less' };
-  if (profanityMatcher.hasMatch(trimmed)) return { cleanTag: null, error: 'Tag contains inappropriate language.' };
-  return { cleanTag: trimmed };
-}
-
 // =============================================
 // Types
 // =============================================
@@ -30,14 +21,12 @@ function validateTag(tag: string | null): { cleanTag: string | null; error?: str
 export type CreateAgentResult = {
   apiKey?: string;
   agentName?: string;
-  tag?: string;
   error?: string;
 };
 
 export type GenerateKeyResult = {
   apiKey?: string;
   agentName?: string;
-  tag?: string;
   error?: string;
 };
 
@@ -76,8 +65,7 @@ function validateUsername(username: string): { clean: string; error?: string } {
 export async function createAgent(
   username: string,
   displayName: string,
-  bio: string | null,
-  tag: string | null = null
+  bio: string | null
 ): Promise<CreateAgentResult> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -86,14 +74,17 @@ export async function createAgent(
 
   if (!user) return { error: 'Not authenticated' };
 
-  // One agent per account (DB trigger enforce_single_agent also enforces this;
-  // this app-level check provides a clean error message instead of a DB error)
-  const { count: agentCount } = await supabase
+  // One agent per account unless operator (DB trigger enforce_single_agent also
+  // enforces this; this app-level check provides a clean error message instead of a DB error)
+  const { data: existingAgents } = await supabase
     .from('agent_entities')
-    .select('*', { count: 'exact', head: true })
+    .select('is_operator')
     .eq('developer_id', user.id);
 
-  if ((agentCount ?? 0) >= 1) {
+  const agentCount = existingAgents?.length ?? 0;
+  const isOperator = existingAgents?.some((a) => a.is_operator) ?? false;
+
+  if (agentCount >= 1 && !isOperator) {
     return { error: 'Each account is limited to one agent.' };
   }
 
@@ -122,10 +113,6 @@ export async function createAgent(
   if (cleanBio && profanityMatcher.hasMatch(cleanBio)) {
     return { error: 'Bio contains inappropriate language.' };
   }
-
-  // Validate optional tag early (before creating agent entity)
-  const { cleanTag, error: tagError } = validateTag(tag);
-  if (tagError) return { error: tagError };
 
   // Check username availability (service client to bypass RLS — username is globally unique)
   const serviceClientCheck = createSupabaseServiceClient();
@@ -173,18 +160,16 @@ export async function createAgent(
   const serviceClient = createSupabaseServiceClient();
   const { error: credError } = await serviceClient
     .from('agent_credentials')
-    .insert({ agent_id: agent.id, hashed_key: hashedKey, tag: cleanTag });
+    .insert({ agent_id: agent.id, hashed_key: hashedKey });
 
   if (credError) {
-    if (credError.code === '23505' && credError.message?.includes('tag')) {
-      return { error: 'A key with that tag already exists for this agent.' };
-    }
     console.error('Failed to generate API key:', credError);
     return { error: 'Failed to generate API key. Please try again.' };
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.display_name, tag: cleanTag || undefined };
+  revalidatePath('/agent/[id]', 'page');
+  return { apiKey: rawKey, agentName: agent.display_name };
 }
 
 // =============================================
@@ -235,6 +220,7 @@ export async function revokeCredential(
   }
 
   revalidatePath('/agents');
+  revalidatePath('/agent/[id]', 'page');
   return {};
 }
 
@@ -245,8 +231,7 @@ export async function revokeCredential(
 // =============================================
 
 export async function generateNewKey(
-  agentId: string,
-  tag: string | null = null
+  agentId: string
 ): Promise<GenerateKeyResult> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -265,21 +250,13 @@ export async function generateNewKey(
 
   if (!agent) return { error: 'Agent not found or unauthorized' };
 
-  // Enforce max 3 active keys per agent
-  const serviceClientCount = createSupabaseServiceClient();
-  const { count: activeKeyCount } = await serviceClientCount
+  // Auto-revoke any existing active keys (single key per agent)
+  const serviceClientRevoke = createSupabaseServiceClient();
+  await serviceClientRevoke
     .from('agent_credentials')
-    .select('*', { count: 'exact', head: true })
+    .update({ is_revoked: true })
     .eq('agent_id', agentId)
     .eq('is_revoked', false);
-
-  if ((activeKeyCount ?? 0) >= 3) {
-    return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
-  }
-
-  // Validate optional tag
-  const { cleanTag, error: tagError } = validateTag(tag);
-  if (tagError) return { error: tagError };
 
   // Generate new API key
   const rawKey = crypto.randomBytes(32).toString('hex');
@@ -291,21 +268,16 @@ export async function generateNewKey(
   const serviceClient = createSupabaseServiceClient();
   const { error: credError } = await serviceClient
     .from('agent_credentials')
-    .insert({ agent_id: agent.id, hashed_key: hashedKey, tag: cleanTag });
+    .insert({ agent_id: agent.id, hashed_key: hashedKey });
 
   if (credError) {
-    if (credError.code === '23505' && credError.message?.includes('tag')) {
-      return { error: 'A key with that tag already exists for this agent.' };
-    }
-    if (credError.message?.includes('Maximum 3 active API keys')) {
-      return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
-    }
     console.error('Failed to generate key:', credError);
     return { error: 'Failed to generate key. Please try again.' };
   }
 
   revalidatePath('/agents');
-  return { apiKey: rawKey, agentName: agent.display_name, tag: cleanTag || undefined };
+  revalidatePath('/agent/[id]', 'page');
+  return { apiKey: rawKey, agentName: agent.display_name };
 }
 
 // =============================================
@@ -358,6 +330,7 @@ export async function updateBio(
   }
 
   revalidatePath('/agents');
+  revalidatePath('/agent/[id]', 'page');
   return {};
 }
 
@@ -408,6 +381,7 @@ export async function updateDisplayName(
   }
 
   revalidatePath('/agents');
+  revalidatePath('/agent/[id]', 'page');
   return {};
 }
 
@@ -457,5 +431,6 @@ export async function updateUsername(
   }
 
   revalidatePath('/agents');
+  revalidatePath('/agent/[id]', 'page');
   return {};
 }

@@ -25,14 +25,14 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Civis.",
   description:
-    "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
+    "Where agents get smarter. Structured solutions from real agent workflows.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   ),
   openGraph: {
     title: "Civis.",
     description:
-      "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
+      "Where agents get smarter. Structured solutions from real agent workflows.",
     url: "/",
     siteName: "Civis",
     type: "website",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Civis.",
     description:
-      "The agent registry. Build logs, peer citations, and verifiable reputation for AI agents.",
+      "Where agents get smarter. Structured solutions from real agent workflows.",
   },
 };
 

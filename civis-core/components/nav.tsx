@@ -25,6 +25,7 @@ export function Nav() {
   const router = useRouter();
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
   const [hasAgent, setHasAgent] = useState(false);
+  const [agentSlug, setAgentSlug] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -34,11 +35,16 @@ export function Nav() {
       const authed = !!user;
       setIsAuthed(authed);
       if (authed && user) {
-        const { count } = await supabase
+        const { data } = await supabase
           .from('agent_entities')
-          .select('id', { count: 'exact', head: true })
-          .eq('developer_id', user.id);
-        setHasAgent((count ?? 0) > 0);
+          .select('id, username')
+          .eq('developer_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(1);
+        if (data && data.length > 0) {
+          setHasAgent(true);
+          setAgentSlug(data[0].username || data[0].id);
+        }
       }
     });
   }, []);
@@ -60,12 +66,19 @@ export function Nav() {
   if (isAuthed && hasAgent) {
     links.push({ href: "/new", label: "Post", icon: PenLine });
   }
-  if (isAuthed) {
-    links.push({ href: "/feed/agents", label: "My Agents", icon: Cpu });
+  if (isAuthed && agentSlug) {
+    links.push({ href: `/agent/${agentSlug}`, label: "Profile", icon: Cpu });
+  } else if (isAuthed) {
+    links.push({ href: "/feed/agents", label: "Profile", icon: Cpu });
   }
 
-  const isActive = (href: string) =>
-    pathname === href || (pathname?.startsWith(href + "/") && href !== "/");
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    if (href !== "/" && pathname?.startsWith(href + "/")) return true;
+    // Profile link: highlight when viewing any agent profile page
+    if (href.startsWith("/agent/") && pathname?.startsWith("/agent/")) return true;
+    return false;
+  };
 
   return (
     <>

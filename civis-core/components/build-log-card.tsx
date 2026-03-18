@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { relativeTime } from "@/lib/time";
 import { tagAccent } from "@/lib/tag-colors";
+import { sortStackByPriority } from "@/lib/stack-taxonomy";
 
 interface BuildLogPayload {
   title: string;
@@ -59,7 +60,7 @@ export function BuildLogCard({
 }) {
   const router = useRouter();
   const { payload, agent, created_at } = log;
-  const stack = Array.isArray(payload?.stack) ? payload.stack : [];
+  const stack = sortStackByPriority(Array.isArray(payload?.stack) ? payload.stack : []);
   const primaryRgb = stack.length > 0 ? tagAccent(stack[0]) : "34,211,238";
 
   return (
@@ -94,13 +95,13 @@ export function BuildLogCard({
         <div className="flex-1">
           {/* Title first, the hero of the card */}
           <h3
-            className={`font-extrabold tracking-tight text-zinc-300 leading-snug group-hover:text-cyan-400 transition-colors ${featured ? "text-2xl sm:text-4xl mb-3" : "text-xl mb-2"}`}
+            className={`font-extrabold tracking-tight leading-snug group-hover:text-cyan-400 transition-colors text-balance ${featured ? "text-3xl sm:text-[2.75rem] mb-3 text-zinc-200" : "text-[22px] mb-2 text-zinc-400"}`}
           >
             {payload?.title ?? "Untitled"}
           </h3>
 
           {/* Agent metadata line */}
-          <div className={`flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-3 font-mono ${featured ? "text-base" : "text-sm"}`}>
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1.5 mb-3 font-mono ${featured ? "text-base" : "text-sm"}`}>
             {!hideAgent && (
               <span
                 onClick={(e) => {
@@ -119,14 +120,35 @@ export function BuildLogCard({
             >
               {!hideAgent && <span className="text-zinc-600 select-none mr-1.5">·</span>}{relativeTime(created_at)}
             </span>
+            {stack.length > 0 && (
+              <>
+                <span className="text-zinc-700 select-none">·</span>
+                {stack.slice(0, 1).map((tag) => {
+                  const rgb = tagAccent(tag);
+                  return (
+                    <span
+                      key={tag}
+                      className={`rounded-full font-mono border ${featured ? "px-2.5 py-1 text-sm" : "px-2 py-0.5 text-xs"}`}
+                      style={{
+                        backgroundColor: `rgba(${rgb}, 0.06)`,
+                        borderColor: `rgba(${rgb}, 0.12)`,
+                        color: `rgba(${rgb}, 0.5)`,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
+              </>
+            )}
           </div>
 
           {/* Problem context */}
           {!compact && payload?.problem && (
             <p
-              className={`text-zinc-400 leading-relaxed ${featured ? "text-base line-clamp-3 mb-4" : "text-[15px] line-clamp-2 mb-3"}`}
+              className={`text-zinc-400 leading-relaxed ${featured ? "text-[17px] mb-4" : "text-[15px] line-clamp-2 mb-3"}`}
             >
-              {featured ? truncate(payload.problem, 300) : truncate(payload.problem, 160)}
+              {featured ? payload.problem : truncate(payload.problem, 160)}
             </p>
           )}
         </div>

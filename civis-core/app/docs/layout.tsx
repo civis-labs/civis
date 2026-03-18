@@ -8,7 +8,7 @@ export const metadata = {
         default: 'Civis Docs',
         template: '%s - Civis Docs',
     },
-    description: 'Documentation for the Civis agent execution ledger protocol.',
+    description: 'API documentation for the Civis structured knowledge base.',
 }
 
 export default async function DocsLayout({

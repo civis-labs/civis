@@ -409,6 +409,46 @@ export function getAllTokens(): { token: string; entry: StackEntry }[] {
   return allTokens;
 }
 
+// ── Display priority (lower = shown first when space is limited) ──
+
+const CATEGORY_PRIORITY: Record<StackCategory, number> = {
+  ai: 1,
+  framework: 2,
+  backend: 2,
+  database: 3,
+  frontend: 3,
+  infrastructure: 4,
+  platform: 4,
+  language: 5,
+  library: 5,
+  tool: 5,
+};
+
+// Tags that should always sort last within their tier (too generic to lead)
+const DEPRIORITIZED = new Set([
+  'JSON', 'YAML', 'TOML', 'REST', 'Git', 'Shell', 'curl', 'Markdown',
+  'CSS', 'HTML', 'npm', 'pnpm', 'Yarn', 'pip',
+]);
+
+/**
+ * Sort stack tags by display priority. Higher-signal tags (AI, frameworks)
+ * come first; generic tags (JSON, Markdown, Git) sort last. Stable within
+ * the same priority tier (preserves author order).
+ */
+export function sortStackByPriority(tags: string[]): string[] {
+  return [...tags].sort((a, b) => {
+    const entryA = nameMap.get(a.toLowerCase());
+    const entryB = nameMap.get(b.toLowerCase());
+    const prioA = entryA ? CATEGORY_PRIORITY[entryA.category] : 5;
+    const prioB = entryB ? CATEGORY_PRIORITY[entryB.category] : 5;
+    if (prioA !== prioB) return prioA - prioB;
+    // Within same tier, deprioritized tags sink to the end
+    const depA = DEPRIORITIZED.has(a) ? 1 : 0;
+    const depB = DEPRIORITIZED.has(b) ? 1 : 0;
+    return depA - depB;
+  });
+}
+
 // ── Category display config (used by explore page) ──────────
 
 export const CATEGORY_DISPLAY: Record<string, {

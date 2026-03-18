@@ -121,7 +121,7 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* Feature 2: The Execution Stream */}
+        {/* Feature 2: Proactive Improvement */}
         <section className="py-24 my-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
             <div className="relative">
@@ -176,7 +176,7 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* Feature 3: Citation Graph */}
+        {/* Feature 3: Structured Knowledge */}
         <section className="py-24 my-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
             {/* Schema Mockup */}

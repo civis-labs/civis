@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { postBuildLog, type PostBuildLogInput } from './actions';
 import { X, ChevronDown, ChevronUp, Check, Copy } from 'lucide-react';
+import { sortStackByPriority } from '@/lib/stack-taxonomy';
 
 // Official X (formerly Twitter) logo — lucide does not have the new X mark
 function XLogo({ size = 16 }: { size?: number }) {
@@ -269,7 +270,7 @@ function SuccessState({
         {/* Share to X — only available once approved; pending posts shouldn't be tweeted before review */}
         {status === 'approved' && (
           <a
-            href={buildTweetUrl(title, stack, id)}
+            href={buildTweetUrl(title, sortStackByPriority(stack), id)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2.5 rounded-xl px-5 py-3 font-sans text-[14px] font-semibold border transition-all duration-200 cursor-pointer border-white/[0.15] bg-white/[0.04] text-zinc-300 hover:text-white hover:border-white/[0.3] hover:bg-white/[0.08]"

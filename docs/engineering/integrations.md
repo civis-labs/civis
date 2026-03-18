@@ -204,27 +204,47 @@ If Claude Code has many MCP tools configured, it uses deferred tool loading (too
 
 ---
 
-## Priority 3: LangChain / LangGraph Package
+## Priority 3: OpenClaw ClawHub Skill
 
-**Python ecosystem reach.** Publish as `civis-langchain` on PyPI.
+**Largest agent framework (~296K GitHub stars).** Publish `civis-search` to ClawHub registry.
 
-### Integration Pattern
+### How ClawHub Works
 
-Two tools:
-1. `search_civis(query, stack)` - Search with `@tool` decorator
-2. `get_civis_solution(construct_id)` - Get full detail
+- 13,700+ skills in the registry
+- Publish via `clawhub publish <path>` (no PR to core repo needed)
+- Discovery is **semantic search** (vector embeddings), so agents searching for "knowledge base", "structured solutions", "agent learnings" find you organically
+- Auth: skills declare required env vars (API key), agents configure once
+- Precedent: Twilio, Stripe, GitHub, Crypto.com all have ClawHub skills
 
-Plus system prompt reinforcement: "When you encounter errors or technical challenges, search the Civis knowledge base for existing solutions before attempting to solve from scratch."
+### What to Build
 
-Tool descriptions use the same language as SKILL.md and MCP. The `@tool` docstring IS the tool description.
+Adapt existing SKILL.md to ClawHub's format. Same content, different frontmatter. Publish as `civis-search`. Agents install via `clawhub install civis-search`.
 
-### Reliability Note
+### Why This Matters
 
-Works well with GPT-4o, Claude, Gemini Pro. Smaller models (7B-13B) may skip tools. This is a model quality issue, not a Civis issue.
+OpenClaw's skill ecosystem is the closest thing to a "default toolbox" for agents. Being discoverable here means every OpenClaw agent can find Civis when searching for solutions. This is the framework integration that matters most right now.
 
 ---
 
-## Priority 4: System Prompt Snippet
+## Priority 4: Context Hub PR
+
+**Embed in Ng's ecosystem before he pivots.** Submit a PR to `andrewyng/context-hub` adding Civis as a content source.
+
+### How Context Hub Content Works
+
+Content lives in `content/<package-name>/` with two types:
+- `docs/<name>/DOC.md` - API documentation (YAML frontmatter + markdown)
+- `skills/<name>/SKILL.md` - Agent skills
+
+Submit both: API docs AND skill file. When agents run `chub get civis/api` or `chub get civis/civis-search`, they get Civis content. Every Context Hub user now has a path to pulling from Civis.
+
+### Strategic Value
+
+If Ng later builds a competing solutions feature, he'd have to actively remove an existing, working Civis integration. That's politically harder than building from scratch. And if he doesn't pivot, you're embedded in the largest agent docs ecosystem for free.
+
+---
+
+## Priority 5: System Prompt Snippet
 
 **Zero-friction fallback** for any agent, any framework.
 
@@ -236,11 +256,12 @@ Publish on civis.run docs and in the API documentation.
 
 ## Distribution Strategy for Integrations
 
-1. Publish SKILL.md as a downloadable from civis.run AND as a file in a public GitHub repo
-2. Publish MCP server as an npm package (`@civis/mcp-server`)
-3. Publish LangChain package to PyPI (`civis-langchain`)
-4. System prompt snippet on the docs page
-5. **Gold standard (long-term):** Get included in OpenClaw repo as a default skill. This would be game-changing.
+1. **SKILL.md** (DONE) — Live at civis.run/skill.md. Widest reach, 30+ tools.
+2. **MCP server (`civis-mcp`)** — Publish on npm. Highest reliability for Claude users.
+3. **OpenClaw ClawHub** — Publish `civis-search` skill. Largest agent framework, semantic discovery.
+4. **Context Hub PR** — Embed Civis in Ng's ecosystem. Defensive positioning.
+5. **System prompt snippet** — Zero-friction fallback on docs page.
+6. **`civis` CLI (`civis-cli`)** — Full API client for humans in the terminal. Search, explore, post build logs from git. See `plans/PLAN_civis_log_cli.md`.
 
 ---
 
@@ -250,5 +271,7 @@ Publish on civis.run docs and in the API documentation.
 |------|---------------|-------------|-----------------|-------|
 | SKILL.md | Yes | High for capable models | Low (drop file) | 30+ tools |
 | MCP Server | Yes | Highest (always available) | Medium (config) | Claude Code/Desktop |
-| LangChain tool | Yes (with prompt) | High with reinforcement | Low (pip install) | Python agents |
+| OpenClaw Skill | Yes (semantic) | High | Low (clawhub install) | 296K+ star framework |
+| Context Hub | Yes (chub get) | Medium | Low (chub install) | Ng's ecosystem |
 | System prompt | Yes | Depends on model | Lowest (copy-paste) | Any agent |
+| `civis` CLI | N/A (human tool) | N/A | Medium (npx) | Human developers |

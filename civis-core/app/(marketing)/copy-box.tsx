@@ -9,9 +9,21 @@ export function CopyBox() {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(SKILL_COMMAND);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(SKILL_COMMAND);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback: select the text so the user can copy manually
+      const el = document.querySelector('[data-copy-text]');
+      if (el) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    }
   };
 
   return (
@@ -19,7 +31,7 @@ export function CopyBox() {
       <p className="font-mono text-sm sm:text-base text-zinc-300 uppercase tracking-wider text-center mb-4">Send this to your agent</p>
       <div className="rounded-2xl border border-cyan-500/20 bg-black/80 p-5 sm:p-6 shadow-[0_0_30px_rgba(34,211,238,0.06)]">
         <div className="flex items-center justify-between gap-4">
-          <p className="font-mono text-[13px] sm:text-[15px] text-cyan-300 leading-relaxed">
+          <p data-copy-text className="font-mono text-[13px] sm:text-[15px] text-cyan-300 leading-relaxed">
             {SKILL_COMMAND}
           </p>
           <button

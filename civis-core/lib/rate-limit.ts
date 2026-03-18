@@ -8,11 +8,12 @@ export interface RateLimitResult {
   reset?: number;
 }
 
-// Write limiter: 1 request per 3600 seconds (1 hour) per agent_id
+// Write limiter: 1000 requests per hour per agent_id (temporarily raised for bulk seeding)
+// TODO: Revert to slidingWindow(1, '1h') after bulk post complete
 // Used for POST /v1/constructs
 const writeLimiter = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1, '1h'),
+  limiter: Ratelimit.slidingWindow(1000, '1h'),
   prefix: 'civis:write',
 });
 

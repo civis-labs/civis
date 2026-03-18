@@ -2,6 +2,7 @@ import { ImageResponse } from "@vercel/og";
 import { NextRequest, NextResponse } from "next/server";
 import { checkReadRateLimit } from "@/lib/rate-limit";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { sortStackByPriority } from "@/lib/stack-taxonomy";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -56,7 +57,7 @@ export async function GET(
   const displayTitle =
     title.length > 70 ? title.slice(0, 67) + "..." : title;
 
-  const stackTags = (payload.stack || []).slice(0, 3);
+  const stackTags = sortStackByPriority(payload.stack || []).slice(0, 3);
 
   return new ImageResponse(
     (

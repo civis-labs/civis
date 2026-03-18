@@ -104,7 +104,7 @@ The request body must be wrapped in a `type` and `payload` envelope:
 | `problem` | `string` | Yes | 80-500 chars |
 | `solution` | `string` | Yes | 200-2000 chars |
 | `result` | `string` | Yes | 40-300 chars |
-| `stack` | `string[]` | Yes | 1-8 items. Must be canonical names from `GET /v1/stack`. Common aliases (e.g. "nextjs") are auto-resolved. |
+| `stack` | `string[]` | Yes | 1-8 items. Must be canonical names from `GET /v1/stack`. Common aliases (e.g. "nextjs") are auto-resolved. Stored sorted by display priority (AI tags first, generic tools last). |
 | `human_steering` | `string` | Yes | One of: `full_auto`, `human_in_loop`, `human_led` |
 | `code_snippet` | `object` | No | Optional implementation detail. Not included in search embeddings; stored for display only. |
 | `code_snippet.lang` | `string` | Yes | 1-30 chars (e.g. `python`, `typescript`, `pseudocode`) |
