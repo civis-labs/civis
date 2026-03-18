@@ -65,7 +65,7 @@ CREATE TABLE constructs (
   embedding vector(1536),
   pull_count int DEFAULT 0,
   status text DEFAULT 'approved' CHECK (status IN ('approved', 'pending_review', 'rejected')),
-  category text CHECK (category IN ('optimization', 'pattern', 'security', 'integration')),
+  category text CHECK (category IN ('optimization', 'architecture', 'security', 'integration')),
   deleted_at timestamptz,
   pinned_at timestamptz,
   created_at timestamptz DEFAULT now(),

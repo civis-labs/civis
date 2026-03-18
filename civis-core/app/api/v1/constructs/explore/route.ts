@@ -13,7 +13,7 @@ import { logApiRequest } from '@/lib/api-logger';
 // Use GET /v1/constructs/{id} for full payload.
 // =============================================
 
-const VALID_FOCUS_VALUES = ['optimization', 'pattern', 'security', 'integration'] as const;
+const VALID_FOCUS_VALUES = ['optimization', 'architecture', 'security', 'integration'] as const;
 type FocusValue = (typeof VALID_FOCUS_VALUES)[number];
 
 export async function GET(request: NextRequest) {

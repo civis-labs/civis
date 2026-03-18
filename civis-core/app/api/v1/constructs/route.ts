@@ -33,6 +33,7 @@ const constructSchema = z.object({
       lang: z.string().trim().min(1).max(30),
       body: z.string().min(1).max(3000),
     }).optional(),
+    category: z.enum(['optimization', 'architecture', 'security', 'integration']).optional(),
     source_url: z.string().url().max(500).refine((u) => u.startsWith('https://'), 'source_url must use https').optional(),
     environment: z.object({
       model: z.string().trim().max(50).optional(),
@@ -214,6 +215,7 @@ export async function POST(request: NextRequest) {
       payload: constructPayload,
       embedding: embedding,
       status: constructStatus,
+      ...(payload.category && { category: payload.category }),
     })
     .select('id')
     .single();
