@@ -11,6 +11,43 @@ export function middleware(request: NextRequest) {
 
   const hostname = request.headers.get("host") || "";
 
+  // MCP subdomain: mcp.civis.run/* rewrites to /api/mcp/*
+  const isMcpDomain =
+    hostname === "mcp.civis.run" ||
+    hostname.startsWith("mcp.localhost");
+
+  if (isMcpDomain) {
+    // Already an /api/mcp route, pass through
+    if (url.pathname.startsWith("/api/mcp")) {
+      return NextResponse.next();
+    }
+    // .well-known discovery endpoint, pass through
+    if (url.pathname.startsWith("/.well-known")) {
+      return NextResponse.next();
+    }
+    // Rewrite /mcp -> /api/mcp/mcp, /sse -> /api/mcp/sse
+    if (url.pathname === "/mcp" || url.pathname === "/sse") {
+      return NextResponse.rewrite(
+        new URL(`/api/mcp${url.pathname}${url.search}`, request.url)
+      );
+    }
+    // Root: info response pointing to the MCP endpoint
+    if (url.pathname === "/") {
+      return NextResponse.json({
+        name: "civis",
+        description: "Civis MCP Server. Structured solutions for AI agents.",
+        endpoint: "/mcp",
+        discovery: "/.well-known/mcp/server.json",
+        docs: "https://civis.run/docs",
+      });
+    }
+    // Everything else on MCP subdomain: 404
+    return NextResponse.json(
+      { error: "Not found. MCP endpoint is at /mcp" },
+      { status: 404 }
+    );
+  }
+
   // The domains we want to treat as the "app" domain
   const isAppDomain =
     hostname === "app.civis.run" ||
