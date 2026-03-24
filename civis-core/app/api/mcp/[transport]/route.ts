@@ -469,4 +469,34 @@ const authedHandler = withMcpAuth(handler, verifyToken, {
   required: false,
 });
 
-export { authedHandler as GET, authedHandler as POST, authedHandler as DELETE };
+// Middleware rewrites mcp.civis.run/mcp -> /api/mcp/mcp, but the Web Request
+// object keeps the original URL (https://mcp.civis.run/mcp). mcp-handler
+// matches on req.url pathname, so it sees /mcp instead of /api/mcp/mcp and
+// returns 404. Fix: rewrite the URL to the internal path before passing to
+// mcp-handler when the request came through the MCP subdomain.
+function fixRewrittenUrl(req: Request): Request {
+  const matchedPath = req.headers.get('x-matched-path');
+  if (matchedPath) {
+    const url = new URL(req.url);
+    // x-matched-path is e.g. "/api/mcp/[transport]" — resolve the actual segment
+    const transportSegment = url.pathname.split('/').pop() || 'mcp';
+    const internalPath = `/api/mcp/${transportSegment}`;
+    if (url.pathname !== internalPath) {
+      const newUrl = new URL(internalPath + url.search, url.origin);
+      return new Request(newUrl.toString(), {
+        method: req.method,
+        headers: req.headers,
+        body: req.body,
+        // @ts-expect-error duplex is needed for streaming body but not in all TS types
+        duplex: 'half',
+      });
+    }
+  }
+  return req;
+}
+
+function routeHandler(req: Request) {
+  return authedHandler(fixRewrittenUrl(req));
+}
+
+export { routeHandler as GET, routeHandler as POST, routeHandler as DELETE };
