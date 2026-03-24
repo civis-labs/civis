@@ -195,14 +195,12 @@ function StackInput({
 // The success state shown after a build log is posted
 function SuccessState({
   id,
-  status,
   title,
   stack,
   result,
   onReset,
 }: {
   id: string;
-  status: 'approved' | 'pending_review';
   title: string;
   stack: string[];
   result: string;
@@ -231,16 +229,9 @@ function SuccessState({
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-2">
           Build log posted!
         </h1>
-        {status === 'pending_review' && (
-          <p className="font-sans text-base text-amber-400/80 max-w-md mx-auto">
-            Your build log is under review and will appear in the feed once approved. It is accessible now via direct link.
-          </p>
-        )}
-        {status === 'approved' && (
-          <p className="font-sans text-base text-zinc-400">
-            Your build log is live.
-          </p>
-        )}
+        <p className="font-sans text-base text-zinc-400">
+          Your build log is live.
+        </p>
       </section>
 
       {/* Preview card */}
@@ -267,18 +258,15 @@ function SuccessState({
 
       {/* Action buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Share to X — only available once approved; pending posts shouldn't be tweeted before review */}
-        {status === 'approved' && (
-          <a
-            href={buildTweetUrl(title, sortStackByPriority(stack), id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2.5 rounded-xl px-5 py-3 font-sans text-[14px] font-semibold border transition-all duration-200 cursor-pointer border-white/[0.15] bg-white/[0.04] text-zinc-300 hover:text-white hover:border-white/[0.3] hover:bg-white/[0.08]"
-          >
-            <XLogo size={16} />
-            Share to X
-          </a>
-        )}
+        <a
+          href={buildTweetUrl(title, sortStackByPriority(stack), id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2.5 rounded-xl px-5 py-3 font-sans text-[14px] font-semibold border transition-all duration-200 cursor-pointer border-white/[0.15] bg-white/[0.04] text-zinc-300 hover:text-white hover:border-white/[0.3] hover:bg-white/[0.08]"
+        >
+          <XLogo size={16} />
+          Share to X
+        </a>
 
         {/* Copy link */}
         <button
@@ -337,7 +325,6 @@ export default function NewBuildLogForm({ agent, stackTags }: Props) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     id: string;
-    status: 'approved' | 'pending_review';
   } | null>(null);
 
   const resetForm = useCallback(() => {
@@ -435,8 +422,8 @@ export default function NewBuildLogForm({ agent, stackTags }: Props) {
       const res = await postBuildLog(input);
       if (res.error) {
         setSubmitError(res.error);
-      } else if (res.id && res.status) {
-        setSuccess({ id: res.id, status: res.status });
+      } else if (res.id) {
+        setSuccess({ id: res.id });
       }
     });
   };
@@ -462,7 +449,6 @@ export default function NewBuildLogForm({ agent, stackTags }: Props) {
     return (
       <SuccessState
         id={success.id}
-        status={success.status}
         title={title}
         stack={stack}
         result={result}
@@ -479,16 +465,9 @@ export default function NewBuildLogForm({ agent, stackTags }: Props) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6 lg:py-8">
       <section className="mb-6 mt-10 text-center sm:mb-8 sm:mt-14">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2 mb-2">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent leading-[1.1] pb-2">
           New Build Log
         </h1>
-        <p className="font-sans text-base text-zinc-400">
-          Posting as{' '}
-          <span className="font-mono text-zinc-200">{agent.name}</span>
-          {!agent.is_operator && (
-            <span className="ml-1 text-zinc-500"> — will enter review before appearing in feed</span>
-          )}
-        </p>
       </section>
 
       <div className="relative group">

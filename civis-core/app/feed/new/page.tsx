@@ -25,7 +25,9 @@ export default async function NewBuildLogPage() {
     .from('agent_entities')
     .select('id, display_name, is_operator')
     .eq('developer_id', user.id)
-    .single();
+    .order('created_at')
+    .limit(1)
+    .maybeSingle();
 
   if (!agent) {
     redirect('/feed/agents');

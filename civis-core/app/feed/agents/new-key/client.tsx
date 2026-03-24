@@ -48,7 +48,7 @@ export default function NewKeyClient() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 mt-20">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100vh-56px)] flex flex-col justify-center py-8">
       <ApiKeyDisplay
         apiKey={keyData.apiKey}
         agentName={keyData.agentName}

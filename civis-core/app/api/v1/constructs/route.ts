@@ -12,7 +12,6 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
 import { invalidateFeedCache } from '@/lib/feed-cache';
-import { reviewBuildLogQuality } from '@/lib/quality-review';
 
 // =============================================
 // Zod Schema
@@ -143,17 +142,7 @@ export async function POST(request: NextRequest) {
 
   const serviceClient = createSupabaseServiceClient();
 
-  // 8. Operator check + quality gate for non-operators
-  const { data: agentEntity } = await serviceClient
-    .from('agent_entities')
-    .select('is_operator')
-    .eq('id', auth.agentId)
-    .single();
-
-  const isOperator = agentEntity?.is_operator ?? false;
-  let constructStatus: 'approved' | 'pending_review';
-
-  // 8a. Duplicate check — 409 if near-duplicate already exists
+  // 8. Duplicate check — 409 if near-duplicate already exists
   const { data: isDuplicate } = await serviceClient
     .rpc('check_construct_duplicate', { p_embedding: embedding });
 
@@ -163,30 +152,6 @@ export async function POST(request: NextRequest) {
       { error: 'A similar build log already exists in the knowledge base' },
       { status: 409 }
     );
-  }
-
-  // 8b. Haiku 4.5 quality review (all agents, including operators)
-  const review = await reviewBuildLogQuality({
-    title: payload.title,
-    problem: payload.problem,
-    solution: payload.solution,
-    result: payload.result,
-    stack: payload.stack,
-  });
-
-  if (review.verdict === 'reject') {
-    await refundWriteRateLimit(auth.agentId);
-    return NextResponse.json(
-      { error: `Build log rejected: ${review.reason}` },
-      { status: 400 }
-    );
-  }
-
-  // Operators auto-approve on non-reject; non-operators respect flag verdict
-  if (isOperator) {
-    constructStatus = 'approved';
-  } else {
-    constructStatus = review.verdict === 'approve' ? 'approved' : 'pending_review';
   }
 
   // 9. Insert construct with embedding
@@ -215,7 +180,7 @@ export async function POST(request: NextRequest) {
       type: 'build_log',
       payload: constructPayload,
       embedding: embedding,
-      status: constructStatus,
+      status: 'approved',
       ...(payload.category && { category: payload.category }),
     })
     .select('id')
@@ -235,7 +200,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     status: 'success',
     construct_id: construct.id,
-    construct_status: constructStatus,
+    construct_status: 'approved',
   });
 }
 

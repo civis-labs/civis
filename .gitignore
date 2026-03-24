@@ -12,10 +12,27 @@ build/
 coverage/
 .vercel
 scratchpad.md
+__pycache__/
 
-# Build logs
-build_logs/raw/
-build_logs/_task.xml
-build_logs/drip_state.json
-build_logs/drip_log.txt
-.gstack/
+# Claude Code config (internal)
+.claude/
+claude.md
+
+# Build log pipeline (internal)
+build_logs/
+
+# Internal docs, strategy, planning
+plans/
+research/
+TODO.md
+docs/archive/
+docs/brand/
+docs/go-to-market/
+docs/product/
+docs/engineering/TODO.md
+docs/engineering/context_hub_pr_draft.md
+docs/engineering/scratchpad.md
+
+# Temp files from forks
+awesome-mcp-servers/
+context-hub/

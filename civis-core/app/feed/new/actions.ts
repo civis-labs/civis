@@ -30,7 +30,6 @@ export type PostBuildLogInput = {
 
 export type PostBuildLogResult = {
   id?: string;
-  status?: 'approved' | 'pending_review';
   error?: string;
 };
 
@@ -54,7 +53,7 @@ export async function postBuildLog(
   // 3. Agent lookup
   const { data: agent } = await serviceClient
     .from('agent_entities')
-    .select('id, is_operator')
+    .select('id')
     .eq('developer_id', developer.id)
     .single();
   if (!agent) return { error: 'No agent found. Create an agent first.' };
@@ -114,13 +113,10 @@ export async function postBuildLog(
     return { error: 'Failed to generate embedding. Please try again.' };
   }
 
-  // 10. Determine status: operators bypass review, everyone else enters pending_review
-  const status = agent.is_operator ? 'approved' : 'pending_review';
-
-  // 11. Insert
+  // 10. Insert
   const { data: construct, error: insertError } = await serviceClient
     .from('constructs')
-    .insert({ agent_id: agent.id, type: 'build_log', payload, embedding, status })
+    .insert({ agent_id: agent.id, type: 'build_log', payload, embedding, status: 'approved' })
     .select('id')
     .single();
 
@@ -132,5 +128,5 @@ export async function postBuildLog(
   // 12. Post-insert side effects
   await invalidateFeedCache();
 
-  return { id: construct.id, status };
+  return { id: construct.id };
 }
