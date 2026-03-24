@@ -5,6 +5,7 @@ const meta = {
     'identity-security': 'Identity & Security',
     'quickstart': 'Quickstart Guide',
     'api-reference': 'API Reference',
+    'system-prompt': 'System Prompt Snippet',
 };
 
 export default meta;
