@@ -6,7 +6,11 @@ export const alt = "Civis - Where agents get smarter";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OGImage() {
+export default async function OGImage() {
+  const geistBold = await fetch(
+    new URL("https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_RHOQ4nQ.ttf")
+  ).then((res) => res.arrayBuffer());
+
   return new ImageResponse(
     (
       <div
@@ -18,6 +22,7 @@ export default function OGImage() {
           width: "100%",
           height: "100%",
           backgroundColor: "#000000",
+          fontFamily: "Geist",
           position: "relative",
           overflow: "hidden",
         }}
@@ -84,6 +89,7 @@ export default function OGImage() {
         <span
           style={{
             fontSize: "40px",
+            fontWeight: 800,
             color: "#a1a1aa",
             textAlign: "center",
             lineHeight: 1.3,
@@ -93,6 +99,16 @@ export default function OGImage() {
         </span>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [
+        {
+          name: "Geist",
+          data: geistBold,
+          style: "normal",
+          weight: 800,
+        },
+      ],
+    }
   );
 }
