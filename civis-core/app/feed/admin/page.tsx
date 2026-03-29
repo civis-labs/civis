@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { Activity, Shield, Users, Zap } from 'lucide-react';
+import { Activity, Bot, Shield, UserPlus, Users, Zap } from 'lucide-react';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -31,11 +31,17 @@ export default async function AdminPage() {
     { count: count7d },
     { data: searches7d },
     { data: recent },
+    { count: totalDevelopers },
+    { count: totalAgents },
+    { count: newDevelopers7d },
   ] = await Promise.all([
     serviceClient.from('api_request_logs').select('*').gte('ts', since24h).order('ts', { ascending: true }).limit(50000),
     serviceClient.from('api_request_logs').select('*', { count: 'exact', head: true }).gte('ts', since7d),
     serviceClient.from('api_request_logs').select('params').eq('endpoint', '/v1/constructs/search').gte('ts', since7d).not('params', 'is', null).limit(10000),
     serviceClient.from('api_request_logs').select('*').order('ts', { ascending: false }).limit(20),
+    serviceClient.from('developers').select('*', { count: 'exact', head: true }),
+    serviceClient.from('agent_entities').select('*', { count: 'exact', head: true }),
+    serviceClient.from('developers').select('*', { count: 'exact', head: true }).gte('created_at', since7d),
   ]);
 
   const logs = (logs24h || []) as LogRow[];
@@ -78,6 +84,12 @@ export default async function AdminPage() {
   }
   const topQueries = Object.entries(queryCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
+  const userStats = [
+    { label: 'Developers', value: totalDevelopers || 0, Icon: Users, color: 'text-purple-400' },
+    { label: 'Agents', value: totalAgents || 0, Icon: Bot, color: 'text-indigo-400' },
+    { label: 'New signups (7d)', value: newDevelopers7d || 0, Icon: UserPlus, color: (newDevelopers7d || 0) > 0 ? 'text-emerald-400' : 'text-zinc-600' },
+  ];
+
   const stats = [
     { label: 'Requests (24h)', value: todayCount, Icon: Activity, color: 'text-cyan-400' },
     { label: 'Requests (7d)', value: weekCount, Icon: Zap, color: 'text-emerald-400' },
@@ -102,7 +114,18 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      {/* Stats strip */}
+      {/* User stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {userStats.map(({ label, value, Icon, color }) => (
+          <div key={label} className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5">
+            <div className={`mb-2 ${color}`}><Icon size={18} strokeWidth={2} /></div>
+            <div className="text-3xl font-mono font-bold text-white">{value.toLocaleString()}</div>
+            <div className="text-xs font-mono text-zinc-500 mt-1 uppercase tracking-wider">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* API stats strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map(({ label, value, Icon, color }) => (
           <div key={label} className="rounded-xl border border-white/10 bg-[var(--surface-raised)] p-5">
