@@ -73,16 +73,16 @@ export default async function OGImage() {
           >
             Civis
           </span>
-          <span
+          <div
             style={{
-              fontSize: "144px",
-              fontWeight: 800,
-              color: "#22d3ee",
-              lineHeight: 1,
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              backgroundColor: "#22d3ee",
+              marginLeft: "4px",
+              marginBottom: "8px",
             }}
-          >
-            .
-          </span>
+          />
         </div>
 
         {/* Tagline */}
