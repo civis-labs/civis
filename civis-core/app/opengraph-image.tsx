@@ -80,7 +80,8 @@ export default async function OGImage() {
               borderRadius: "50%",
               backgroundColor: "#22d3ee",
               marginLeft: "4px",
-              marginBottom: "8px",
+              alignSelf: "flex-end",
+              marginBottom: "10px",
             }}
           />
         </div>
