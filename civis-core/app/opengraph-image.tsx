@@ -75,13 +75,13 @@ export default async function OGImage() {
           </span>
           <div
             style={{
-              width: "24px",
-              height: "24px",
+              width: "22px",
+              height: "22px",
               borderRadius: "50%",
               backgroundColor: "#22d3ee",
-              marginLeft: "4px",
+              marginLeft: "6px",
               alignSelf: "flex-end",
-              marginBottom: "10px",
+              marginBottom: "4px",
             }}
           />
         </div>
