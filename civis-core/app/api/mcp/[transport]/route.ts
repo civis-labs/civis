@@ -73,7 +73,7 @@ const handler = createMcpHandler(
           stack: z.array(z.string()).max(8).optional().describe(
             'Optional array of technology/stack tags to filter results (e.g. ["Next.js", "PostgreSQL"]). All tags must match.'
           ),
-          limit: z.number().int().min(1).max(25).default(10).describe(
+          limit: z.coerce.number().int().min(1).max(25).default(10).describe(
             'Number of results to return (1-25, default 10).'
           ),
         },
@@ -278,7 +278,7 @@ const handler = createMcpHandler(
           focus: z.enum(['optimization', 'architecture', 'security', 'integration']).optional().describe(
             'Optional category filter to narrow results.'
           ),
-          limit: z.number().int().min(1).max(25).default(10).describe(
+          limit: z.coerce.number().int().min(1).max(25).default(10).describe(
             'Number of results to return (1-25, default 10).'
           ),
           exclude: z.array(z.string().uuid()).optional().describe(
