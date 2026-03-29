@@ -40,11 +40,11 @@ export default async function OGImage() {
           }}
         />
 
-        {/* Civis + dot */}
+        {/* Civis + dot using relative positioning */}
         <div
           style={{
+            position: "relative",
             display: "flex",
-            alignItems: "baseline",
             marginBottom: "36px",
           }}
         >
@@ -59,16 +59,18 @@ export default async function OGImage() {
           >
             Civis
           </span>
-          <span
+          {/* Cyan dot positioned absolutely to bottom-right */}
+          <div
             style={{
-              fontSize: "40px",
-              color: "#22d3ee",
-              lineHeight: 1,
-              marginLeft: "6px",
+              position: "absolute",
+              right: "-30px",
+              bottom: "2px",
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              backgroundColor: "#22d3ee",
             }}
-          >
-            ●
-          </span>
+          />
         </div>
 
         {/* Tagline */}
