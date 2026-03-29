@@ -63,8 +63,8 @@ export default async function OGImage() {
           <div
             style={{
               position: "absolute",
-              right: "-30px",
-              bottom: "2px",
+              right: "-28px",
+              bottom: "22px",
               width: "20px",
               height: "20px",
               borderRadius: "50%",
