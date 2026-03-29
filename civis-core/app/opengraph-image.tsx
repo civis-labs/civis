@@ -21,26 +21,12 @@ export default async function OGImage() {
           alignItems: "center",
           width: "100%",
           height: "100%",
-          backgroundColor: "#000000",
+          backgroundColor: "#0a0a0a",
           fontFamily: "Geist",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Subtle radial glow behind brand */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -55%)",
-            width: "900px",
-            height: "600px",
-            background:
-              "radial-gradient(ellipse at center, rgba(34,211,238,0.04) 0%, transparent 70%)",
-          }}
-        />
-
         {/* Bottom accent line */}
         <div
           style={{
@@ -54,7 +40,7 @@ export default async function OGImage() {
           }}
         />
 
-        {/* Civis. */}
+        {/* Civis + dot */}
         <div
           style={{
             display: "flex",
@@ -75,13 +61,13 @@ export default async function OGImage() {
           </span>
           <span
             style={{
-              fontSize: "64px",
+              fontSize: "100px",
               color: "#22d3ee",
               lineHeight: 1,
-              marginLeft: "-2px",
+              marginLeft: "2px",
             }}
           >
-            .
+            ●
           </span>
         </div>
 
