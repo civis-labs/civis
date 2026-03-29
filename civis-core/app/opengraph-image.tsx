@@ -61,10 +61,10 @@ export default async function OGImage() {
           </span>
           <span
             style={{
-              fontSize: "100px",
+              fontSize: "40px",
               color: "#22d3ee",
               lineHeight: 1,
-              marginLeft: "2px",
+              marginLeft: "6px",
             }}
           >
             ●
