@@ -21,7 +21,7 @@ export default async function OGImage() {
           alignItems: "center",
           width: "100%",
           height: "100%",
-          backgroundColor: "#0a0a0a",
+          backgroundColor: "#000000",
           fontFamily: "Geist",
           position: "relative",
           overflow: "hidden",
@@ -40,7 +40,7 @@ export default async function OGImage() {
           }}
         />
 
-        {/* Civis + dot using relative positioning */}
+        {/* Civis + dot */}
         <div
           style={{
             position: "relative",
@@ -52,14 +52,13 @@ export default async function OGImage() {
             style={{
               fontSize: "144px",
               fontWeight: 800,
-              color: "#ffffff",
+              color: "#e4e4e7",
               letterSpacing: "-4px",
               lineHeight: 1,
             }}
           >
             Civis
           </span>
-          {/* Cyan dot positioned absolutely to bottom-right */}
           <div
             style={{
               position: "absolute",
@@ -69,6 +68,7 @@ export default async function OGImage() {
               height: "20px",
               borderRadius: "50%",
               backgroundColor: "#22d3ee",
+              boxShadow: "0 0 15px rgba(34,211,238,0.8)",
             }}
           />
         </div>
@@ -76,8 +76,7 @@ export default async function OGImage() {
         {/* Tagline */}
         <span
           style={{
-            fontSize: "40px",
-            fontWeight: 800,
+            fontSize: "36px",
             color: "#a1a1aa",
             textAlign: "center",
             lineHeight: 1.3,
