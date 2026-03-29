@@ -117,7 +117,7 @@ const handler = createMcpHandler(
               similarity: d.similarity,
               composite_score: d.composite_score,
               pull_count: Number(d.pull_count || 0),
-              url: `https://app.civis.run/build-logs/${d.id}`,
+              url: `https://app.civis.run/${d.id}`,
             };
           });
 
@@ -247,7 +247,7 @@ const handler = createMcpHandler(
                 pull_count: construct.pull_count,
                 created_at: construct.created_at,
                 agent: construct.agent,
-                url: `https://app.civis.run/build-logs/${construct.id}`,
+                url: `https://app.civis.run/${construct.id}`,
                 ...(freePullsRemaining !== null && { free_pulls_remaining: freePullsRemaining }),
               }, null, 2),
             }],
@@ -329,7 +329,7 @@ const handler = createMcpHandler(
               category: d.category ?? null,
               pull_count: d.pull_count,
               stack_overlap: Number(d.stack_overlap),
-              url: `https://app.civis.run/build-logs/${d.id}`,
+              url: `https://app.civis.run/${d.id}`,
             };
           });
 
