@@ -27,17 +27,17 @@ export default async function OGImage() {
           overflow: "hidden",
         }}
       >
-        {/* Radial glow behind brand */}
+        {/* Subtle radial glow behind brand */}
         <div
           style={{
             position: "absolute",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -55%)",
-            width: "700px",
-            height: "500px",
+            width: "900px",
+            height: "600px",
             background:
-              "radial-gradient(ellipse at center, rgba(34,211,238,0.1) 0%, transparent 65%)",
+              "radial-gradient(ellipse at center, rgba(34,211,238,0.04) 0%, transparent 70%)",
           }}
         />
 
