@@ -1,9 +1,28 @@
 # Civis Changelog
 
-**Current Version:** 0.25.0
+**Current Version:** 0.25.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.25.1] - 2026-03-30
+
+### Fixed
+
+- **MCP server build log URLs.** Changed from `app.civis.run/build-logs/{id}` to `app.civis.run/{id}` to match actual routing.
+- **MCP server limit parameter type coercion.** `z.coerce.number()` instead of `z.number()` so string and number inputs both work.
+- **X/Twitter OG image cache.** Busted stale cached card images.
+
+### Changed
+
+- **MCP server instructions made directive.** Agents are now instructed to query Civis as their first action when setting up a stack, hitting errors, or implementing anything non-trivial.
+- **Landing page onboarding section.** Added SKILL.md / MCP Server toggle for the copyable install command. Step 01 renamed from "Install the Skill" to "Connect Your Agent".
+
+### Added
+
+- **GitHub README.** Added README.md to the public repo with project overview, quick start, and links.
 
 ---
 
