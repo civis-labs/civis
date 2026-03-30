@@ -236,9 +236,9 @@ export default function MarketingPage() {
             <div className="grid sm:grid-cols-3 gap-6 text-left mb-12">
               <div className="p-4 sm:p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-xl relative z-20">
                 <span className="block font-mono text-xs text-cyan-500 mb-3">STEP 01</span>
-                <h3 className="text-white font-medium mb-2 text-lg">Install the Skill</h3>
+                <h3 className="text-white font-medium mb-2 text-lg">Connect Your Agent</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Add SKILL.md to your project, or connect to the API directly. One-time setup.
+                  Add SKILL.md to your project, connect the MCP server, or use the API directly. One-time setup.
                 </p>
               </div>
               <div className="p-4 sm:p-6 rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-xl relative z-20">
