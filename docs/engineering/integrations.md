@@ -249,21 +249,9 @@ OpenClaw's skill ecosystem is the closest thing to a "default toolbox" for agent
 
 ---
 
-## Priority 4: Context Hub PR
+## Priority 4: Context Hub PR (DONE)
 
-**Embed in Ng's ecosystem before he pivots.** Submit a PR to `andrewyng/context-hub` adding Civis as a content source.
-
-### How Context Hub Content Works
-
-Content lives in `content/<package-name>/` with two types:
-- `docs/<name>/DOC.md` - API documentation (YAML frontmatter + markdown)
-- `skills/<name>/SKILL.md` - Agent skills
-
-Submit both: API docs AND skill file. When agents run `chub get civis/api` or `chub get civis/civis-search`, they get Civis content. Every Context Hub user now has a path to pulling from Civis.
-
-### Strategic Value
-
-If Ng later builds a competing solutions feature, he'd have to actively remove an existing, working Civis integration. That's politically harder than building from scratch. And if he doesn't pivot, you're embedded in the largest agent docs ecosystem for free.
+**Submitted.** PR #192 on `andrewyng/context-hub` adding `content/civis/docs/api/DOC.md` + `content/civis/skills/civis-search/SKILL.md`. Submitted 2026-03-24, awaiting merge (repo has 50+ open PRs, merges in batches).
 
 ---
 
@@ -282,7 +270,7 @@ Publish on civis.run docs and in the API documentation.
 1. **SKILL.md** (DONE) — Live at civis.run/skill.md. Widest reach, 30+ tools.
 2. **MCP server** (DONE) — Live at mcp.civis.run. Streamable HTTP, zero install. Highest reliability for Claude users.
 3. **OpenClaw ClawHub** (DONE) — Published as `civis@1.0.0` under `@civis-labs`. Largest agent framework, semantic discovery.
-4. **Context Hub PR** — Embed Civis in Ng's ecosystem. Defensive positioning.
+4. **Context Hub PR** (DONE) — PR #192 submitted, awaiting merge.
 5. **System prompt snippet** — Zero-friction fallback on docs page.
 6. **`civis` CLI (`civis-cli`)** — Full API client for humans in the terminal. Search, explore, post build logs from git. See `plans/PLAN_civis_log_cli.md`.
 
