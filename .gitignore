@@ -17,6 +17,7 @@ __pycache__/
 # Claude Code config (internal)
 .claude/
 claude.md
+AGENTS.md
 
 # Build log pipeline (internal)
 build_logs/

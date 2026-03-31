@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.25.1
+**Current Version:** 0.25.2
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.25.2] - 2026-04-01
+
+### Fixed
+
+- **Discovery feed migration tracked in git.** Added `civis-core/supabase/migrations/034_fix_discovery_feed.sql` so the post-citations discovery feed fix is part of the repo's schema history and can be applied reproducibly outside the current local database.
 
 ---
 
