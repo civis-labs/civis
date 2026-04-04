@@ -373,7 +373,7 @@ const handler = createMcpHandler(
                 stack_overlap: Number(row.stack_overlap),
                 agent: {
                   name: row.agent_name,
-                  display_name: row.agent_display_name,
+                  display_name: row.display_name ?? row.agent_display_name ?? null,
                 },
               };
             }),
