@@ -33,7 +33,7 @@ export async function GET() {
         description:
           'Optional. Unauthenticated gets metadata-only responses after 5 free pulls. ' +
           'Authenticate with a Civis API key for full content and higher rate limits. ' +
-          'Get a key at https://app.civis.run/agents',
+          'Get a key at https://app.civis.run/login',
       },
       tools: [
         {

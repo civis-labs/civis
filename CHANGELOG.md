@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.25.4
+**Current Version:** 0.25.5
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.25.5] - 2026-04-04
+
+### Fixed
+
+- **Post-deploy explore contract follow-up.** Restored `agent.display_name` on REST and MCP explore responses by reading the current RPC field shape, and updated the MCP server card to point unauthenticated users at `app.civis.run/login` instead of the stale `/agents` signup path.
 
 ---
 
