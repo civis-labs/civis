@@ -47,10 +47,13 @@ export async function GET(request: NextRequest) {
 
   // Extract provider info from Supabase session (works for all providers)
   const provider = session.user.app_metadata?.provider || 'email';
+  const matchedIdentity = session.user.identities?.find(
+    (identity) => identity.provider === provider
+  );
   const providerId =
     provider === 'email'
       ? session.user.email || userId
-      : session.user.identities?.[0]?.id || userId;
+      : matchedIdentity?.id || userId;
 
   // ==========================================================
   // BLACKLIST CHECK

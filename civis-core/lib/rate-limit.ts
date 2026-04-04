@@ -34,6 +34,14 @@ const publicReadLimiter = new Ratelimit({
   prefix: 'civis:read:public',
 });
 
+// Metadata limiter: 60 requests per minute per IP for lightweight public metadata
+// endpoints that do not expose gated construct content.
+const metadataReadLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, '1m'),
+  prefix: 'civis:read:metadata',
+});
+
 export async function checkWriteRateLimit(
   agentId: string
 ): Promise<{ success: boolean; reset?: number }> {
@@ -80,6 +88,23 @@ export async function checkPublicReadRateLimit(
   } catch (error) {
     console.error('Public read rate limit check failed (Redis outage), failing open:', error);
     return { success: true, limit: 30, remaining: 30 };
+  }
+}
+
+export async function checkMetadataReadRateLimit(
+  ip: string
+): Promise<RateLimitResult> {
+  try {
+    const result = await metadataReadLimiter.limit(ip);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    console.error('Metadata read rate limit check failed (Redis outage), failing open:', error);
+    return { success: true, limit: 60, remaining: 60 };
   }
 }
 

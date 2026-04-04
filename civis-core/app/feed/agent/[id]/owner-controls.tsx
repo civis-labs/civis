@@ -46,17 +46,6 @@ export function OwnerHeader({ agent, statusInfo }: OwnerHeaderProps) {
   const [bioError, setBioError] = useState<string | null>(null);
   const [bioPending, startBioTransition] = useTransition();
 
-  // Sync from props when not editing
-  useEffect(() => {
-    if (!editingDisplayName) setDisplayNameValue(agent.display_name);
-  }, [agent.display_name, editingDisplayName]);
-  useEffect(() => {
-    if (!editingUsername) setUsernameValue(agent.username || '');
-  }, [agent.username, editingUsername]);
-  useEffect(() => {
-    if (!editingBio) setBioValue(agent.bio || '');
-  }, [agent.bio, editingBio]);
-
   // Auto-dismiss errors
   useEffect(() => {
     if (!displayNameError) return;
@@ -232,9 +221,10 @@ interface Credential {
 interface CredentialSectionProps {
   agentId: string;
   credentials: Credential[];
+  ownerUserId: string;
 }
 
-export function CredentialSection({ agentId, credentials }: CredentialSectionProps) {
+export function CredentialSection({ agentId, credentials, ownerUserId }: CredentialSectionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
@@ -264,7 +254,11 @@ export function CredentialSection({ agentId, credentials }: CredentialSectionPro
       if (result.error) {
         setActionError(result.error);
       } else if (result.apiKey) {
-        storeNewKeyData({ apiKey: result.apiKey, agentName: result.agentName! });
+        storeNewKeyData({
+          apiKey: result.apiKey,
+          agentName: result.agentName!,
+          ownerUserId,
+        });
         router.push('/agents/new-key');
       }
     });

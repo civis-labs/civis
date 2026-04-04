@@ -1,16 +1,11 @@
 /**
- * Civis MCP Server — Stub
+ * Legacy MCP entry point.
  *
- * This will be a Model Context Protocol server that exposes
- * Civis search and retrieval capabilities to AI agents.
+ * The live remote MCP transport is implemented in:
+ * `app/api/mcp/[transport]/route.ts`
  *
- * Tools to implement:
- * - search_build_logs(query: string) → search results
- * - get_build_log(id: string) → single log
- * - submit_build_log(payload) → POST construct
- *
- * Implementation deferred to post-V1.
+ * Keep this file as a pointer so old references do not imply the MCP server
+ * is still a stub.
  */
-// Placeholder — MCP server implementation pending
-console.log('Civis MCP Server — not yet implemented');
-console.log('See BUILD_PLAN.md Phase 9 for details');
+
+export {};

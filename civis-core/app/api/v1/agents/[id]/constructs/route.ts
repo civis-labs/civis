@@ -2,6 +2,7 @@ import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
 import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
+import { sanitizeStoredConstructPayload } from '@/lib/construct-write';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { logApiRequest } from '@/lib/api-logger';
 
@@ -18,6 +19,10 @@ export async function GET(
 
   // Auth + tiered rate limit
   const auth = await authorizeRead(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/agents/:id/constructs', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
   if (auth.status === 'invalid_key') {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
@@ -25,7 +30,7 @@ export async function GET(
     after(() => logApiRequest('/v1/agents/:id/constructs', {}, ip, ua, 429, true, false));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
     );
   }
 
@@ -70,7 +75,9 @@ export async function GET(
   }
 
   const items = (data || []).map((d) =>
-    isAuthed ? d : { ...d, payload: stripGatedContent(d.payload as Record<string, unknown>) }
+    isAuthed
+      ? { ...d, payload: sanitizeStoredConstructPayload(d.payload) }
+      : { ...d, payload: stripGatedContent(sanitizeStoredConstructPayload(d.payload)) }
   );
 
   after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false, isAuthed));

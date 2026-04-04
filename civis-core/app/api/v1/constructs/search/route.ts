@@ -30,6 +30,10 @@ export async function GET(request: NextRequest) {
 
   // Auth + tiered rate limit
   const auth = await authorizeRead(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/constructs/search', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
   if (auth.status === 'invalid_key') {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
@@ -37,7 +41,7 @@ export async function GET(request: NextRequest) {
     after(() => logApiRequest('/v1/constructs/search', {}, ip, ua, 429, true, false));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
     );
   }
 
@@ -81,6 +85,7 @@ export async function GET(request: NextRequest) {
   try {
     queryEmbedding = await generateEmbedding(q, { cache: true });
   } catch {
+    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed));
     return NextResponse.json(
       { error: 'Failed to generate search embedding' },
       { status: 500 }
@@ -100,6 +105,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await serviceClient.rpc('search_constructs', rpcParams);
 
   if (error) {
+    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed));
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
 

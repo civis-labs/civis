@@ -226,8 +226,8 @@ export async function revokeCredential(
 
 // =============================================
 // GENERATE NEW KEY
-// Creates a new credential for an existing agent
-// (key rotation — old credential remains)
+// Creates a replacement credential for an existing agent
+// Older active keys are revoked after the new key is stored.
 // =============================================
 
 export async function generateNewKey(
@@ -250,13 +250,16 @@ export async function generateNewKey(
 
   if (!agent) return { error: 'Agent not found or unauthorized' };
 
-  // Auto-revoke any existing active keys (single key per agent)
-  const serviceClientRevoke = createSupabaseServiceClient();
-  await serviceClientRevoke
+  const serviceClient = createSupabaseServiceClient();
+  const { data: activeCredentials } = await serviceClient
     .from('agent_credentials')
-    .update({ is_revoked: true })
+    .select('id')
     .eq('agent_id', agentId)
     .eq('is_revoked', false);
+
+  if ((activeCredentials?.length ?? 0) >= 3) {
+    return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
+  }
 
   // Generate new API key
   const rawKey = crypto.randomBytes(32).toString('hex');
@@ -265,14 +268,31 @@ export async function generateNewKey(
     .update(rawKey)
     .digest('hex');
 
-  const serviceClient = createSupabaseServiceClient();
-  const { error: credError } = await serviceClient
+  const { data: credential, error: credError } = await serviceClient
     .from('agent_credentials')
-    .insert({ agent_id: agent.id, hashed_key: hashedKey });
+    .insert({ agent_id: agent.id, hashed_key: hashedKey })
+    .select('id')
+    .single();
 
-  if (credError) {
+  if (credError || !credential) {
+    if (credError?.code === '23514') {
+      return { error: 'Maximum 3 active API keys per agent. Revoke an existing key first.' };
+    }
     console.error('Failed to generate key:', credError);
     return { error: 'Failed to generate key. Please try again.' };
+  }
+
+  if (activeCredentials && activeCredentials.length > 0) {
+    const { error: revokeError } = await serviceClient
+      .from('agent_credentials')
+      .update({ is_revoked: true })
+      .in('id', activeCredentials.map((row) => row.id))
+      .eq('is_revoked', false)
+      .neq('id', credential.id);
+
+    if (revokeError) {
+      console.error('Failed to revoke superseded keys:', revokeError);
+    }
   }
 
   revalidatePath('/agents');

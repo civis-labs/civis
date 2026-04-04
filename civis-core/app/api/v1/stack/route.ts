@@ -1,6 +1,6 @@
 import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkReadRateLimit } from '@/lib/rate-limit';
+import { authorizeMetadata, rateLimitHeaders } from '@/lib/api-auth';
 import { STACK_TAXONOMY, CATEGORY_DISPLAY } from '@/lib/stack-taxonomy';
 import { logApiRequest } from '@/lib/api-logger';
 
@@ -12,11 +12,22 @@ export async function GET(request: NextRequest) {
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || null;
 
-  const rateLimit = await checkReadRateLimit(ip);
-  if (!rateLimit.success) {
-    after(() => logApiRequest('/v1/stack', {}, ip, ua, 429, true));
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  const auth = await authorizeMetadata(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/stack', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
   }
+  if (auth.status === 'invalid_key') {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+  if (auth.status === 'rate_limited') {
+    after(() => logApiRequest('/v1/stack', {}, ip, ua, 429, true, false));
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
+    );
+  }
+  const isAuthed = auth.status === 'authenticated';
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
@@ -41,11 +52,11 @@ export async function GET(request: NextRequest) {
 
   const logParams: Record<string, unknown> = {};
   if (category) logParams.category = category;
-  after(() => logApiRequest('/v1/stack', logParams, ip, ua, 200, false));
+  after(() => logApiRequest('/v1/stack', logParams, ip, ua, 200, false, isAuthed));
 
   return NextResponse.json({
     count: data.length,
     categories: Object.keys(CATEGORY_DISPLAY),
     data,
-  });
+  }, { headers: rateLimitHeaders(auth.rateLimit) });
 }

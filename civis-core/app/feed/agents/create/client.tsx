@@ -17,7 +17,7 @@ function validateUsernameClient(value: string): string | null {
   return null;
 }
 
-export default function CreateClient({ isFirstAgent }: { isFirstAgent: boolean }) {
+export default function CreateClient() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('form');
   const [newKey, setNewKey] = useState<{ apiKey: string; agentName: string } | null>(null);

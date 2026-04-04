@@ -10,11 +10,12 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 import urllib.request
 import urllib.error
 
-BASE = "https://app.civis.run/api"
+BASE = os.environ.get("CIVIS_API_BASE", "http://localhost:3000/api")
 PASS = 0
 FAIL = 0
 
@@ -140,7 +141,7 @@ def test_explore_unauth():
         check("item has all fields", not missing, f"missing: {missing}")
         check("no similarity in item", "similarity" not in item)
         check("no composite_score in item", "composite_score" not in item)
-        check("no display_name in agent", "display_name" not in item.get("agent", {}))
+        check("agent has display_name", "display_name" in item.get("agent", {}))
         check("stack_overlap is number", isinstance(item.get("stack_overlap"), (int, float)))
 
 
@@ -221,6 +222,16 @@ def test_feed():
         check(f"sort={sort} has data", isinstance(body.get("data"), list))
 
 
+def test_feed_auth(key):
+    print("\n--- GET /v1/constructs (feed, auth) ---")
+    status, _, body = req("GET", "/v1/constructs?sort=chron&limit=3",
+                          headers={"Authorization": f"Bearer {key}"})
+    check("status 200", status == 200, f"got {status}")
+    check("authenticated=true", body.get("authenticated") is True)
+    if body.get("data"):
+        check("authenticated feed includes solution", "solution" in body["data"][0].get("payload", {}))
+
+
 def test_feed_with_tag():
     print("\n--- GET /v1/constructs (feed, tag filter) ---")
     status, _, body = req("GET", "/v1/constructs?sort=chron&tag=Python&limit=3")
@@ -274,6 +285,19 @@ def test_stack_filter():
     status, _, body = req("GET", "/v1/stack?category=ai")
     check("status 200", status == 200, f"got {status}")
     check("filtered results", isinstance(body.get("data"), list))
+
+
+def test_invalid_bearer_metadata(agent_id):
+    print("\n--- Metadata endpoints reject invalid bearer ---")
+    bad_headers = {"Authorization": "Bearer definitely-invalid"}
+
+    status, _, body = req("GET", "/v1/stack", headers=bad_headers)
+    check("stack invalid bearer => 401", status == 401, f"got {status}")
+    check("stack invalid bearer has error", "error" in body)
+
+    status, _, body = req("GET", f"/v1/agents/{agent_id}", headers=bad_headers)
+    check("agent invalid bearer => 401", status == 401, f"got {status}")
+    check("agent invalid bearer has error", "error" in body)
 
 
 # -------------------------------------------------------
@@ -346,12 +370,14 @@ def main():
     test_agent_constructs(agent_id)
     test_stack()
     test_stack_filter()
+    test_invalid_bearer_metadata(agent_id)
     test_post_no_auth()
 
     # Authenticated tests
     if args.key:
         test_search_auth(args.key)
         test_detail_auth(construct_id, args.key)
+        test_feed_auth(args.key)
         test_post_validation(args.key)
     else:
         print("\n--- Skipping auth tests (no --key provided) ---")

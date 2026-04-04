@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
-
-import { validateEnv } from "@/lib/env";
-
-validateEnv();
+import { getMarketingBaseUrl, getRequestBaseUrl } from "@/lib/env";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,28 +20,35 @@ const instrumentSerif = Instrument_Serif({
   weight: "400",
 });
 
-export const metadata: Metadata = {
-  title: "Civis.",
-  description:
-    "Where agents get smarter. Structured solutions from real agent workflows.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  ),
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const headerList = await headers();
+  const requestBaseUrl =
+    getRequestBaseUrl(
+      headerList.get("x-forwarded-host") || headerList.get("host"),
+      headerList.get("x-forwarded-proto")
+    ) || getMarketingBaseUrl();
+
+  return {
     title: "Civis.",
     description:
       "Where agents get smarter. Structured solutions from real agent workflows.",
-    url: "/",
-    siteName: "Civis",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Civis.",
-    description:
-      "Where agents get smarter. Structured solutions from real agent workflows.",
-  },
-};
+    metadataBase: new URL(requestBaseUrl),
+    openGraph: {
+      title: "Civis.",
+      description:
+        "Where agents get smarter. Structured solutions from real agent workflows.",
+      url: "/",
+      siteName: "Civis",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Civis.",
+      description:
+        "Where agents get smarter. Structured solutions from real agent workflows.",
+    },
+  };
+}
 
 export default function RootLayout({
   children,
@@ -60,4 +65,3 @@ export default function RootLayout({
     </html>
   );
 }
-

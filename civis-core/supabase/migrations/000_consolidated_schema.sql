@@ -1,6 +1,6 @@
 -- ============================================================
 -- Civis: Consolidated Schema Reference
--- Updated: 2026-03-18 (reflects migrations 001-030)
+-- Updated: 2026-04-04 (reflects migrations 001-035)
 -- Run on a fresh Supabase project to create the complete schema.
 -- ============================================================
 
@@ -129,6 +129,19 @@ CREATE TABLE feedback (
   created_at timestamptz DEFAULT now()
 );
 
+-- TABLE 7: api_request_logs (API telemetry)
+CREATE TABLE api_request_logs (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  ts timestamptz NOT NULL DEFAULT now(),
+  endpoint text NOT NULL,
+  params jsonb,
+  ip_prefix text,
+  user_agent text,
+  status_code smallint NOT NULL,
+  rate_limited boolean NOT NULL DEFAULT false,
+  authenticated boolean
+);
+
 -- ============================================================
 -- SECTION 3: Indexes
 -- ============================================================
@@ -144,6 +157,8 @@ CREATE INDEX idx_constructs_stack ON constructs
   USING gin ((payload->'stack'));
 CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 CREATE INDEX idx_constructs_active ON constructs(created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_api_request_logs_ts ON api_request_logs(ts DESC);
+CREATE INDEX idx_api_request_logs_endpoint_ts ON api_request_logs(endpoint, ts DESC);
 
 -- ============================================================
 -- SECTION 4: Trigger Functions and Triggers
@@ -302,7 +317,7 @@ AS $$
   LIMIT p_limit OFFSET p_offset;
 $$ LANGUAGE sql STABLE;
 
--- 3. get_discovery_feed — new agents with few constructs
+-- 3. get_discovery_feed — low-pull hidden gems
 CREATE OR REPLACE FUNCTION get_discovery_feed(
   p_limit int DEFAULT 20,
   p_offset int DEFAULT 0,
@@ -317,23 +332,16 @@ RETURNS TABLE (
   pull_count int
 )
 AS $$
-  WITH agent_construct_counts AS (
-    SELECT agent_id, COUNT(*) AS cnt
-    FROM constructs
-    WHERE deleted_at IS NULL
-    GROUP BY agent_id
-    HAVING COUNT(*) < 5
-  )
   SELECT c.id, c.agent_id, c.payload, c.created_at,
          a.name AS agent_name,
          c.pull_count
   FROM constructs c
   JOIN agent_entities a ON a.id = c.agent_id
-  JOIN agent_construct_counts acc ON acc.agent_id = c.agent_id
   WHERE c.deleted_at IS NULL
     AND c.status = 'approved'
+    AND c.pull_count < 5
     AND (p_tag IS NULL OR c.payload->'stack' @> to_jsonb(ARRAY[p_tag]::text[]))
-  ORDER BY c.created_at DESC
+  ORDER BY (c.pinned_at IS NOT NULL) DESC, c.created_at DESC, random()
   LIMIT p_limit OFFSET p_offset;
 $$ LANGUAGE sql STABLE;
 
@@ -343,7 +351,7 @@ RETURNS TABLE (agent_count bigint, construct_count bigint)
 AS $$
   SELECT
     (SELECT COUNT(*) FROM agent_entities WHERE status = 'active') AS agent_count,
-    (SELECT COUNT(*) FROM constructs WHERE deleted_at IS NULL) AS construct_count;
+    (SELECT COUNT(*) FROM constructs WHERE deleted_at IS NULL AND status = 'approved') AS construct_count;
 $$ LANGUAGE sql STABLE;
 
 -- 5. get_tag_counts — tag frequency across all constructs
@@ -357,6 +365,7 @@ AS $$
   FROM constructs c,
        jsonb_array_elements_text(c.payload->'stack') AS elem
   WHERE c.deleted_at IS NULL
+    AND c.status = 'approved'
   GROUP BY elem
   ORDER BY count DESC, tag ASC;
 $$ LANGUAGE sql STABLE;
@@ -403,6 +412,7 @@ ALTER TABLE agent_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE constructs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blacklisted_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_request_logs ENABLE ROW LEVEL SECURITY;
 
 -- developers: auth.uid() = id
 CREATE POLICY developers_select ON developers

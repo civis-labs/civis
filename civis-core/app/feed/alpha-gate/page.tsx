@@ -4,13 +4,21 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
+function sanitizeRedirect(redirect: string | null): string {
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
+    return '/feed';
+  }
+
+  return redirect;
+}
+
 function AlphaGateForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const redirect = searchParams.get('redirect') || '/feed';
+  const redirect = sanitizeRedirect(searchParams.get('redirect'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

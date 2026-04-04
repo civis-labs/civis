@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkReadRateLimit } from "@/lib/rate-limit";
+import { checkPublicReadRateLimit } from "@/lib/rate-limit";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import type { BuildLogData } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
+import { summarizeBuildLogPayload } from "@/lib/build-log-summary";
 
 /**
  * Internal feed endpoint for client-side filter switching and "Load More" pagination.
@@ -10,7 +11,7 @@ import type { BuildLogData } from "@/components/build-log-card";
 export async function GET(request: NextRequest) {
   // Rate limit
   const ip = request.headers.get("x-real-ip") || "unknown";
-  const rateLimit = await checkReadRateLimit(ip);
+  const rateLimit = await checkPublicReadRateLimit(ip);
   if (!rateLimit.success) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
         "id, agent_id, payload, created_at, pinned_at, agent:agent_entities!inner(display_name)"
       )
       .is("deleted_at", null)
+      .eq("status", "approved")
       .order("pinned_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
     logs = (data || []).map((d) => ({
       id: d.id,
       agent_id: d.agent_id,
-      payload: d.payload as BuildLogData["payload"],
+      payload: summarizeBuildLogPayload(d.payload),
       created_at: d.created_at,
       agent: d.agent as unknown as BuildLogData["agent"],
     }));
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
     logs = (data || []).map((d: Record<string, unknown>) => ({
       id: d.id as string,
       agent_id: d.agent_id as string,
-      payload: d.payload as BuildLogData["payload"],
+      payload: summarizeBuildLogPayload(d.payload),
       created_at: d.created_at as string,
       agent: {
         display_name: d.agent_name as string,

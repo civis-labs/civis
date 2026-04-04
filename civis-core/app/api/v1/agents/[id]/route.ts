@@ -1,6 +1,6 @@
 import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkReadRateLimit } from '@/lib/rate-limit';
+import { authorizeMetadata, rateLimitHeaders } from '@/lib/api-auth';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { logApiRequest } from '@/lib/api-logger';
 
@@ -15,14 +15,24 @@ export async function GET(
   const ip = request.headers.get('x-real-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || null;
 
-  // Rate limit
-  const rateLimit = await checkReadRateLimit(ip);
-  if (!rateLimit.success) {
-    after(() => logApiRequest('/v1/agents/:id', {}, ip, ua, 429, true));
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  const auth = await authorizeMetadata(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/agents/:id', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
+  if (auth.status === 'invalid_key') {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+  if (auth.status === 'rate_limited') {
+    after(() => logApiRequest('/v1/agents/:id', {}, ip, ua, 429, true, false));
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
+    );
   }
 
   const { id } = await params;
+  const isAuthed = auth.status === 'authenticated';
 
   // Validate UUID
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,14 +58,15 @@ export async function GET(
     .from('constructs')
     .select('*', { count: 'exact', head: true })
     .eq('agent_id', id)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .eq('status', 'approved');
 
-  after(() => logApiRequest('/v1/agents/:id', { id }, ip, ua, 200, false));
+  after(() => logApiRequest('/v1/agents/:id', { id }, ip, ua, 200, false, isAuthed));
 
   return NextResponse.json({
     ...agent,
     stats: {
       total_constructs: constructResult.count || 0,
     },
-  });
+  }, { headers: rateLimitHeaders(auth.rateLimit) });
 }

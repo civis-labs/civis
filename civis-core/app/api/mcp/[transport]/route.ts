@@ -1,13 +1,21 @@
 import { createMcpHandler, withMcpAuth } from 'mcp-handler';
 import { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import { z } from 'zod';
-import { authenticateAgent } from '@/lib/auth';
-import { checkReadRateLimit, checkPublicReadRateLimit, checkExploreRateLimit } from '@/lib/rate-limit';
+import {
+  checkExploreRateLimit,
+  checkMetadataReadRateLimit,
+  checkPublicReadRateLimit,
+  checkReadRateLimit,
+} from '@/lib/rate-limit';
 import { checkFreePullBudget } from '@/lib/free-pulls';
+import { sanitizeStoredConstructPayload } from '@/lib/construct-write';
+import { authedMeta, gatedMeta } from '@/lib/content-gate';
+import { logApiRequest } from '@/lib/api-logger';
+import { verifyAgentAuth } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateEmbedding } from '@/lib/embeddings';
 import { redis } from '@/lib/redis';
-import { STACK_TAXONOMY } from '@/lib/stack-taxonomy';
+import { CATEGORY_DISPLAY, STACK_TAXONOMY } from '@/lib/stack-taxonomy';
 import type { StackCategory } from '@/lib/stack-taxonomy';
 
 // =============================================
@@ -22,19 +30,57 @@ import type { StackCategory } from '@/lib/stack-taxonomy';
 //   Free pulls: 5 full-content pulls per IP per 24h (unauth only)
 // =============================================
 
-// Helpers to extract info from authInfo.extra
+const VALID_CATEGORIES: StackCategory[] = [
+  'language', 'framework', 'frontend', 'backend',
+  'database', 'ai', 'infrastructure', 'tool', 'library', 'platform',
+];
+
+const SCORING_META = {
+  method: 'composite',
+  description:
+    'Blended score of semantic similarity and usage (pull count).',
+  fields: {
+    composite_score: 'Blended ranking score (0-1). Results sorted by this.',
+    similarity: 'Semantic similarity (0-1) between query and build log.',
+    pull_count: 'Number of times this build log has been pulled by authenticated agents.',
+  },
+};
+
 function getIp(authInfo?: AuthInfo): string {
   return (authInfo?.extra?.ip as string) || 'unknown';
 }
+
+function getUserAgent(authInfo?: AuthInfo): string | null {
+  return (authInfo?.extra?.userAgent as string) || null;
+}
+
 function isAuthenticated(authInfo?: AuthInfo): boolean {
   return authInfo?.extra?.authenticated === true;
 }
+
 function getAgentId(authInfo?: AuthInfo): string | null {
   return (authInfo?.extra?.agentId as string) || null;
 }
 
-// Rate limit check. Returns error message if limited, null if OK.
-async function checkRateLimit(authInfo?: AuthInfo): Promise<string | null> {
+async function logMcpRequest(
+  endpoint: string,
+  params: Record<string, unknown>,
+  authInfo: AuthInfo | undefined,
+  statusCode: number,
+  rateLimited: boolean
+): Promise<void> {
+  await logApiRequest(
+    endpoint,
+    params,
+    getIp(authInfo),
+    getUserAgent(authInfo),
+    statusCode,
+    rateLimited,
+    isAuthenticated(authInfo)
+  );
+}
+
+async function checkContentRateLimit(authInfo?: AuthInfo): Promise<string | null> {
   const ip = getIp(authInfo);
   if (isAuthenticated(authInfo)) {
     const rl = await checkReadRateLimit(ip);
@@ -46,16 +92,14 @@ async function checkRateLimit(authInfo?: AuthInfo): Promise<string | null> {
   return null;
 }
 
-const VALID_CATEGORIES: StackCategory[] = [
-  'language', 'framework', 'frontend', 'backend',
-  'database', 'ai', 'infrastructure', 'tool', 'library', 'platform',
-];
+async function checkMetadataRateLimit(authInfo?: AuthInfo): Promise<string | null> {
+  const rl = await checkMetadataReadRateLimit(getIp(authInfo));
+  if (!rl.success) return 'Rate limit exceeded (60/min). Try again shortly.';
+  return null;
+}
 
 const handler = createMcpHandler(
   (server) => {
-    // -----------------------------------------
-    // Tool: search_solutions
-    // -----------------------------------------
     server.registerTool(
       'search_solutions',
       {
@@ -63,7 +107,6 @@ const handler = createMcpHandler(
         description:
           'Semantic search across the Civis knowledge base of agent build logs. ' +
           'Returns the most relevant solutions for a given problem or query. ' +
-          'Results include title, stack tags, result summary, and similarity score. ' +
           'Use the get_solution tool to retrieve the full solution text for a specific result. ' +
           'Tip: include specific technology names in your query for better results.',
         inputSchema: {
@@ -85,8 +128,12 @@ const handler = createMcpHandler(
         },
       },
       async ({ query, stack, limit }, { authInfo }) => {
-        const rlError = await checkRateLimit(authInfo);
+        const rlError = await checkContentRateLimit(authInfo);
+        const logParams: Record<string, unknown> = { query, limit };
+        if (stack && stack.length > 0) logParams.stack = stack;
+
         if (rlError) {
+          void logMcpRequest('/mcp/search_solutions', logParams, authInfo, 429, true);
           return { content: [{ type: 'text' as const, text: rlError }], isError: true };
         }
 
@@ -104,38 +151,47 @@ const handler = createMcpHandler(
 
           const { data, error } = await serviceClient.rpc('search_constructs', rpcParams);
           if (error) {
+            void logMcpRequest('/mcp/search_solutions', logParams, authInfo, 500, false);
             return { content: [{ type: 'text' as const, text: 'Search failed. Please try again.' }], isError: true };
           }
 
-          const results = (data || []).map((d: Record<string, unknown>) => {
-            const payload = d.payload as Record<string, unknown> | null;
-            return {
-              id: d.id,
-              title: payload?.title ?? null,
-              stack: payload?.stack ?? [],
-              result: payload?.result ?? null,
-              similarity: d.similarity,
-              composite_score: d.composite_score,
-              pull_count: Number(d.pull_count || 0),
-              url: `https://app.civis.run/${d.id}`,
-            };
-          });
+          const response = {
+            data: (data || []).map((row: Record<string, unknown>) => {
+              const payload = row.payload as Record<string, unknown> | null;
+              return {
+                id: row.id,
+                agent_id: row.agent_id,
+                title: payload?.title ?? null,
+                stack: payload?.stack ?? [],
+                result: payload?.result ?? null,
+                created_at: row.created_at,
+                similarity: row.similarity,
+                composite_score: row.composite_score,
+                pull_count: Number(row.pull_count || 0),
+                agent: {
+                  name: row.agent_name,
+                },
+              };
+            }),
+            query,
+            scoring: SCORING_META,
+            ...(isAuthenticated(authInfo) ? authedMeta() : gatedMeta()),
+          };
 
+          void logMcpRequest('/mcp/search_solutions', logParams, authInfo, 200, false);
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({ results, query, count: results.length }, null, 2),
+              text: JSON.stringify(response, null, 2),
             }],
           };
         } catch {
+          void logMcpRequest('/mcp/search_solutions', logParams, authInfo, 500, false);
           return { content: [{ type: 'text' as const, text: 'Search failed. Please try again.' }], isError: true };
         }
       }
     );
 
-    // -----------------------------------------
-    // Tool: get_solution
-    // -----------------------------------------
     server.registerTool(
       'get_solution',
       {
@@ -159,8 +215,9 @@ const handler = createMcpHandler(
         },
       },
       async ({ id }, { authInfo }) => {
-        const rlError = await checkRateLimit(authInfo);
+        const rlError = await checkContentRateLimit(authInfo);
         if (rlError) {
+          void logMcpRequest('/mcp/get_solution', { id }, authInfo, 429, true);
           return { content: [{ type: 'text' as const, text: rlError }], isError: true };
         }
 
@@ -171,25 +228,20 @@ const handler = createMcpHandler(
             .select('id, agent_id, type, payload, pull_count, created_at, agent:agent_entities!inner(id, name, display_name, bio)')
             .eq('id', id)
             .is('deleted_at', null)
+            .eq('status', 'approved')
             .single();
 
           if (error || !construct) {
+            void logMcpRequest('/mcp/get_solution', { id }, authInfo, 404, false);
             return { content: [{ type: 'text' as const, text: 'Build log not found.' }], isError: true };
           }
 
-          const payload = construct.payload as Record<string, unknown>;
-          const ip = getIp(authInfo);
-          const authed = isAuthenticated(authInfo);
+          const storedPayload = sanitizeStoredConstructPayload(construct.payload);
           const agentId = getAgentId(authInfo);
-
-          // Determine if caller gets full content
-          let showFull = false;
+          let payload = storedPayload;
           let freePullsRemaining: number | null = null;
 
-          if (authed) {
-            showFull = true;
-
-            // Track pull (Redis dedup: same agent + same construct within 1hr = 1 pull)
+          if (isAuthenticated(authInfo)) {
             if (agentId) {
               try {
                 const dedupeKey = `pull:${agentId}:${id}`;
@@ -203,64 +255,45 @@ const handler = createMcpHandler(
               }
             }
           } else {
-            // Unauthenticated: check free pull budget (5 per IP per 24h)
-            const budget = await checkFreePullBudget(ip);
+            const budget = await checkFreePullBudget(getIp(authInfo));
             freePullsRemaining = budget.remaining;
-            showFull = budget.allowed;
+            if (!budget.allowed) {
+              payload = {
+                title: storedPayload.title,
+                problem: storedPayload.problem,
+                result: storedPayload.result,
+                stack: storedPayload.stack,
+                human_steering: storedPayload.human_steering,
+              };
+            }
           }
 
-          if (!showFull) {
-            return {
-              content: [{
-                type: 'text' as const,
-                text: JSON.stringify({
-                  id: construct.id,
-                  title: payload.title,
-                  problem: payload.problem,
-                  stack: payload.stack,
-                  result: payload.result,
-                  pull_count: construct.pull_count,
-                  created_at: construct.created_at,
-                  agent: construct.agent,
-                  _gated: true,
-                  _gated_fields: ['solution', 'code_snippet'],
-                  _message: 'Free pull budget exhausted. Authenticate with a Civis API key for unlimited full content. Get one at https://app.civis.run/agents',
-                  ...(freePullsRemaining !== null && { free_pulls_remaining: freePullsRemaining }),
-                }, null, 2),
-              }],
-            };
-          }
+          const response = {
+            id: construct.id,
+            agent_id: construct.agent_id,
+            type: construct.type,
+            payload,
+            pull_count: construct.pull_count,
+            created_at: construct.created_at,
+            agent: construct.agent,
+            ...(isAuthenticated(authInfo) ? authedMeta() : gatedMeta()),
+            ...(freePullsRemaining !== null && { free_pulls_remaining: freePullsRemaining }),
+          };
 
+          void logMcpRequest('/mcp/get_solution', { id }, authInfo, 200, false);
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({
-                id: construct.id,
-                title: payload.title,
-                problem: payload.problem,
-                solution: payload.solution,
-                stack: payload.stack,
-                result: payload.result,
-                code_snippet: payload.code_snippet ?? null,
-                environment: payload.environment ?? null,
-                human_steering: payload.human_steering,
-                pull_count: construct.pull_count,
-                created_at: construct.created_at,
-                agent: construct.agent,
-                url: `https://app.civis.run/${construct.id}`,
-                ...(freePullsRemaining !== null && { free_pulls_remaining: freePullsRemaining }),
-              }, null, 2),
+              text: JSON.stringify(response, null, 2),
             }],
           };
         } catch {
+          void logMcpRequest('/mcp/get_solution', { id }, authInfo, 500, false);
           return { content: [{ type: 'text' as const, text: 'Failed to retrieve build log.' }], isError: true };
         }
       }
     );
 
-    // -----------------------------------------
-    // Tool: explore
-    // -----------------------------------------
     server.registerTool(
       'explore',
       {
@@ -293,15 +326,20 @@ const handler = createMcpHandler(
         },
       },
       async ({ stack, focus, limit, exclude }, { authInfo }) => {
-        const rlError = await checkRateLimit(authInfo);
+        const rlError = await checkContentRateLimit(authInfo);
+        const logParams: Record<string, unknown> = { stack, limit };
+        if (focus) logParams.focus = focus;
+        if (exclude && exclude.length > 0) logParams.exclude = exclude;
+
         if (rlError) {
+          void logMcpRequest('/mcp/explore', logParams, authInfo, 429, true);
           return { content: [{ type: 'text' as const, text: rlError }], isError: true };
         }
 
-        // Additional explore-specific rate limit for authenticated users
         if (isAuthenticated(authInfo)) {
           const exploreRl = await checkExploreRateLimit(getIp(authInfo));
           if (!exploreRl.success) {
+            void logMcpRequest('/mcp/explore', logParams, authInfo, 429, true);
             return { content: [{ type: 'text' as const, text: 'Explore rate limit exceeded (10/hr). Try again later.' }], isError: true };
           }
         }
@@ -316,38 +354,46 @@ const handler = createMcpHandler(
           });
 
           if (error) {
+            void logMcpRequest('/mcp/explore', logParams, authInfo, 500, false);
             return { content: [{ type: 'text' as const, text: 'Explore failed. Please try again.' }], isError: true };
           }
 
-          const results = (data || []).map((d: Record<string, unknown>) => {
-            const payload = d.payload as Record<string, unknown> | null;
-            return {
-              id: d.id,
-              title: payload?.title ?? null,
-              stack: payload?.stack ?? [],
-              result: payload?.result ?? null,
-              category: d.category ?? null,
-              pull_count: d.pull_count,
-              stack_overlap: Number(d.stack_overlap),
-              url: `https://app.civis.run/${d.id}`,
-            };
-          });
+          const response = {
+            data: (data || []).map((row: Record<string, unknown>) => {
+              const payload = row.payload as Record<string, unknown> | null;
+              return {
+                id: row.id,
+                agent_id: row.agent_id,
+                title: payload?.title ?? null,
+                stack: payload?.stack ?? [],
+                result: payload?.result ?? null,
+                pull_count: row.pull_count,
+                category: row.category ?? null,
+                created_at: row.created_at,
+                stack_overlap: Number(row.stack_overlap),
+                agent: {
+                  name: row.agent_name,
+                  display_name: row.agent_display_name,
+                },
+              };
+            }),
+            ...(isAuthenticated(authInfo) ? authedMeta() : gatedMeta()),
+          };
 
+          void logMcpRequest('/mcp/explore', logParams, authInfo, 200, false);
           return {
             content: [{
               type: 'text' as const,
-              text: JSON.stringify({ results, count: results.length }, null, 2),
+              text: JSON.stringify(response, null, 2),
             }],
           };
         } catch {
+          void logMcpRequest('/mcp/explore', logParams, authInfo, 500, false);
           return { content: [{ type: 'text' as const, text: 'Explore failed. Please try again.' }], isError: true };
         }
       }
     );
 
-    // -----------------------------------------
-    // Tool: list_stack_tags
-    // -----------------------------------------
     server.registerTool(
       'list_stack_tags',
       {
@@ -370,14 +416,15 @@ const handler = createMcpHandler(
         },
       },
       async ({ category }, { authInfo }) => {
-        const rlError = await checkRateLimit(authInfo);
+        const rlError = await checkMetadataRateLimit(authInfo);
         if (rlError) {
+          void logMcpRequest('/mcp/list_stack_tags', category ? { category } : {}, authInfo, 429, true);
           return { content: [{ type: 'text' as const, text: rlError }], isError: true };
         }
 
         let entries = STACK_TAXONOMY;
         if (category) {
-          entries = entries.filter(e => e.category === category);
+          entries = entries.filter((entry) => entry.category === category);
           if (entries.length === 0) {
             return {
               content: [{
@@ -389,26 +436,31 @@ const handler = createMcpHandler(
           }
         }
 
-        const data = entries.map(e => ({
-          name: e.name,
-          category: e.category,
-          aliases: e.aliases,
-        }));
+        const response = {
+          count: entries.length,
+          categories: Object.values(CATEGORY_DISPLAY).map((entry) => entry.label),
+          data: entries.map((entry) => ({
+            name: entry.name,
+            category: entry.category,
+            aliases: entry.aliases,
+          })),
+        };
 
+        void logMcpRequest('/mcp/list_stack_tags', category ? { category } : {}, authInfo, 200, false);
         return {
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({
-              count: data.length,
-              categories: VALID_CATEGORIES,
-              tags: data,
-            }, null, 2),
+            text: JSON.stringify(response, null, 2),
           }],
         };
       }
     );
   },
   {
+    serverInfo: {
+      name: 'civis',
+      version: '1.0.0',
+    },
     capabilities: {
       tools: {},
     },
@@ -424,7 +476,7 @@ const handler = createMcpHandler(
       'Use list_stack_tags to find valid canonical technology names for filtering. ' +
       'Results are ranked by semantic similarity and pull count (usage-based reputation). ' +
       'Authenticate with a Civis API key (Bearer token) for full solution content and higher rate limits. ' +
-      'Get an API key at https://app.civis.run/agents',
+      'Get an API key at https://app.civis.run/login',
   },
   {
     basePath: '/api/mcp',
@@ -432,40 +484,43 @@ const handler = createMcpHandler(
   }
 );
 
-// Auth verification: always returns AuthInfo so tools can access IP.
-// Unauthenticated requests get a sentinel AuthInfo with authenticated=false in extra.
 async function verifyToken(
   req: Request,
   bearerToken?: string
 ): Promise<AuthInfo | undefined> {
   const ip = req.headers.get('x-real-ip') || 'unknown';
+  const userAgent = req.headers.get('user-agent') || null;
+  const precheckedStatus = req.headers.get('x-civis-auth-status');
+  const precheckedAgentId = req.headers.get('x-civis-agent-id');
+
+  if (precheckedStatus === 'authenticated' && precheckedAgentId) {
+    return {
+      token: bearerToken || '_verified',
+      clientId: precheckedAgentId,
+      scopes: ['read:solutions'],
+      extra: { ip, userAgent, authenticated: true, agentId: precheckedAgentId },
+    };
+  }
 
   if (!bearerToken) {
-    // Return AuthInfo with IP but mark as unauthenticated.
-    // withMcpAuth (required: false) calls verifyToken even with no bearer token,
-    // so we use this to pass the IP into tool handlers via authInfo.extra.
     return {
       token: '_anonymous',
       clientId: '_anonymous',
       scopes: [],
-      extra: { ip, authenticated: false, agentId: null },
+      extra: { ip, userAgent, authenticated: false, agentId: null },
     };
   }
 
-  // Verify Civis API key
-  const fakeReq = new Request('https://civis.run', {
-    headers: { authorization: `Bearer ${bearerToken}` },
-  });
-  const agent = await authenticateAgent(fakeReq);
-  // Throw so withMcpAuth returns 401. Returning undefined with required:false
-  // would silently downgrade a bad key to anonymous access.
-  if (!agent) throw new Error('Invalid or revoked API key');
+  const auth = await verifyAgentAuth(req);
+  if (auth.status !== 'authenticated') {
+    throw new Error('Invalid or revoked API key');
+  }
 
   return {
     token: bearerToken,
-    clientId: agent.agentId,
+    clientId: auth.agentId,
     scopes: ['read:solutions'],
-    extra: { ip, authenticated: true, agentId: agent.agentId },
+    extra: { ip, userAgent, authenticated: true, agentId: auth.agentId },
   };
 }
 
@@ -482,7 +537,6 @@ function fixRewrittenUrl(req: Request): Request {
   const matchedPath = req.headers.get('x-matched-path');
   if (matchedPath) {
     const url = new URL(req.url);
-    // x-matched-path is e.g. "/api/mcp/[transport]" — resolve the actual segment
     const transportSegment = url.pathname.split('/').pop() || 'mcp';
     const internalPath = `/api/mcp/${transportSegment}`;
     if (url.pathname !== internalPath) {
@@ -499,8 +553,45 @@ function fixRewrittenUrl(req: Request): Request {
   return req;
 }
 
-function routeHandler(req: Request) {
-  return authedHandler(fixRewrittenUrl(req));
+async function prepareMcpRequest(req: Request): Promise<Request | Response> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) {
+    return req;
+  }
+
+  const auth = await verifyAgentAuth(req);
+  if (auth.status === 'error') {
+    void logApiRequest('/mcp/auth', {}, req.headers.get('x-real-ip') || 'unknown', req.headers.get('user-agent'), 500, false, false);
+    return new Response(JSON.stringify({ error: 'Authentication check failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (auth.status !== 'authenticated') {
+    return req;
+  }
+
+  const headers = new Headers(req.headers);
+  headers.set('x-civis-auth-status', 'authenticated');
+  headers.set('x-civis-agent-id', auth.agentId);
+
+  return new Request(req.url, {
+    method: req.method,
+    headers,
+    body: req.body,
+    // @ts-expect-error duplex is needed for streaming body but not in all TS types
+    duplex: 'half',
+  });
+}
+
+async function routeHandler(req: Request) {
+  const fixedReq = fixRewrittenUrl(req);
+  const preparedReq = await prepareMcpRequest(fixedReq);
+  if (preparedReq instanceof Response) {
+    return preparedReq;
+  }
+  return authedHandler(preparedReq);
 }
 
 export { routeHandler as GET, routeHandler as POST, routeHandler as DELETE };

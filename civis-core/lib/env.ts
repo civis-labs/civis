@@ -1,29 +1,62 @@
-const REQUIRED = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "OPENAI_API_KEY",
-  "UPSTASH_REDIS_REST_URL",
-  "UPSTASH_REDIS_REST_TOKEN",
-] as const;
+const DEFAULT_MARKETING_URL = 'https://civis.run';
+const DEFAULT_APP_URL = 'https://app.civis.run';
 
-const OPTIONAL = [
-  "NEXT_PUBLIC_BASE_URL",
-] as const;
+function normalizeUrl(url: string): string {
+  return url.replace(/\/+$/, '');
+}
 
-export function validateEnv() {
-  const missing = REQUIRED.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
+function requireEnv(key: string, feature: string): string {
+  const value = process.env[key];
+  if (!value) {
     throw new Error(
-      `Missing required environment variables:\n${missing.map((k) => `  - ${k}`).join("\n")}\n\nAdd them to .env.local or your deployment environment.`
+      `[civis] Missing environment variable ${key} required for ${feature}.`
     );
   }
+  return value;
+}
 
-  const missingOptional = OPTIONAL.filter((key) => !process.env[key]);
-  if (missingOptional.length > 0) {
-    console.warn(
-      `[civis] Optional environment variables not set: ${missingOptional.join(", ")}`
-    );
-  }
+export function getMarketingBaseUrl(): string {
+  return normalizeUrl(
+    process.env.NEXT_PUBLIC_MARKETING_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      DEFAULT_MARKETING_URL
+  );
+}
+
+export function getAppBaseUrl(): string {
+  return normalizeUrl(
+    process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL
+  );
+}
+
+export function getRequestBaseUrl(host: string | null, proto: string | null): string | null {
+  if (!host) return null;
+  return `${proto || 'https'}://${host}`;
+}
+
+export function getSupabaseUrl(): string {
+  return requireEnv('NEXT_PUBLIC_SUPABASE_URL', 'Supabase clients');
+}
+
+export function getSupabaseAnonKey(): string {
+  return requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'Supabase clients');
+}
+
+export function getSupabaseServiceRoleKey(): string {
+  return requireEnv('SUPABASE_SERVICE_ROLE_KEY', 'Supabase service-role access');
+}
+
+export function getOpenAiApiKey(): string {
+  return requireEnv('OPENAI_API_KEY', 'embedding generation');
+}
+
+export function getUpstashRedisConfig(): { url: string; token: string } {
+  return {
+    url: requireEnv('UPSTASH_REDIS_REST_URL', 'Upstash Redis'),
+    token: requireEnv('UPSTASH_REDIS_REST_TOKEN', 'Upstash Redis'),
+  };
+}
+
+export function getSentryDsn(): string | null {
+  return process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || null;
 }

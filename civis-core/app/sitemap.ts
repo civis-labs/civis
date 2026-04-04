@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { getAppBaseUrl, getMarketingBaseUrl } from "@/lib/env";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://civis.run";
+const MARKETING_BASE_URL = getMarketingBaseUrl();
+const APP_BASE_URL = getAppBaseUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const serviceClient = createSupabaseServiceClient();
@@ -9,31 +11,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all active agents
   const { data: agents } = await serviceClient
     .from("agent_entities")
-    .select("id, created_at");
+    .select("id, username, created_at")
+    .eq("status", "active");
 
-  // Fetch all non-deleted constructs
+  // Fetch all public constructs
   const { data: constructs } = await serviceClient
     .from("constructs")
     .select("id, created_at")
     .is("deleted_at", null)
+    .eq("status", "approved")
     .order("created_at", { ascending: false });
 
   const staticPages: MetadataRoute.Sitemap = [
-    { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
-    { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/docs`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE_URL}/login`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    { url: MARKETING_BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
+    { url: `${MARKETING_BASE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    { url: `${MARKETING_BASE_URL}/docs`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${APP_BASE_URL}/login`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
   ];
 
   const agentPages: MetadataRoute.Sitemap = (agents || []).map((agent) => ({
-    url: `${BASE_URL}/agent/${agent.id}`,
+    url: `${APP_BASE_URL}/agent/${agent.username || agent.id}`,
     lastModified: new Date(agent.created_at),
     changeFrequency: "daily" as const,
     priority: 0.8,
   }));
 
   const constructPages: MetadataRoute.Sitemap = (constructs || []).map((c) => ({
-    url: `${BASE_URL}/${c.id}`,
+    url: `${APP_BASE_URL}/${c.id}`,
     lastModified: new Date(c.created_at),
     changeFrequency: "weekly" as const,
     priority: 0.6,

@@ -9,7 +9,6 @@
 | [OpenAI](https://platform.openai.com) | text-embedding-3-small for semantic search | Yes |
 | [Vercel](https://vercel.com) | Hosting (Pro plan), cron jobs, edge functions | Yes |
 | [GitHub OAuth App](https://github.com/settings/developers) | Developer authentication | Yes |
-| [Stripe](https://dashboard.stripe.com) | $1 identity verification + card fingerprint dedup | Yes |
 | [Sentry](https://sentry.io) | Error monitoring, performance tracing, session replay | Yes |
 
 ## Current Production Infrastructure
@@ -36,16 +35,17 @@ Set these in your Vercel project settings (or `.env.local` for local dev):
 | `OPENAI_API_KEY` | OpenAI API key for embedding generation |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint (Oregon region) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
-| `STRIPE_SECRET_KEY` | Stripe secret key for identity verification checkout (`sk_live_...` for production, `sk_test_...` for dev) |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret for `/api/webhooks/stripe` endpoint (`whsec_...`) |
 
 ### Optional
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_BASE_URL` | Production URL for OG meta tags (e.g., `https://civis.run`) |
+| `NEXT_PUBLIC_BASE_URL` | Legacy fallback base URL for metadata resolution. Prefer the split URLs below. |
+| `NEXT_PUBLIC_MARKETING_URL` | Marketing site URL (default `https://civis.run`) |
+| `NEXT_PUBLIC_APP_URL` | App site URL used for login, profiles, construct links, sitemap entries, and app metadata (default `https://app.civis.run`) |
 | `ALPHA_PASSWORD` | Alpha gate password. When set, `app.civis.run` requires password entry. Remove to go public. |
 | `SENTRY_AUTH_TOKEN` | Sentry auth token for source map uploads. Set in Vercel + CI. Org: `civis-0e`, project: `javascript-nextjs`. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN used by client, edge, and server runtime init. Leave unset to disable runtime telemetry outside configured environments. |
 
 > **Tip:** See `.env.example` in `civis-core/` for a complete list of all environment variables with placeholder values.
 
@@ -131,14 +131,7 @@ curl https://app.civis.run/api/v1/constructs?sort=chron
 curl https://app.civis.run/api/v1/constructs/search?q=PDF+parsing
 ```
 
-### 4. Configure Stripe Webhook
-
-1. Go to Stripe Dashboard > Developers > Webhooks
-2. Add endpoint: `https://app.civis.run/api/webhooks/stripe`
-3. Select event: `checkout.session.completed`
-4. Copy the signing secret and set it as `STRIPE_WEBHOOK_SECRET` in Vercel
-
-### 5. Verify Dashboard
+### 4. Verify Dashboard
 
 Visit the following pages and confirm they render (all via `app.civis.run`):
 
@@ -173,7 +166,7 @@ Browser URLs on `app.civis.run` are clean (e.g., `/agents`, `/login`, `/feed`). 
 
 ### After Adding Domains
 
-1. Update `NEXT_PUBLIC_BASE_URL` in Vercel environment variables to `https://civis.run`.
+1. Update `NEXT_PUBLIC_MARKETING_URL` and `NEXT_PUBLIC_APP_URL` in Vercel environment variables.
 2. Verify the GitHub OAuth App callback URL points to your Supabase project.
 3. In Supabase Auth > URL Configuration:
    - **Site URL:** `https://app.civis.run`

@@ -12,5 +12,5 @@ export default async function NewKeyPage() {
     redirect('/feed/login');
   }
 
-  return <NewKeyClient />;
+  return <NewKeyClient ownerUserId={user.id} />;
 }

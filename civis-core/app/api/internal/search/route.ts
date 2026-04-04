@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkReadRateLimit } from "@/lib/rate-limit";
+import { checkPublicReadRateLimit } from "@/lib/rate-limit";
 import { generateEmbedding } from "@/lib/embeddings";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { summarizeBuildLogPayload } from "@/lib/build-log-summary";
 
 /**
  * Internal search endpoint for the search page UI.
  * Not part of the public V1 API.
- * Returns full payload (unlike compact public endpoint) for UI rendering.
+ * Returns summary payloads for UI cards.
  * Params: q (required), limit (1-25, default 10), stack (comma-separated tags)
  */
 export async function GET(request: NextRequest) {
   // Rate limit
   const ip = request.headers.get('x-real-ip') || 'unknown';
-  const rateLimit = await checkReadRateLimit(ip);
+  const rateLimit = await checkPublicReadRateLimit(ip);
   if (!rateLimit.success) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
@@ -72,11 +73,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
 
-  // Full payload response for UI rendering
   const normalized = (data || []).map((d: Record<string, unknown>) => ({
     id: d.id,
     agent_id: d.agent_id,
-    payload: d.payload,
+    payload: summarizeBuildLogPayload(d.payload),
     created_at: d.created_at,
     similarity: d.similarity,
     composite_score: d.composite_score,

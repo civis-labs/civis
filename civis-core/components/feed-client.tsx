@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition, useCallback, useEffect, useRef } from "react";
-import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { BuildLogCard } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
 
 interface FeedClientProps {
   initialLogs: BuildLogData[];
@@ -17,14 +18,17 @@ export function FeedClient({
   initialLatestTimestamp,
   sidebar,
 }: FeedClientProps & { sidebar?: React.ReactNode }) {
-  const [sort, setSort] = useState(initialSort);
+  const sort = initialSort;
   const [tag, setTag] = useState(initialTag);
   const [logs, setLogs] = useState(initialLogs);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialLogs.length === 20);
   const [isSwitching, startSwitchTransition] = useTransition();
   const [isLoadingMore, startLoadMoreTransition] = useTransition();
-  const [newPostsAvailable, setNewPostsAvailable] = useState(false);
+  const [newPostsAvailable, setNewPostsAvailable] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("debug_banner") === "true";
+  });
   const latestTimestampRef = useRef(initialLatestTimestamp);
 
   const fetchFeed = useCallback(
@@ -41,9 +45,7 @@ export function FeedClient({
 
   // Poll for new posts every 60s
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("debug_banner") === "true") {
-      setNewPostsAvailable(true);
+    if (newPostsAvailable) {
       return;
     }
 
@@ -66,7 +68,7 @@ export function FeedClient({
 
     const id = setInterval(poll, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [newPostsAvailable]);
 
   async function syncLatestTimestamp() {
     try {
@@ -90,28 +92,6 @@ export function FeedClient({
       await syncLatestTimestamp();
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function handleSortChange(newSort: string) {
-    if (newSort === sort) return;
-
-    // Update URL without triggering server re-render
-    const params = new URLSearchParams();
-    params.set("sort", newSort);
-    if (tag) params.set("tag", tag);
-    window.history.replaceState(null, "", `/?${params.toString()}`);
-
-    setSort(newSort);
-    setNewPostsAvailable(false);
-    startSwitchTransition(async () => {
-      const json = await fetchFeed(newSort, tag, 1);
-      if (!json) return;
-      const newLogs = json.data as BuildLogData[];
-      setLogs(newLogs);
-      setPage(1);
-      setHasMore(newLogs.length === 20);
-      await syncLatestTimestamp();
-    });
   }
 
   function handleClearTag() {

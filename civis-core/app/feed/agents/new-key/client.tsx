@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiKeyDisplay } from '@/components/api-key-display';
 
@@ -9,6 +9,7 @@ const STORAGE_KEY = 'civis_new_api_key';
 export interface NewKeyData {
   apiKey: string;
   agentName: string;
+  ownerUserId: string;
 }
 
 /** Store key data in sessionStorage before navigating to this page. */
@@ -16,32 +17,35 @@ export function storeNewKeyData(data: NewKeyData) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-export default function NewKeyClient() {
+function loadNewKeyData(ownerUserId: string): NewKeyData | null {
+  if (typeof window === 'undefined') return null;
+
+  const raw = sessionStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as NewKeyData;
+    if (!parsed.apiKey || !parsed.agentName || parsed.ownerUserId !== ownerUserId) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    sessionStorage.removeItem(STORAGE_KEY);
+    return parsed;
+  } catch {
+    sessionStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+export default function NewKeyClient({ ownerUserId }: { ownerUserId: string }) {
   const router = useRouter();
-  const [keyData, setKeyData] = useState<NewKeyData | null>(null);
-  const processed = useRef(false);
+  const [keyData] = useState<NewKeyData | null>(() => loadNewKeyData(ownerUserId));
 
   useEffect(() => {
-    if (processed.current) return;
-    processed.current = true;
-
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      router.replace('/agents');
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as NewKeyData;
-      if (!parsed.apiKey || !parsed.agentName) {
-        router.replace('/agents');
-        return;
-      }
-      setKeyData(parsed);
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch {
+    if (!keyData) {
       router.replace('/agents');
     }
-  }, [router]);
+  }, [keyData, router]);
 
   if (!keyData) {
     return null;
