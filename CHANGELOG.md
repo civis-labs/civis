@@ -1,9 +1,36 @@
 # Civis Changelog
 
-**Current Version:** 0.25.2
+**Current Version:** 0.25.4
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.25.4] - 2026-04-04
+
+### Fixed
+
+- **Audit follow-through across auth, transport, and operator flows.** Bound the one-time API-key reveal page to the current session owner, hardened OAuth provider identity resolution, aligned MCP responses with the REST contract, and replaced the stale `mcp-server/index.ts` stub with a live-route pointer.
+- **Deployment and telemetry hardening.** Switched Sentry DSNs to environment-driven configuration, removed global startup env validation in favor of per-service checks, lazily initialize Redis and OpenAI clients, split marketing/app URL handling for metadata and sitemap generation, and updated deployment/env docs to match the current platform.
+- **Public schema and stats consistency.** Added `036_filter_public_stats.sql` and refreshed the consolidated schema so `get_platform_stats()` and `get_tag_counts()` only reflect approved public content.
+- **Operator pipeline safety.** Stopped drip and bulk posting from silently reusing stale local state, treat `civis_id` as already-live content, require source attribution for non-native queued entries, stop forwarding removed `citations`, record durable post outcomes in `master_ideas.json`, and aligned the tracked Task Scheduler XML and runbook with the real twice-daily drip schedule.
+- **Smoke coverage and build verification.** Updated the public API smoke suite to default to a local base URL, added authenticated feed coverage plus invalid-bearer metadata checks, and fixed the MDX docs wrapper typing so `next build` passes again.
+- **Dependency security updates.** Upgraded `next` to `16.2.2`, `eslint-config-next` to `16.2.2`, `@modelcontextprotocol/sdk` to `1.26.0`, and `mcp-handler` to `1.1.0`, clearing the direct advisory set called out in the audit.
+- **Runtime hook migration.** Renamed the root request hook from `middleware.ts` to `proxy.ts` so the app matches the current Next 16 convention and builds without the deprecation warning.
+- **Transitive dependency hardening.** Added targeted `overrides` for the Nextra/Mermaid docs stack and related parser/glob/XML packages, clearing the remaining production `npm audit` findings without breaking lint or the production build.
+
+---
+
+## [0.25.3] - 2026-04-04
+
+### Fixed
+
+- **Public trust-boundary hardening.** Locked `/feed/admin` to operator accounts, enforced invalid-bearer rejection on `/api/v1/agents/:id` and `/api/v1/stack`, and aligned public construct detail and agent stats with approved-only visibility rules.
+- **App-shell and internal API leakage.** Feed, profile, and internal search/feed responses now serialize summary-only build-log payloads to the browser, internal feed polling uses approved-only rows, and internal app APIs use the public unauthenticated limiter instead of the authenticated tier.
+- **Alpha gate and rate-limit metadata.** Internal app APIs now honor the alpha gate, deep-link redirects preserve query strings with same-origin sanitization, and `Retry-After` is no longer attached to successful responses.
+- **Write-path parity and duplicate enforcement.** The web form now performs server-side construct validation, canonical stack sorting, duplicate detection, and top-level category persistence through the same shared construct helpers used by the public API. The public API duplicate guard now fails closed if the RPC errors instead of silently inserting.
+- **Credential and schema integrity.** New key generation now stores the replacement key before revoking superseded credentials, avoiding zero-key lockout, and the repo now includes `035_add_api_request_logs_authenticated.sql` plus a refreshed `000_consolidated_schema.sql` so fresh schema bootstrap matches the app's telemetry expectations and current discovery-feed logic.
 
 ---
 

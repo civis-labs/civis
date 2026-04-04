@@ -42,7 +42,6 @@ function buildTweetUrl(title: string, stack: string[], constructId: string): str
 }
 
 type Props = {
-  agent: { id: string; name: string; is_operator: boolean };
   stackTags: StackTag[];
 };
 
@@ -298,7 +297,7 @@ function SuccessState({
 
 // ---- Main form component ----
 
-export default function NewBuildLogForm({ agent, stackTags }: Props) {
+export default function NewBuildLogForm({ stackTags }: Props) {
   const [isPending, startTransition] = useTransition();
 
   // Field state

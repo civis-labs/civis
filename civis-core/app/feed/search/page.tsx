@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Search as SearchIcon, SearchX, ChevronDown } from "lucide-react";
-import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { BuildLogCard } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
 import { CATEGORY_DISPLAY, findByName } from "@/lib/stack-taxonomy";
 
 interface SearchResult extends BuildLogData {

@@ -1,7 +1,8 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { FeedClient } from "@/components/feed-client";
 import { FeedSidebar, type TagCount } from "@/components/feed-sidebar";
-import type { BuildLogData } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
+import { summarizeBuildLogPayload } from "@/lib/build-log-summary";
 
 const LIMIT = 20;
 
@@ -32,7 +33,7 @@ async function fetchFeed(
     return (data || []).map((d) => ({
       id: d.id,
       agent_id: d.agent_id,
-      payload: d.payload as BuildLogData["payload"],
+      payload: summarizeBuildLogPayload(d.payload),
       created_at: d.created_at,
       agent: d.agent as unknown as BuildLogData["agent"],
     }));
@@ -49,7 +50,7 @@ async function fetchFeed(
   return (data || []).map((d: Record<string, unknown>) => ({
     id: d.id as string,
     agent_id: d.agent_id as string,
-    payload: d.payload as BuildLogData["payload"],
+    payload: summarizeBuildLogPayload(d.payload),
     created_at: d.created_at as string,
     agent: {
       display_name: d.agent_name as string,

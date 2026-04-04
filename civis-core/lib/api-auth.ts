@@ -1,5 +1,9 @@
-import { authenticateAgent } from '@/lib/auth';
-import { checkReadRateLimit, checkPublicReadRateLimit } from '@/lib/rate-limit';
+import { verifyAgentAuth } from '@/lib/auth';
+import {
+  checkMetadataReadRateLimit,
+  checkPublicReadRateLimit,
+  checkReadRateLimit,
+} from '@/lib/rate-limit';
 import type { RateLimitResult } from '@/lib/rate-limit';
 
 export interface RateLimitInfo {
@@ -12,7 +16,15 @@ export type ReadAuthResult =
   | { status: 'authenticated'; agentId: string; rateLimit: RateLimitInfo }
   | { status: 'unauthenticated'; rateLimit: RateLimitInfo }
   | { status: 'rate_limited'; rateLimit: RateLimitInfo }
-  | { status: 'invalid_key' };
+  | { status: 'invalid_key' }
+  | { status: 'internal_error' };
+
+export type MetadataAuthResult =
+  | { status: 'authenticated'; rateLimit: RateLimitInfo }
+  | { status: 'unauthenticated'; rateLimit: RateLimitInfo }
+  | { status: 'rate_limited'; rateLimit: RateLimitInfo }
+  | { status: 'invalid_key' }
+  | { status: 'internal_error' };
 
 /**
  * Combined auth + rate limit check for read endpoints.
@@ -27,8 +39,11 @@ export async function authorizeRead(request: Request): Promise<ReadAuthResult> {
   const hasAuthHeader = !!request.headers.get('authorization');
 
   if (hasAuthHeader) {
-    const agent = await authenticateAgent(request);
-    if (!agent) {
+    const auth = await verifyAgentAuth(request);
+    if (auth.status === 'error') {
+      return { status: 'internal_error' };
+    }
+    if (auth.status !== 'authenticated') {
       return { status: 'invalid_key' };
     }
     const rl = await checkReadRateLimit(ip);
@@ -36,10 +51,40 @@ export async function authorizeRead(request: Request): Promise<ReadAuthResult> {
     if (!rl.success) {
       return { status: 'rate_limited', rateLimit: info };
     }
-    return { status: 'authenticated', agentId: agent.agentId, rateLimit: info };
+    return { status: 'authenticated', agentId: auth.agentId, rateLimit: info };
   }
 
   const rl = await checkPublicReadRateLimit(ip);
+  const info = toRateLimitInfo(rl);
+  if (!rl.success) {
+    return { status: 'rate_limited', rateLimit: info };
+  }
+  return { status: 'unauthenticated', rateLimit: info };
+}
+
+export async function authorizeMetadata(
+  request: Request
+): Promise<MetadataAuthResult> {
+  const ip = request.headers.get('x-real-ip') || 'unknown';
+  const hasAuthHeader = !!request.headers.get('authorization');
+
+  if (hasAuthHeader) {
+    const auth = await verifyAgentAuth(request);
+    if (auth.status === 'error') {
+      return { status: 'internal_error' };
+    }
+    if (auth.status !== 'authenticated') {
+      return { status: 'invalid_key' };
+    }
+    const rl = await checkMetadataReadRateLimit(ip);
+    const info = toRateLimitInfo(rl);
+    if (!rl.success) {
+      return { status: 'rate_limited', rateLimit: info };
+    }
+    return { status: 'authenticated', rateLimit: info };
+  }
+
+  const rl = await checkMetadataReadRateLimit(ip);
   const info = toRateLimitInfo(rl);
   if (!rl.success) {
     return { status: 'rate_limited', rateLimit: info };
@@ -54,14 +99,19 @@ function toRateLimitInfo(rl: RateLimitResult): RateLimitInfo {
 /**
  * Build standard X-RateLimit-* response headers from rate limit info.
  */
-export function rateLimitHeaders(info: RateLimitInfo): Record<string, string> {
+export function rateLimitHeaders(
+  info: RateLimitInfo,
+  options?: { includeRetryAfter?: boolean }
+): Record<string, string> {
   const headers: Record<string, string> = {
     'X-RateLimit-Limit': String(info.limit),
     'X-RateLimit-Remaining': String(info.remaining),
   };
   if (info.reset) {
     headers['X-RateLimit-Reset'] = String(Math.ceil(info.reset / 1000));
-    headers['Retry-After'] = String(Math.max(0, Math.ceil((info.reset - Date.now()) / 1000)));
+    if (options?.includeRetryAfter) {
+      headers['Retry-After'] = String(Math.max(0, Math.ceil((info.reset - Date.now()) / 1000)));
+    }
   }
   return headers;
 }

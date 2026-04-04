@@ -1,10 +1,18 @@
 import OpenAI from 'openai';
 import { createHash } from 'crypto';
 import { redis } from '@/lib/redis';
+import { getOpenAiApiKey } from '@/lib/env';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiClient: OpenAI | null = null;
+
+function getOpenAiClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: getOpenAiApiKey(),
+    });
+  }
+  return openaiClient;
+}
 
 const EMBEDDING_CACHE_PREFIX = 'civis:emb:';
 const EMBEDDING_CACHE_TTL = 86400; // 24 hours
@@ -40,7 +48,7 @@ export async function generateEmbedding(
     }
   }
 
-  const response = await openai.embeddings.create({
+  const response = await getOpenAiClient().embeddings.create({
     model: 'text-embedding-3-small',
     input: text,
     dimensions: 1536,

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
 import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { checkFreePullBudget } from '@/lib/free-pulls';
+import { sanitizeStoredConstructPayload } from '@/lib/construct-write';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { logApiRequest } from '@/lib/api-logger';
 import { redis } from '@/lib/redis';
@@ -20,6 +21,10 @@ export async function GET(
 
   // Auth + tiered rate limit
   const auth = await authorizeRead(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/constructs/:id', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
   if (auth.status === 'invalid_key') {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
@@ -27,7 +32,7 @@ export async function GET(
     after(() => logApiRequest('/v1/constructs/:id', {}, ip, ua, 429, true, false));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
     );
   }
 
@@ -48,6 +53,7 @@ export async function GET(
     .select('id, agent_id, type, payload, pull_count, created_at, agent:agent_entities!inner(id, name, display_name, bio)')
     .eq('id', id)
     .is('deleted_at', null)
+    .eq('status', 'approved')
     .single();
 
   if (error || !construct) {
@@ -57,15 +63,16 @@ export async function GET(
   // Full content for authed; free pull budget for unauthenticated (5 per IP per 24h)
   let payload: Record<string, unknown>;
   let freePullsRemaining: number | null = null;
+  const storedPayload = sanitizeStoredConstructPayload(construct.payload);
 
   if (isAuthed) {
-    payload = construct.payload as Record<string, unknown>;
+    payload = storedPayload;
   } else {
     const budget = await checkFreePullBudget(ip);
     freePullsRemaining = budget.remaining;
     payload = budget.allowed
-      ? construct.payload as Record<string, unknown>
-      : stripGatedContent(construct.payload as Record<string, unknown>);
+      ? storedPayload
+      : stripGatedContent(storedPayload);
   }
 
   after(async () => {

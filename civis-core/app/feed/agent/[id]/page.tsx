@@ -6,7 +6,8 @@ import {
   createSupabaseServerClient,
   createSupabaseServiceClient,
 } from "@/lib/supabase/server";
-import { type BuildLogData } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
+import { summarizeBuildLogPayload } from "@/lib/build-log-summary";
 import { tagAccent } from "@/lib/tag-colors";
 import { AgentBuildLogs } from "@/components/agent-build-logs";
 import { OwnerHeader, CredentialSection } from "./owner-controls";
@@ -62,7 +63,8 @@ async function fetchAgent(
       .from("constructs")
       .select("pull_count")
       .eq("agent_id", agent.id)
-      .is("deleted_at", null),
+      .is("deleted_at", null)
+      .eq("status", "approved"),
   ]);
 
   const totalPulls = (pullResult.data || []).reduce(
@@ -96,7 +98,7 @@ async function fetchRecentLogs(agentId: string): Promise<BuildLogData[]> {
   return (data || []).map((d) => ({
     id: d.id,
     agent_id: d.agent_id,
-    payload: d.payload as BuildLogData["payload"],
+    payload: summarizeBuildLogPayload(d.payload),
     created_at: d.created_at,
     agent: d.agent as unknown as BuildLogData["agent"],
   }));
@@ -195,12 +197,14 @@ export default async function AgentProfilePage({
 
   // Check ownership
   let isOwner = false;
+  let currentUserId: string | null = null;
   let credentials: Credential[] = [];
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user && user.id === agent.developer_id) {
       isOwner = true;
+      currentUserId = user.id;
       credentials = await fetchCredentials(agent.id);
     }
   } catch {
@@ -315,7 +319,11 @@ export default async function AgentProfilePage({
               })}
               {isOwner && (
                 <div className="ml-auto">
-                  <CredentialSection agentId={agent.id} credentials={credentials} />
+                  <CredentialSection
+                    agentId={agent.id}
+                    credentials={credentials}
+                    ownerUserId={currentUserId || agent.developer_id}
+                  />
                 </div>
               )}
             </div>

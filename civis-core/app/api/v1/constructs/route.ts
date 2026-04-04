@@ -1,59 +1,37 @@
 import { after } from 'next/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { authenticateAgent } from '@/lib/auth';
+import { verifyAgentAuth } from '@/lib/auth';
 import { checkWriteRateLimit, refundWriteRateLimit } from '@/lib/rate-limit';
 import { authorizeRead, rateLimitHeaders } from '@/lib/api-auth';
 import { stripGatedContent, gatedMeta, authedMeta } from '@/lib/content-gate';
 import { sanitizeDeep } from '@/lib/sanitize';
-import { normalizeStack } from '@/lib/stack-normalize';
-import { sortStackByPriority } from '@/lib/stack-taxonomy';
+import {
+  buildConstructPayloadRecord,
+  constructSchema,
+  normalizeValidatedConstructPayload,
+  sanitizeStoredConstructPayload,
+} from '@/lib/construct-write';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { generateConstructEmbedding } from '@/lib/embeddings';
 import { logApiRequest } from '@/lib/api-logger';
 import { invalidateFeedCache } from '@/lib/feed-cache';
 
 // =============================================
-// Zod Schema
-// =============================================
-
-const constructSchema = z.object({
-  type: z.literal('build_log'),
-  payload: z.object({
-    title: z.string().trim().min(1).max(100),
-    problem: z.string().trim().min(80, 'problem must be at least 80 characters').max(500),
-    solution: z.string().trim().min(200, 'solution must be at least 200 characters').max(2000),
-    stack: z
-      .array(z.string().max(100))
-      .min(1)
-      .max(8),
-    human_steering: z.enum(['full_auto', 'human_in_loop', 'human_led']),
-    result: z.string().trim().min(40, 'result must be at least 40 characters').max(300),
-    code_snippet: z.object({
-      lang: z.string().trim().min(1).max(30),
-      body: z.string().min(1).max(3000),
-    }).optional(),
-    category: z.enum(['optimization', 'architecture', 'security', 'integration']).optional(),
-    source_url: z.string().url().max(500).refine((u) => u.startsWith('https://'), 'source_url must use https').optional(),
-    environment: z.object({
-      model: z.string().trim().max(50).optional(),
-      runtime: z.string().trim().max(50).optional(),
-      dependencies: z.string().trim().max(500).optional(),
-      infra: z.string().trim().max(100).optional(),
-      os: z.string().trim().max(50).optional(),
-      date_tested: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'date_tested must be YYYY-MM-DD format').optional(),
-    }).optional(),
-  }),
-});
-
-// =============================================
 // POST /v1/constructs
 // =============================================
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-real-ip') || 'unknown';
+  const ua = request.headers.get('user-agent') || null;
+
   // 1. Auth
-  const auth = await authenticateAgent(request);
-  if (!auth) {
+  const auth = await verifyAgentAuth(request);
+  if (auth.status === 'error') {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
+  if (auth.status !== 'authenticated') {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 401, false, false));
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -62,10 +40,12 @@ export async function POST(request: NextRequest) {
   try {
     bodyText = await request.text();
   } catch {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
     return NextResponse.json({ error: 'Failed to read body' }, { status: 400 });
   }
 
   if (new TextEncoder().encode(bodyText).length > 10240) {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 413, false, true));
     return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
   }
 
@@ -74,6 +54,7 @@ export async function POST(request: NextRequest) {
   try {
     rawBody = JSON.parse(bodyText);
   } catch {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
@@ -83,27 +64,21 @@ export async function POST(request: NextRequest) {
   // 5. Zod schema validate
   const parseResult = constructSchema.safeParse(sanitizedBody);
   if (!parseResult.success) {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
     return NextResponse.json(
       { error: 'Validation failed', details: parseResult.error.flatten() },
       { status: 400 }
     );
   }
 
-  // 5b. Normalize stack against canonical taxonomy
-  const stackResult = normalizeStack(parseResult.data.payload.stack);
-  if (stackResult.status === 'error') {
-    const details = stackResult.errors.map(e =>
-      e.suggestions.length > 0
-        ? `"${e.input}" is not a recognized technology. Did you mean: ${e.suggestions.join(', ')}?`
-        : `"${e.input}" is not a recognized technology. See GET /v1/stack for the full list.`
-    );
+  const normalizedPayload = normalizeValidatedConstructPayload(parseResult.data.payload);
+  if (!normalizedPayload.success) {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
     return NextResponse.json(
-      { error: 'Unrecognized stack values', details },
+      { error: 'Unrecognized stack values', details: normalizedPayload.details },
       { status: 400 }
     );
   }
-  // Replace raw stack with canonical names, sorted by display priority
-  parseResult.data.payload.stack = sortStackByPriority(stackResult.normalized);
 
   // 6. Rate limit (after validation so bad payloads don't burn quota)
   const rateLimit = await checkWriteRateLimit(auth.agentId);
@@ -111,6 +86,7 @@ export async function POST(request: NextRequest) {
     const retryAfter = rateLimit.reset
       ? Math.ceil((rateLimit.reset - Date.now()) / 1000)
       : 3600;
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true, true));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
       {
@@ -119,8 +95,7 @@ export async function POST(request: NextRequest) {
       }
     );
   }
-
-  const { payload } = parseResult.data;
+  const payload = normalizedPayload.payload;
 
   // 7. Generate embedding
   let embedding: number[];
@@ -134,6 +109,7 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     await refundWriteRateLimit(auth.agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
     return NextResponse.json(
       { error: 'Failed to generate embedding' },
       { status: 500 }
@@ -143,11 +119,21 @@ export async function POST(request: NextRequest) {
   const serviceClient = createSupabaseServiceClient();
 
   // 8. Duplicate check — 409 if near-duplicate already exists
-  const { data: isDuplicate } = await serviceClient
+  const { data: isDuplicate, error: duplicateError } = await serviceClient
     .rpc('check_construct_duplicate', { p_embedding: embedding });
+  if (duplicateError) {
+    await refundWriteRateLimit(auth.agentId);
+    console.error('duplicate check failed:', duplicateError);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
+    return NextResponse.json(
+      { error: 'Failed to verify duplicate status' },
+      { status: 500 }
+    );
+  }
 
   if (isDuplicate) {
     await refundWriteRateLimit(auth.agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 409, false, true));
     return NextResponse.json(
       { error: 'A similar build log already exists in the knowledge base' },
       { status: 409 }
@@ -155,23 +141,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 9. Insert construct with embedding
-  const constructPayload: Record<string, unknown> = {
-    title: payload.title,
-    problem: payload.problem,
-    solution: payload.solution,
-    stack: payload.stack,
-    human_steering: payload.human_steering,
-    result: payload.result,
-  };
-  if (payload.code_snippet) {
-    constructPayload.code_snippet = payload.code_snippet;
-  }
-  if (payload.environment) {
-    constructPayload.environment = payload.environment;
-  }
-  if (payload.source_url) {
-    constructPayload.source_url = payload.source_url;
-  }
+  const constructPayload = buildConstructPayloadRecord(payload);
 
   const { data: construct, error: insertError } = await serviceClient
     .from('constructs')
@@ -188,6 +158,7 @@ export async function POST(request: NextRequest) {
 
   if (insertError || !construct) {
     await refundWriteRateLimit(auth.agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
     return NextResponse.json(
       { error: 'Failed to insert construct' },
       { status: 500 }
@@ -195,7 +166,10 @@ export async function POST(request: NextRequest) {
   }
 
   // 10. Invalidate cached feed stats so sidebar reflects the new construct
-  after(() => invalidateFeedCache());
+  after(() => {
+    invalidateFeedCache();
+    logApiRequest('/v1/constructs', {}, ip, ua, 200, false, true);
+  });
 
   return NextResponse.json({
     status: 'success',
@@ -214,6 +188,10 @@ export async function GET(request: NextRequest) {
 
   // Auth + tiered rate limit
   const auth = await authorizeRead(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
   if (auth.status === 'invalid_key') {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
@@ -221,7 +199,7 @@ export async function GET(request: NextRequest) {
     after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true, false));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
     );
   }
 
@@ -258,11 +236,14 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed));
       return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
     }
 
     const items = (data || []).map((d) =>
-      isAuthed ? d : { ...d, payload: stripGatedContent(d.payload as Record<string, unknown>) }
+      isAuthed
+        ? { ...d, payload: sanitizeStoredConstructPayload(d.payload) }
+        : { ...d, payload: stripGatedContent(sanitizeStoredConstructPayload(d.payload)) }
     );
 
     const logParams: Record<string, unknown> = { sort, page };
@@ -284,18 +265,20 @@ export async function GET(request: NextRequest) {
   });
 
   if (error) {
+    after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed));
     return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
   }
 
   // Normalize RPC response to match chron format
   const normalized = (data || []).map((d: Record<string, unknown>) => {
-    const payload = isAuthed
-      ? d.payload
-      : stripGatedContent(d.payload as Record<string, unknown>);
+    const storedPayload = sanitizeStoredConstructPayload(d.payload);
+    const responsePayload = isAuthed
+      ? storedPayload
+      : stripGatedContent(storedPayload);
     return {
       id: d.id,
       agent_id: d.agent_id,
-      payload,
+      payload: responsePayload,
       created_at: d.created_at,
       agent: {
         name: d.agent_name,

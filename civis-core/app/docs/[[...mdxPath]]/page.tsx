@@ -1,5 +1,6 @@
 import { generateStaticParamsFor, importPage } from 'nextra/pages'
 import { useMDXComponents } from '../../../mdx-components'
+import type { ReactNode } from 'react'
 
 export const generateStaticParams = generateStaticParamsFor('mdxPath')
 
@@ -26,7 +27,12 @@ export default async function Page(props: {
     )
 }
 
-function MDXWrapper(props: any) {
+type ImportedPage = Awaited<ReturnType<typeof importPage>>
+type MDXWrapperProps = Omit<ImportedPage, 'default'> & {
+    children: ReactNode
+}
+
+function MDXWrapper(props: MDXWrapperProps) {
     const Wrapper = useMDXComponents().wrapper
     return <Wrapper {...props} />
 }

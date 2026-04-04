@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FileText, ArrowRight } from "lucide-react";
-import { BuildLogCard, type BuildLogData } from "@/components/build-log-card";
+import { BuildLogCard } from "@/components/build-log-card";
+import type { BuildLogData } from "@/lib/build-log-summary";
 import { relativeTime } from "@/lib/time";
 import { tagAccent } from "@/lib/tag-colors";
 import { sortStackByPriority } from "@/lib/stack-taxonomy";

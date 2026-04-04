@@ -22,6 +22,10 @@ export async function GET(request: NextRequest) {
 
   // Auth + tiered rate limit (public: 30/hr, authed: 60/min)
   const auth = await authorizeRead(request);
+  if (auth.status === 'internal_error') {
+    after(() => logApiRequest('/v1/constructs/explore', {}, ip, ua, 500, false, false));
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
+  }
   if (auth.status === 'invalid_key') {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest) {
     after(() => logApiRequest('/v1/constructs/explore', {}, ip, ua, 429, true, false));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
-      { status: 429, headers: rateLimitHeaders(auth.rateLimit) }
+      { status: 429, headers: rateLimitHeaders(auth.rateLimit, { includeRetryAfter: true }) }
     );
   }
 
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
       after(() => logApiRequest('/v1/constructs/explore', {}, ip, ua, 429, true, true));
       return NextResponse.json(
         { error: 'Explore rate limit exceeded' },
-        { status: 429, headers: rateLimitHeaders(exploreRl) }
+        { status: 429, headers: rateLimitHeaders(exploreRl, { includeRetryAfter: true }) }
       );
     }
   }
@@ -140,6 +144,7 @@ export async function GET(request: NextRequest) {
           stack_overlap: Number(d.stack_overlap),
           agent: {
             name: d.agent_name,
+            display_name: d.agent_display_name,
           },
         };
       }),

@@ -22,6 +22,14 @@ export default async function AdminPage() {
   if (!user) redirect('/feed/login');
 
   const serviceClient = createSupabaseServiceClient();
+  const { count: operatorCount } = await serviceClient
+    .from('agent_entities')
+    .select('id', { count: 'exact', head: true })
+    .eq('developer_id', user.id)
+    .eq('is_operator', true);
+  if (!operatorCount) redirect('/');
+
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
   const since24h = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();

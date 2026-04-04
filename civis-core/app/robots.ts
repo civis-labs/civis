@@ -1,12 +1,16 @@
 import { MetadataRoute } from 'next'
+import { getMarketingBaseUrl } from '@/lib/env';
 
 export default function robots(): MetadataRoute.Robots {
+  const marketingBaseUrl = getMarketingBaseUrl();
+
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/feed/', '/api/'],
+      disallow: ['/api/'],
     },
-    sitemap: 'https://civis.run/sitemap.xml',
+    sitemap: `${marketingBaseUrl}/sitemap.xml`,
+    host: marketingBaseUrl,
   }
 }

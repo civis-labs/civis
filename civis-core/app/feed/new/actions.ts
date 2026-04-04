@@ -4,29 +4,19 @@ import {
   createSupabaseServerClient,
   createSupabaseServiceClient,
 } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { sanitizeDeep } from '@/lib/sanitize';
-import { normalizeStack } from '@/lib/stack-normalize';
 import { generateConstructEmbedding } from '@/lib/embeddings';
 import { checkWriteRateLimit, refundWriteRateLimit } from '@/lib/rate-limit';
 import { invalidateFeedCache } from '@/lib/feed-cache';
+import {
+  buildConstructPayloadRecord,
+  constructPayloadSchema,
+  getFirstValidationMessage,
+  normalizeValidatedConstructPayload,
+} from '@/lib/construct-write';
 
-export type PostBuildLogInput = {
-  title: string;
-  problem: string;
-  solution: string;
-  result: string;
-  stack: string[];
-  human_steering: 'full_auto' | 'human_in_loop' | 'human_led';
-  code_snippet?: { lang: string; body: string };
-  environment?: {
-    model?: string;
-    runtime?: string;
-    dependencies?: string;
-    infra?: string;
-    os?: string;
-    date_tested?: string;
-  };
-};
+export type PostBuildLogInput = z.infer<typeof constructPayloadSchema>;
 
 export type PostBuildLogResult = {
   id?: string;
@@ -61,11 +51,14 @@ export async function postBuildLog(
   // 5. Sanitize input (XSS prevention) before rate limit so bad payloads don't burn quota
   const sanitized = sanitizeDeep(formData) as PostBuildLogInput;
 
-  // 6. Normalize stack tags
-  const stackResult = normalizeStack(sanitized.stack);
-  if (stackResult.status === 'error') {
-    const invalid = stackResult.errors.map((e) => `"${e.input}"`).join(', ');
-    return { error: `Unrecognized stack tags: ${invalid}. See /v1/stack for the full list.` };
+  const parseResult = constructPayloadSchema.safeParse(sanitized);
+  if (!parseResult.success) {
+    return { error: getFirstValidationMessage(parseResult.error) };
+  }
+
+  const normalizedPayload = normalizeValidatedConstructPayload(parseResult.data);
+  if (!normalizedPayload.success) {
+    return { error: normalizedPayload.details[0] || 'Unrecognized stack tags' };
   }
 
   // 7. Write rate limit (1/hr per agent) after validation so bad payloads don't burn quota
@@ -75,48 +68,48 @@ export async function postBuildLog(
   }
 
   // 8. Build payload
-  const payload: Record<string, unknown> = {
-    title: sanitized.title,
-    problem: sanitized.problem,
-    solution: sanitized.solution,
-    result: sanitized.result,
-    stack: stackResult.normalized,
-    human_steering: sanitized.human_steering,
-  };
-
-  if (sanitized.code_snippet?.lang && sanitized.code_snippet?.body) {
-    payload.code_snippet = sanitized.code_snippet;
-  }
-
-  if (sanitized.environment) {
-    const env: Record<string, string> = {};
-    for (const [k, v] of Object.entries(sanitized.environment)) {
-      if (v && typeof v === 'string' && v.trim()) env[k] = v.trim();
-    }
-    if (Object.keys(env).length > 0) payload.environment = env;
-  }
+  const payload = normalizedPayload.payload;
 
   // 9. Generate embedding
   let embedding: number[];
   try {
     embedding = await generateConstructEmbedding({
-      title: sanitized.title,
-      problem: sanitized.problem,
-      solution: sanitized.solution,
-      result: sanitized.result,
-      ...(payload.code_snippet
-        ? { code_snippet: payload.code_snippet as { lang: string; body: string } }
-        : {}),
+      title: payload.title,
+      problem: payload.problem,
+      solution: payload.solution,
+      result: payload.result,
+      code_snippet: payload.code_snippet,
     });
   } catch {
     await refundWriteRateLimit(agent.id);
     return { error: 'Failed to generate embedding. Please try again.' };
   }
 
+  const { data: isDuplicate, error: duplicateError } = await serviceClient
+    .rpc('check_construct_duplicate', { p_embedding: embedding });
+
+  if (duplicateError) {
+    await refundWriteRateLimit(agent.id);
+    console.error('duplicate check failed:', duplicateError);
+    return { error: 'Failed to verify duplicate status. Please try again.' };
+  }
+
+  if (isDuplicate) {
+    await refundWriteRateLimit(agent.id);
+    return { error: 'A similar build log already exists in the knowledge base' };
+  }
+
   // 10. Insert
   const { data: construct, error: insertError } = await serviceClient
     .from('constructs')
-    .insert({ agent_id: agent.id, type: 'build_log', payload, embedding, status: 'approved' })
+    .insert({
+      agent_id: agent.id,
+      type: 'build_log',
+      payload: buildConstructPayloadRecord(payload),
+      embedding,
+      status: 'approved',
+      ...(payload.category && { category: payload.category }),
+    })
     .select('id')
     .single();
 

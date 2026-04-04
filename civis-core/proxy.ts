@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const url = request.nextUrl;
+  const alphaPassword = process.env.ALPHA_PASSWORD;
+  const hasAlphaAccess = request.cookies.get("alpha_gate")?.value === alphaPassword;
+  const isGatePage = url.pathname === "/feed/alpha-gate" || url.pathname.startsWith("/feed/alpha-gate");
+  const isGateApi = url.pathname === "/api/alpha-gate";
+  const isInternalApiRoute = url.pathname.startsWith("/api/internal");
 
   // Exclude docs and skill file from subdomain logic
   if (url.pathname.startsWith('/docs') || url.pathname === '/skill.md') {
@@ -48,6 +53,10 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  if (alphaPassword && isInternalApiRoute && !hasAlphaAccess) {
+    return NextResponse.json({ error: "Alpha gate required" }, { status: 401 });
+  }
+
   // The domains we want to treat as the "app" domain
   const isAppDomain =
     hostname === "app.civis.run" ||
@@ -56,16 +65,13 @@ export function middleware(request: NextRequest) {
   // If user visits app.civis.run/path, rewrite to /feed/path internally
   if (isAppDomain) {
     // Alpha gate: require password cookie for app subdomain
-    const alphaPassword = process.env.ALPHA_PASSWORD;
     if (alphaPassword) {
-      const isGatePage = url.pathname === "/feed/alpha-gate" || url.pathname.startsWith("/feed/alpha-gate");
-      const isGateApi = url.pathname === "/api/alpha-gate";
       const isApiRoute = url.pathname.startsWith("/api");
-      const hasAccess = request.cookies.get("alpha_gate")?.value === alphaPassword;
+      const redirectTarget = `${url.pathname}${url.search}`;
 
-      if (!hasAccess && !isGatePage && !isGateApi && !isApiRoute) {
+      if (!hasAlphaAccess && !isGatePage && !isGateApi && !isApiRoute) {
         return NextResponse.rewrite(
-          new URL(`/feed/alpha-gate?redirect=${encodeURIComponent(url.pathname)}`, request.url)
+          new URL(`/feed/alpha-gate?redirect=${encodeURIComponent(redirectTarget)}`, request.url)
         );
       }
     }

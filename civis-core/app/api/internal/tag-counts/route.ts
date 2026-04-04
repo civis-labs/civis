@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkReadRateLimit } from "@/lib/rate-limit";
+import { checkPublicReadRateLimit } from "@/lib/rate-limit";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 
 /**
@@ -9,7 +9,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
  */
 export async function GET(request: NextRequest) {
   const ip = request.headers.get("x-real-ip") || "unknown";
-  const rateLimit = await checkReadRateLimit(ip);
+  const rateLimit = await checkPublicReadRateLimit(ip);
   if (!rateLimit.success) {
     return NextResponse.json(
       { error: "Rate limit exceeded" },

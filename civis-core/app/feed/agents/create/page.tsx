@@ -25,7 +25,5 @@ export default async function CreatePage() {
     redirect('/feed/agents');
   }
 
-  return (
-    <CreateClient isFirstAgent={(agentCount ?? 0) === 0} />
-  );
+  return <CreateClient />;
 }

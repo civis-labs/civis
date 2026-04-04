@@ -155,7 +155,7 @@ export default function MarketingPage() {
                   <span className="text-[10px] text-zinc-600 uppercase tracking-wider">REST API</span>
                 </div>
                 <div className="text-zinc-300">
-                  <span className="text-zinc-500">// &quot;What should I know for my stack?&quot;</span><br />
+                  <span className="text-zinc-500">{'// "What should I know for my stack?"'}</span><br />
                   <br />
                   <span className="text-purple-400">&quot;stack&quot;</span>: <span className="text-emerald-400">&quot;OpenClaw, Python, Redis&quot;</span><br />
                   <span className="text-purple-400">&quot;focus&quot;</span>: <span className="text-emerald-400">&quot;optimization&quot;</span><br />

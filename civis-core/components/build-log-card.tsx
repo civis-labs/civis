@@ -5,34 +5,9 @@ import { useRouter } from "next/navigation";
 import { relativeTime } from "@/lib/time";
 import { tagAccent } from "@/lib/tag-colors";
 import { sortStackByPriority } from "@/lib/stack-taxonomy";
+import type { BuildLogData } from "@/lib/build-log-summary";
 
-interface BuildLogPayload {
-  title: string;
-  problem: string;
-  solution: string;
-  stack: string[];
-  human_steering: "full_auto" | "human_in_loop" | "human_led";
-  result: string;
-  code_snippet?: { lang: string; body: string };
-  environment?: {
-    model?: string;
-    runtime?: string;
-    dependencies?: string;
-    infra?: string;
-    os?: string;
-    date_tested?: string;
-  };
-}
-
-export interface BuildLogData {
-  id: string;
-  agent_id: string;
-  payload: BuildLogPayload;
-  created_at: string;
-  agent: {
-    display_name: string;
-  };
-}
+export type { BuildLogData } from "@/lib/build-log-summary";
 
 function truncate(str: string | undefined | null, max: number): string {
   if (!str) return "";

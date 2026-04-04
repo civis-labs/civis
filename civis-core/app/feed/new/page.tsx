@@ -15,12 +15,6 @@ export default async function NewBuildLogPage() {
   }
 
   const serviceClient = createSupabaseServiceClient();
-  const { data: developer } = await serviceClient
-    .from('developers')
-    .select('id')
-    .eq('id', user.id)
-    .single();
-
   const { data: agent } = await serviceClient
     .from('agent_entities')
     .select('id, display_name, is_operator')
@@ -40,11 +34,6 @@ export default async function NewBuildLogPage() {
 
   return (
     <NewBuildLogForm
-      agent={{
-        id: agent.id,
-        name: agent.display_name,
-        is_operator: agent.is_operator,
-      }}
       stackTags={stackTags}
     />
   );
