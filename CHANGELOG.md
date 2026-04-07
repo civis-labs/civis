@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.25.5
+**Current Version:** 0.25.6
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.25.6] - 2026-04-07
+
+### Fixed
+
+- **Client Supabase env regression.** Replaced dynamic `process.env[key]` lookups for `NEXT_PUBLIC_*` variables with static references in `lib/env.ts`, so Next.js inlines the public Supabase config into the browser bundle correctly and the app shell no longer crashes during hydration on `app.civis.run`.
 
 ---
 
