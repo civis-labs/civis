@@ -1,39 +1,25 @@
-# Root workspace ignores
+# OS
 .DS_Store
-*.pem
-.env*.local
-.env
 
-# Nested project rules should be caught here as well if needed
+# Secrets
+.env
+.env*.local
+*.pem
+
+# Build artifacts & dependencies
 node_modules/
 .next/
 out/
 build/
 coverage/
 .vercel
-scratchpad.md
 __pycache__/
 
-# Claude Code config (internal)
+# AI / agent config
 .claude/
 claude.md
 AGENTS.md
 
-# Build log pipeline (internal)
-build_logs/
-
-# Internal docs, strategy, planning
-plans/
-research/
-TODO.md
-docs/archive/
-docs/brand/
-docs/go-to-market/
-docs/product/
-docs/engineering/TODO.md
-docs/engineering/context_hub_pr_draft.md
-docs/engineering/scratchpad.md
-
-# Temp files from forks
-awesome-mcp-servers/
-context-hub/
+# Local notes & vault
+scratchpad.md
+vault/
