@@ -75,8 +75,10 @@ export async function GET(
       : stripGatedContent(storedPayload);
   }
 
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
+
   after(async () => {
-    logApiRequest('/v1/constructs/:id', { id }, ip, ua, 200, false, isAuthed);
+    logApiRequest('/v1/constructs/:id', { id }, ip, ua, 200, false, isAuthed, authedAgentId);
 
     // Track pull for authenticated requests only.
     // Redis dedup: same agent pulling same construct within 1 hour = 1 pull.

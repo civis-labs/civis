@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
   }
 
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
   try {
     queryEmbedding = await generateEmbedding(q, { cache: true });
   } catch {
-    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed));
+    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed, authedAgentId));
     return NextResponse.json(
       { error: 'Failed to generate search embedding' },
       { status: 500 }
@@ -105,13 +106,13 @@ export async function GET(request: NextRequest) {
   const { data, error } = await serviceClient.rpc('search_constructs', rpcParams);
 
   if (error) {
-    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed));
+    after(() => logApiRequest('/v1/constructs/search', { q, limit, ...(stackParam ? { stack: stackParam } : {}) }, ip, ua, 500, false, isAuthed, authedAgentId));
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
 
   const logParams: Record<string, unknown> = { q, limit };
   if (stackParam) logParams.stack = stackParam;
-  after(() => logApiRequest('/v1/constructs/search', logParams, ip, ua, 200, false, isAuthed));
+  after(() => logApiRequest('/v1/constructs/search', logParams, ip, ua, 200, false, isAuthed, authedAgentId));
 
   // Compact response: title, stack, result summary only. No solution/code_snippet.
   return NextResponse.json(

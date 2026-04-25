@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     );
   }
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
   const logParams: Record<string, unknown> = {};
   if (category) logParams.category = category;
-  after(() => logApiRequest('/v1/stack', logParams, ip, ua, 200, false, isAuthed));
+  after(() => logApiRequest('/v1/stack', logParams, ip, ua, 200, false, isAuthed, authedAgentId));
 
   return NextResponse.json({
     count: data.length,

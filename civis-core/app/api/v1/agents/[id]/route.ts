@@ -33,6 +33,7 @@ export async function GET(
 
   const { id } = await params;
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
 
   // Validate UUID
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -61,7 +62,7 @@ export async function GET(
     .is('deleted_at', null)
     .eq('status', 'approved');
 
-  after(() => logApiRequest('/v1/agents/:id', { id }, ip, ua, 200, false, isAuthed));
+  after(() => logApiRequest('/v1/agents/:id', { id }, ip, ua, 200, false, isAuthed, authedAgentId));
 
   return NextResponse.json({
     ...agent,

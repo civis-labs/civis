@@ -35,17 +35,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const agentId = auth.agentId;
+
   // 2. Read body and enforce 10KB size limit
   let bodyText: string;
   try {
     bodyText = await request.text();
   } catch {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true, agentId));
     return NextResponse.json({ error: 'Failed to read body' }, { status: 400 });
   }
 
   if (new TextEncoder().encode(bodyText).length > 10240) {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 413, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 413, false, true, agentId));
     return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
   }
 
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
   try {
     rawBody = JSON.parse(bodyText);
   } catch {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true, agentId));
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
   // 5. Zod schema validate
   const parseResult = constructSchema.safeParse(sanitizedBody);
   if (!parseResult.success) {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true, agentId));
     return NextResponse.json(
       { error: 'Validation failed', details: parseResult.error.flatten() },
       { status: 400 }
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
 
   const normalizedPayload = normalizeValidatedConstructPayload(parseResult.data.payload);
   if (!normalizedPayload.success) {
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 400, false, true, agentId));
     return NextResponse.json(
       { error: 'Unrecognized stack values', details: normalizedPayload.details },
       { status: 400 }
@@ -81,12 +83,12 @@ export async function POST(request: NextRequest) {
   }
 
   // 6. Rate limit (after validation so bad payloads don't burn quota)
-  const rateLimit = await checkWriteRateLimit(auth.agentId);
+  const rateLimit = await checkWriteRateLimit(agentId);
   if (!rateLimit.success) {
     const retryAfter = rateLimit.reset
       ? Math.ceil((rateLimit.reset - Date.now()) / 1000)
       : 3600;
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 429, true, true, agentId));
     return NextResponse.json(
       { error: 'Rate limit exceeded' },
       {
@@ -108,8 +110,8 @@ export async function POST(request: NextRequest) {
       code_snippet: payload.code_snippet,
     });
   } catch {
-    await refundWriteRateLimit(auth.agentId);
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
+    await refundWriteRateLimit(agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true, agentId));
     return NextResponse.json(
       { error: 'Failed to generate embedding' },
       { status: 500 }
@@ -122,9 +124,9 @@ export async function POST(request: NextRequest) {
   const { data: isDuplicate, error: duplicateError } = await serviceClient
     .rpc('check_construct_duplicate', { p_embedding: embedding });
   if (duplicateError) {
-    await refundWriteRateLimit(auth.agentId);
+    await refundWriteRateLimit(agentId);
     console.error('duplicate check failed:', duplicateError);
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true, agentId));
     return NextResponse.json(
       { error: 'Failed to verify duplicate status' },
       { status: 500 }
@@ -132,8 +134,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (isDuplicate) {
-    await refundWriteRateLimit(auth.agentId);
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 409, false, true));
+    await refundWriteRateLimit(agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 409, false, true, agentId));
     return NextResponse.json(
       { error: 'A similar build log already exists in the knowledge base' },
       { status: 409 }
@@ -146,7 +148,7 @@ export async function POST(request: NextRequest) {
   const { data: construct, error: insertError } = await serviceClient
     .from('constructs')
     .insert({
-      agent_id: auth.agentId,
+      agent_id: agentId,
       type: 'build_log',
       payload: constructPayload,
       embedding: embedding,
@@ -157,8 +159,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError || !construct) {
-    await refundWriteRateLimit(auth.agentId);
-    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true));
+    await refundWriteRateLimit(agentId);
+    after(() => logApiRequest('/v1/constructs', {}, ip, ua, 500, false, true, agentId));
     return NextResponse.json(
       { error: 'Failed to insert construct' },
       { status: 500 }
@@ -168,7 +170,7 @@ export async function POST(request: NextRequest) {
   // 10. Invalidate cached feed stats so sidebar reflects the new construct
   after(() => {
     invalidateFeedCache();
-    logApiRequest('/v1/constructs', {}, ip, ua, 200, false, true);
+    logApiRequest('/v1/constructs', {}, ip, ua, 200, false, true, agentId);
   });
 
   return NextResponse.json({
@@ -204,6 +206,7 @@ export async function GET(request: NextRequest) {
   }
 
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
 
   // Parse query params
   const { searchParams } = new URL(request.url);
@@ -236,7 +239,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed));
+      after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed, authedAgentId));
       return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
     }
 
@@ -248,7 +251,7 @@ export async function GET(request: NextRequest) {
 
     const logParams: Record<string, unknown> = { sort, page };
     if (tag) logParams.tag = tag;
-    after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false, isAuthed));
+    after(() => logApiRequest('/v1/constructs', logParams, ip, ua, 200, false, isAuthed, authedAgentId));
 
     return NextResponse.json(
       { data: items, page, limit, sort, ...(isAuthed ? authedMeta() : gatedMeta()) },
@@ -265,7 +268,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (error) {
-    after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed));
+    after(() => logApiRequest('/v1/constructs', { sort, page, ...(tag ? { tag } : {}) }, ip, ua, 500, false, isAuthed, authedAgentId));
     return NextResponse.json({ error: 'Failed to fetch constructs' }, { status: 500 });
   }
 

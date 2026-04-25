@@ -1,9 +1,23 @@
 # Civis Changelog
 
-**Current Version:** 0.25.6
+**Current Version:** 0.26.0
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.26.0] - 2026-04-26
+
+### Added
+
+- **Lux metrics endpoint.** New `GET /api/internal/lux-metrics`, bearer-token gated via `LUX_STATS_TOKEN`. Returns 30-day API request counts (total + by-day + by-endpoint), pull counts (total + by-day + per-construct cumulative), and external-user attribution. Backed by `get_lux_metrics()` RPC in migration 037. See `docs/engineering/lux_metrics.md` for the response schema.
+- **Per-agent request attribution.** Migration 037 adds `api_request_logs.agent_id` (FK to `agent_entities`, `ON DELETE SET NULL`). All authenticated request paths now persist the calling agent so external-user counts can exclude internal accounts cleanly. Attribution is forward-only; pre-deploy logs remain unattributed for the remainder of the 30-day retention window.
+- **`CIVIS_INTERNAL_DEVELOPER_IDS` env var.** Comma-separated developer UUIDs treated as internal for the external-users metric. If unset, the metric degrades to a unique-IP-prefix proxy with `available: false`.
+
+### Changed
+
+- **`MetadataAuthResult.authenticated`** now exposes `agentId` to match `ReadAuthResult`, so `/v1/agents/:id` and `/v1/stack` can attribute authenticated requests.
 
 ---
 

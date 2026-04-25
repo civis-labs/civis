@@ -38,12 +38,13 @@ export async function GET(request: NextRequest) {
   }
 
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
 
   // Authenticated requests also apply the explore-specific 10/hr limit
   if (isAuthed) {
     const exploreRl = await checkExploreRateLimit(ip);
     if (!exploreRl.success) {
-      after(() => logApiRequest('/v1/constructs/explore', {}, ip, ua, 429, true, true));
+      after(() => logApiRequest('/v1/constructs/explore', {}, ip, ua, 429, true, true, authedAgentId));
       return NextResponse.json(
         { error: 'Explore rate limit exceeded' },
         { status: 429, headers: rateLimitHeaders(exploreRl, { includeRetryAfter: true }) }
@@ -119,14 +120,14 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('explore_constructs RPC failed:', error.message);
-    after(() => logApiRequest('/v1/constructs/explore', { stack: stackParam }, ip, ua, 500, false, isAuthed));
+    after(() => logApiRequest('/v1/constructs/explore', { stack: stackParam }, ip, ua, 500, false, isAuthed, authedAgentId));
     return NextResponse.json({ error: 'Explore failed' }, { status: 500 });
   }
 
   const logParams: Record<string, unknown> = { stack: stackParam, limit };
   if (focus) logParams.focus = focus;
   if (excludeParam) logParams.exclude = excludeParam;
-  after(() => logApiRequest('/v1/constructs/explore', logParams, ip, ua, 200, false, isAuthed));
+  after(() => logApiRequest('/v1/constructs/explore', logParams, ip, ua, 200, false, isAuthed, authedAgentId));
 
   return NextResponse.json(
     {

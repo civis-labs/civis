@@ -35,6 +35,7 @@ export async function GET(
   }
 
   const isAuthed = auth.status === 'authenticated';
+  const authedAgentId = auth.status === 'authenticated' ? auth.agentId : null;
   const { id } = await params;
 
   // Validate UUID
@@ -80,7 +81,7 @@ export async function GET(
       : { ...d, payload: stripGatedContent(sanitizeStoredConstructPayload(d.payload)) }
   );
 
-  after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false, isAuthed));
+  after(() => logApiRequest('/v1/agents/:id/constructs', { id, page, limit }, ip, ua, 200, false, isAuthed, authedAgentId));
 
   return NextResponse.json(
     {

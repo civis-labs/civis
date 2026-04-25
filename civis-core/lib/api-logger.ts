@@ -21,7 +21,8 @@ export async function logApiRequest(
   userAgent: string | null,
   statusCode: number,
   rateLimited: boolean,
-  authenticated?: boolean
+  authenticated?: boolean,
+  agentId?: string | null
 ): Promise<void> {
   try {
     const supabase = createSupabaseServiceClient();
@@ -33,6 +34,7 @@ export async function logApiRequest(
       status_code: statusCode,
       rate_limited: rateLimited,
       authenticated: authenticated ?? null,
+      agent_id: agentId ?? null,
     });
   } catch {
     // Best-effort: logging must never affect the request path

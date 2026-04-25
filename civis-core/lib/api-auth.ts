@@ -20,7 +20,7 @@ export type ReadAuthResult =
   | { status: 'internal_error' };
 
 export type MetadataAuthResult =
-  | { status: 'authenticated'; rateLimit: RateLimitInfo }
+  | { status: 'authenticated'; agentId: string; rateLimit: RateLimitInfo }
   | { status: 'unauthenticated'; rateLimit: RateLimitInfo }
   | { status: 'rate_limited'; rateLimit: RateLimitInfo }
   | { status: 'invalid_key' }
@@ -81,7 +81,7 @@ export async function authorizeMetadata(
     if (!rl.success) {
       return { status: 'rate_limited', rateLimit: info };
     }
-    return { status: 'authenticated', rateLimit: info };
+    return { status: 'authenticated', agentId: auth.agentId, rateLimit: info };
   }
 
   const rl = await checkMetadataReadRateLimit(ip);

@@ -76,7 +76,8 @@ async function logMcpRequest(
     getUserAgent(authInfo),
     statusCode,
     rateLimited,
-    isAuthenticated(authInfo)
+    isAuthenticated(authInfo),
+    getAgentId(authInfo)
   );
 }
 

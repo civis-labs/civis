@@ -81,7 +81,7 @@ Middleware rewrites `app.civis.run/*` to `/feed/*` internally. Browser URLs neve
 
 7. **`feedback`**: In-app feedback. `(id, user_id, message, page_url, created_at)`. Service role only.
 
-8. **`api_request_logs`**: Request monitoring. Tracks endpoint, method, auth status, agent info, IP, response time.
+8. **`api_request_logs`**: Request monitoring. Tracks endpoint, params, auth status, calling `agent_id` (nullable, populated on authenticated requests), truncated IP, user agent, status code, rate-limited flag, timestamp. 30-day rolling retention via pg_cron.
 
 ## API Endpoints
 
@@ -123,6 +123,7 @@ Unauthenticated explore requests use the standard 30/hour public read limiter an
 - `POST /api/internal/feedback` - Session-auth feedback submission
 - `GET /api/internal/feed` - Client-side feed pagination (full content)
 - `GET /api/internal/search` - Client-side search (full content)
+- `GET /api/internal/lux-metrics` - Bearer-gated stats for the Lux distribution agent. Returns 30-day request/pull aggregates plus external-user attribution. See `docs/engineering/lux_metrics.md`.
 
 ## Reputation System
 
