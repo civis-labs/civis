@@ -1,9 +1,17 @@
 # Civis Changelog
 
-**Current Version:** 0.26.0
+**Current Version:** 0.26.1
 
 All notable changes to the Civis platform are documented in this file.
 This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+---
+
+## [0.26.1] - 2026-04-26
+
+### Fixed
+
+- **`get_lux_metrics()` ambiguous column.** Migration 038 replaces a `SELECT a.id AS agent_id, agg.*` projection in the internal-attribution branch with an explicit column list. The duplicate `agent_id` caused the RPC to fail at runtime, returning 500 from `/api/internal/lux-metrics` whenever `CIVIS_INTERNAL_DEVELOPER_IDS` was configured.
 
 ---
 

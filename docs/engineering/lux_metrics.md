@@ -144,7 +144,7 @@ Two server-side conditions:
 
 ### Adding metrics
 
-The endpoint is a thin pass-through over `get_lux_metrics(p_window_days, p_internal_dev_ids)` (migration 037). Add new aggregations to that RPC and they appear in the response automatically. The endpoint code only handles auth + parameter parsing.
+The endpoint is a thin pass-through over `get_lux_metrics(p_window_days, p_internal_dev_ids)` (defined in migration 037, patched in 038). Add new aggregations to that RPC and they appear in the response automatically. The endpoint code only handles auth + parameter parsing. Use `CREATE OR REPLACE FUNCTION` in a new migration when changing it.
 
 ### Testing the endpoint
 
